@@ -1,4 +1,23 @@
 {
+  "name": "tridecco-board",
+  "version": "0.1.0",
+  "description": "Tridecco Game Board is the game board and pieces for the Tridecco game. It is a complete implementation of the game board and pieces, supporting a range of advanced operations and complex gameplay mechanics.",
+  "keywords": [
+    "einstein-problem",
+    "tridecco"
+  ],
+  "homepage": "https://github.com/tridecco/game-board#readme",
+  "bugs": {
+    "url": "https://github.com/tridecco/game-board/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tridecco/game-board.git"
+  },
+  "license": "AGPL-3.0",
+  "author": "Tony Kan",
+  "type": "commonjs",
+  "main": "index.js",
   "devDependencies": {
     "eslint": "^9.22.0",
     "prettier": "^3.5.3"
