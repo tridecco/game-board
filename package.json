@@ -19,7 +19,9 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "lint": "eslint"
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "format": "prettier --write ."
   },
   "devDependencies": {
     "eslint": "^9.22.0",
