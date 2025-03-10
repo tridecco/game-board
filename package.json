@@ -18,6 +18,9 @@
   "author": "Tony Kan",
   "type": "commonjs",
   "main": "index.js",
+  "scripts": {
+    "lint": "eslint"
+  },
   "devDependencies": {
     "eslint": "^9.22.0",
     "prettier": "^3.5.3"
