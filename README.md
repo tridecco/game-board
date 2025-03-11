@@ -7,6 +7,7 @@ Tridecco Game Board is the game board and pieces for the Tridecco game. It is a 
 - **Game Board**: A fully functional game board with support for various operations.
 - **Game Pieces**: A set of game pieces that can be manipulated and interacted with the game board.
 - **Hexagonal Grid**: The hexagonal grid coordinate system is used to represent the game board.
+- **Rendering**: The game board and pieces can be rendered on a Canvas. (only in browser)
 - **Browser Support**: The game board is designed to work seamlessly both Node.js and browser environments.
 
 ## Tech Stack
