@@ -9,6 +9,9 @@ This document provides a comprehensive guide to the API of the Tridecco Game Boa
 - [API Documentation](#api-documentation)
   - [Overview](#overview)
   - [Table of Contents](#table-of-contents)
+  - [Import the Library](#import-the-library)
+    - [Node.js](#nodejs)
+    - [Browser](#browser)
   - [Hexagonal Grid](#hexagonal-grid)
     - [Constructor](#constructor)
       - [Example](#example)
@@ -24,6 +27,30 @@ This document provides a comprehensive guide to the API of the Tridecco Game Boa
       - [Example](#example-5)
     - [`clear()`](#clear)
       - [Example](#example-6)
+
+## Import the Library
+
+### Node.js
+
+```javascript
+// Import the library
+const Tridecco = require('tridecco-board');
+
+// Hexagonal Grid
+const { HexGrid } = Tridecco;
+```
+
+### Browser
+
+```html
+<!-- Import the library -->
+<script src="https://cdn.jsdelivr.net/npm/tridecco-board@latest/dist/tridecco-board.min.js"></script>
+```
+
+```javascript
+// Hexagonal Grid
+const { HexGrid } = Tridecco;
+```
 
 ## Hexagonal Grid
 
