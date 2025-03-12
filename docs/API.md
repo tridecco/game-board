@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides a full API reference for the `HexGrid` class, which represents a hexagonal grid using offset coordinates. This class allows you to create, manipulate, and query hexagonal grids of different types.
+This document provides a comprehensive guide to the API of the Tridecco Game Board library.
 
 ## Table of Contents
 
