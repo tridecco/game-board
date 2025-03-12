@@ -3,7 +3,7 @@
  * @description This file contains unit tests for the HexGrid class.
  */
 
-const HexGrid = require('../src/hexGrid');
+const HexGrid = require('../').HexGrid;
 
 describe('HexGrid', () => {
   describe('constructor', () => {
