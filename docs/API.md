@@ -11,19 +11,19 @@ This document provides a full API reference for the `HexGrid` class, which repre
   - [Table of Contents](#table-of-contents)
   - [Hexagonal Grid](#hexagonal-grid)
     - [Constructor](#constructor)
-    - [Example](#example)
+      - [Example](#example)
     - [`get(col, row)`](#getcol-row)
-    - [Example](#example-1)
+      - [Example](#example-1)
     - [`set(col, row, value)`](#setcol-row-value)
-    - [Example](#example-2)
+      - [Example](#example-2)
     - [`remove(col, row)`](#removecol-row)
-    - [Example](#example-3)
+      - [Example](#example-3)
     - [`getAdjacents(col, row)`](#getadjacentscol-row)
-    - [Example](#example-4)
+      - [Example](#example-4)
     - [`clone()`](#clone)
-    - [Example](#example-5)
+      - [Example](#example-5)
     - [`clear()`](#clear)
-    - [Example](#example-6)
+      - [Example](#example-6)
 
 ## Hexagonal Grid
 
@@ -53,7 +53,7 @@ Creates a new `HexGrid` instance.
 
 - `Error`: If the `type` parameter is not one of the valid grid types.
 
-### Example
+#### Example
 
 ```javascript
 const grid = new HexGrid(10, 8, 'odd-r');
@@ -78,7 +78,7 @@ Retrieves the value stored at the specified column and row in the grid.
 
 - `* | null`: The value at the specified position, or `null` if the coordinates are out of bounds or the cell is empty.
 
-### Example
+#### Example
 
 ```javascript
 const value = grid.get(3, 2);
@@ -105,7 +105,7 @@ Sets a value at the specified column and row in the grid.
 
 - `void`: This method does not return a value.
 
-### Example
+#### Example
 
 ```javascript
 grid.set(3, 2, 'Tile A');
@@ -130,7 +130,7 @@ Removes the value at the specified column and row in the grid, setting the cell 
 
 - `* | null`: The value that was removed from the specified position, or `null` if the coordinates were out of bounds or the cell was already empty.
 
-### Example
+#### Example
 
 ```javascript
 const removedValue = grid.remove(3, 2);
@@ -161,7 +161,7 @@ Retrieves an array of adjacent hexes for a given column and row. The adjacency i
   - `value` (\* | null): The value stored in the adjacent hex, or `null` if the adjacent hex is out of bounds or empty.
     Returns an empty array if no adjacent hexes with values are found within the grid boundaries.
 
-### Example
+#### Example
 
 ```javascript
 grid.set(3, 2, 'Center');
@@ -193,7 +193,7 @@ Creates a deep copy of the `HexGrid` instance. This means that a new `HexGrid` o
 
 - `HexGrid`: A new `HexGrid` instance that is a deep copy of the original grid.
 
-### Example
+#### Example
 
 ```javascript
 const grid2 = grid.clone();
@@ -216,7 +216,7 @@ Clears the entire grid by setting all cell values to `null`. This effectively em
 
 - `void`: This method does not return a value.
 
-### Example
+#### Example
 
 ```javascript
 grid.clear();
