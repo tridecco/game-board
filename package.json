@@ -22,6 +22,7 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
+    "test": "jest --verbose --silent --coverage --ci --bail",
     "build": "webpack"
   },
   "devDependencies": {
