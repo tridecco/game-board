@@ -26,17 +26,26 @@ class HexGrid {
   }
 
   /**
+   * @property {Object} OFFSET - The offsets for the hex grid.
+   */
+  static OFFSET = {
+    NEGATIVE_ONE: -1,
+    ZERO: 0,
+    ONE: 1,
+  };
+
+  /**
    * @property {Object} DIRECTION_OFFSETS - The offsets for each direction in the hex grid.
    */
   static DIRECTION_OFFSETS = {
-    UP_LEFT: [-1, -1],
-    UP: [0, -1],
-    UP_RIGHT: [1, -1],
-    RIGHT: [1, 0],
-    DOWN_RIGHT: [1, 1],
-    DOWN: [0, 1],
-    DOWN_LEFT: [-1, 1],
-    LEFT: [-1, 0],
+    UP_LEFT: [HexGrid.OFFSET.NEGATIVE_ONE, HexGrid.OFFSET.NEGATIVE_ONE],
+    UP: [HexGrid.OFFSET.ZERO, HexGrid.OFFSET.NEGATIVE_ONE],
+    UP_RIGHT: [HexGrid.OFFSET.ONE, HexGrid.OFFSET.NEGATIVE_ONE],
+    RIGHT: [HexGrid.OFFSET.ONE, HexGrid.OFFSET.ZERO],
+    DOWN_RIGHT: [HexGrid.OFFSET.ONE, HexGrid.OFFSET.ONE],
+    DOWN: [HexGrid.OFFSET.ZERO, HexGrid.OFFSET.ONE],
+    DOWN_LEFT: [HexGrid.OFFSET.NEGATIVE_ONE, HexGrid.OFFSET.ONE],
+    LEFT: [HexGrid.OFFSET.NEGATIVE_ONE, HexGrid.OFFSET.ZERO],
   };
 
   /**
@@ -186,7 +195,8 @@ class HexGrid {
     }
 
     const adjacents = [];
-    const isOdd = (this.type.includes('r') ? row : col) % 2 !== 0;
+    const TWO = 2;
+    const isOdd = (this.type.includes('r') ? row : col) % TWO !== 0;
     const dirSet = isOdd ? directions[1] : directions[0];
 
     for (const [dCol, dRow] of dirSet) {
