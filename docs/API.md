@@ -23,10 +23,12 @@ This document provides a comprehensive guide to the API of the Tridecco Game Boa
       - [Example](#example-3)
     - [`getAdjacents(col, row)`](#getadjacentscol-row)
       - [Example](#example-4)
-    - [`clone()`](#clone)
+    - [`forEach(callback)`](#foreachcallback)
       - [Example](#example-5)
-    - [`clear()`](#clear)
+    - [`clone()`](#clone)
       - [Example](#example-6)
+    - [`clear()`](#clear)
+      - [Example](#example-7)
 
 ## Import the Library
 
@@ -203,6 +205,45 @@ console.log(adjacents);
   { col: 4, row: 2, value: 'East' }
   // ... other adjacent hexes if they have values and are within bounds
 ]
+*/
+```
+
+### `forEach(callback)`
+
+```javascript
+forEach(callback);
+```
+
+**Description:**
+
+Iterates over each cell in the grid and executes a provided callback function for each cell. The callback function is called with the following parameters:
+
+- `value` (\* | null): The value stored in the cell.
+- `col` (number): The column index of the cell.
+- `row` (number): The row index of the cell.
+
+**Parameters:**
+
+- `callback` (function): A function to execute for each cell in the grid. The function should accept three parameters: `value`, `col`, and `row`.
+
+**Returns:**
+
+- `void`: This method does not return a value.
+
+#### Example
+
+```javascript
+grid.set(3, 2, 'Tile A');
+grid.set(4, 2, 'Tile B');
+
+grid.forEach((value, col, row) => {
+  console.log(`Value at (${col}, ${row}): ${value}`);
+});
+/* Output:
+...
+Value at (3, 2): Tile A
+Value at (4, 2): Tile B
+...
 */
 ```
 
