@@ -14,15 +14,15 @@ class HexGrid {
    * @param {string} type - The type of the grid ('odd-r' or 'even-r' or 'odd-q' or 'even-q').
    */
   constructor(columns, rows, type) {
-    this.grid = new Array(rows);
-    for (let r = 0; r < rows; r++) {
-      this.grid[r] = new Array(columns).fill(null);
-    }
-
     if (!['odd-r', 'even-r', 'odd-q', 'even-q'].includes(type)) {
       throw new Error('Invalid grid type');
     }
     this.type = type;
+
+    this.grid = new Array(rows);
+    for (let r = 0; r < rows; r++) {
+      this.grid[r] = new Array(columns).fill(null);
+    }
   }
 
   /**
