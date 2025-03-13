@@ -26,79 +26,93 @@ class HexGrid {
   }
 
   /**
+   * @property {Object} DIRECTION_OFFSETS - The offsets for each direction in the hex grid.
+   */
+  static DIRECTION_OFFSETS = {
+    UP_LEFT: [-1, -1],
+    UP: [0, -1],
+    UP_RIGHT: [1, -1],
+    RIGHT: [1, 0],
+    DOWN_RIGHT: [1, 1],
+    DOWN: [0, 1],
+    DOWN_LEFT: [-1, 1],
+    LEFT: [-1, 0],
+  };
+
+  /**
    * @property {Object} DIRECTIONS - The directions for adjacent hexes based on the grid type.
    */
   static DIRECTIONS = {
     'odd-r': [
       [
-        [-1, -1],
-        [0, -1],
-        [1, 0],
-        [0, 1],
-        [-1, 1],
-        [-1, 0],
+        HexGrid.DIRECTION_OFFSETS.UP_LEFT,
+        HexGrid.DIRECTION_OFFSETS.UP,
+        HexGrid.DIRECTION_OFFSETS.RIGHT,
+        HexGrid.DIRECTION_OFFSETS.DOWN,
+        HexGrid.DIRECTION_OFFSETS.DOWN_LEFT,
+        HexGrid.DIRECTION_OFFSETS.LEFT,
       ], // Even rows
       [
-        [0, -1],
-        [1, -1],
-        [1, 0],
-        [1, 1],
-        [0, 1],
-        [-1, 0],
+        HexGrid.DIRECTION_OFFSETS.UP,
+        HexGrid.DIRECTION_OFFSETS.UP_RIGHT,
+        HexGrid.DIRECTION_OFFSETS.RIGHT,
+        HexGrid.DIRECTION_OFFSETS.DOWN_RIGHT,
+        HexGrid.DIRECTION_OFFSETS.DOWN,
+        HexGrid.DIRECTION_OFFSETS.LEFT,
       ], // Odd rows
     ],
     'even-r': [
       [
-        [0, -1],
-        [1, -1],
-        [1, 0],
-        [1, 1],
-        [0, 1],
-        [-1, 0],
+        HexGrid.DIRECTION_OFFSETS.UP,
+        HexGrid.DIRECTION_OFFSETS.UP_RIGHT,
+        HexGrid.DIRECTION_OFFSETS.RIGHT,
+        HexGrid.DIRECTION_OFFSETS.DOWN_RIGHT,
+        HexGrid.DIRECTION_OFFSETS.DOWN,
+        HexGrid.DIRECTION_OFFSETS.LEFT,
       ], // Even rows
       [
-        [-1, -1],
-        [0, -1],
-        [1, 0],
-        [0, 1],
-        [-1, 1],
-        [-1, 0],
+        HexGrid.DIRECTION_OFFSETS.UP_LEFT,
+        HexGrid.DIRECTION_OFFSETS.UP,
+        HexGrid.DIRECTION_OFFSETS.RIGHT,
+        HexGrid.DIRECTION_OFFSETS.DOWN,
+        HexGrid.DIRECTION_OFFSETS.DOWN_LEFT,
+        HexGrid.DIRECTION_OFFSETS.LEFT,
       ], // Odd rows
     ],
     'odd-q': [
       [
-        [0, -1],
-        [1, -1],
-        [1, 0],
-        [0, 1],
-        [-1, 0],
-        [-1, -1],
+        HexGrid.DIRECTION_OFFSETS.UP,
+        HexGrid.DIRECTION_OFFSETS.UP_RIGHT,
+        HexGrid.DIRECTION_OFFSETS.RIGHT,
+        HexGrid.DIRECTION_OFFSETS.DOWN,
+        HexGrid.DIRECTION_OFFSETS.LEFT,
+        HexGrid.DIRECTION_OFFSETS.UP_LEFT,
       ], // Even columns
       [
-        [0, -1],
-        [1, 0],
-        [1, 1],
-        [0, 1],
-        [-1, 1],
-        [-1, 0],
+        HexGrid.DIRECTION_OFFSETS.UP,
+        HexGrid.DIRECTION_OFFSETS.RIGHT,
+        HexGrid.DIRECTION_OFFSETS.DOWN_RIGHT,
+        HexGrid.DIRECTION_OFFSETS.DOWN,
+        HexGrid.DIRECTION_OFFSETS.DOWN_LEFT,
+        HexGrid.DIRECTION_OFFSETS.LEFT,
       ], // Odd columns
     ],
     'even-q': [
       [
-        [0, -1],
-        [1, 0],
-        [1, 1],
-        [0, 1],
-        [-1, 1],
-        [-1, 0],
+        HexGrid.DIRECTION_OFFSETS.UP,
+        HexGrid.DIRECTION_OFFSETS.RIGHT,
+        HexGrid.DIRECTION_OFFSETS.DOWN_RIGHT,
+        HexGrid.DIRECTION_OFFSETS.DOWN,
+        HexGrid.DIRECTION_OFFSETS.DOWN_LEFT,
+        HexGrid.DIRECTION_OFFSETS.LEFT,
       ], // Even columns
       [
-        [0, -1],
-        [1, -1],
-        [1, 0],
-        [0, 1],
-        [-1, 0],
-        [-1, -1],
+        HexGrid.DIRECTION_OFFSETS.UP,
+        HexGrid.DIRECTION_OFFSETS.UP_RIGHT,
+        HexGrid.DIRECTION_OFFSETS.RIGHT,
+        HexGrid.DIRECTION_OFFSETS.DOWN,
+        HexGrid.DIRECTION_OFFSETS.LEFT,
+        HexGrid.DIRECTION_OFFSETS.UP_LEFT,
       ], // Odd columns
     ],
   };
