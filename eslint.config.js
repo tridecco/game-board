@@ -14,5 +14,5 @@ module.exports = {
     'func-names': 'error',
     'prefer-arrow-callback': 'error',
   },
-  ignorePatterns: ['**/*.test.js', '**/dist/**'],
+  ignores: ['**/*.test.js', '**/dist/**'],
 };
