@@ -26,6 +26,84 @@ class HexGrid {
   }
 
   /**
+   * @property {Object} DIRECTIONS - The directions for adjacent hexes based on the grid type.
+   */
+  static DIRECTIONS = {
+    'odd-r': [
+      [
+        [-1, -1],
+        [0, -1],
+        [1, 0],
+        [0, 1],
+        [-1, 1],
+        [-1, 0],
+      ], // Even rows
+      [
+        [0, -1],
+        [1, -1],
+        [1, 0],
+        [1, 1],
+        [0, 1],
+        [-1, 0],
+      ], // Odd rows
+    ],
+    'even-r': [
+      [
+        [0, -1],
+        [1, -1],
+        [1, 0],
+        [1, 1],
+        [0, 1],
+        [-1, 0],
+      ], // Even rows
+      [
+        [-1, -1],
+        [0, -1],
+        [1, 0],
+        [0, 1],
+        [-1, 1],
+        [-1, 0],
+      ], // Odd rows
+    ],
+    'odd-q': [
+      [
+        [0, -1],
+        [1, -1],
+        [1, 0],
+        [0, 1],
+        [-1, 0],
+        [-1, -1],
+      ], // Even columns
+      [
+        [0, -1],
+        [1, 0],
+        [1, 1],
+        [0, 1],
+        [-1, 1],
+        [-1, 0],
+      ], // Odd columns
+    ],
+    'even-q': [
+      [
+        [0, -1],
+        [1, 0],
+        [1, 1],
+        [0, 1],
+        [-1, 1],
+        [-1, 0],
+      ], // Even columns
+      [
+        [0, -1],
+        [1, -1],
+        [1, 0],
+        [0, 1],
+        [-1, 0],
+        [-1, -1],
+      ], // Odd columns
+    ],
+  };
+
+  /**
    * @method get - Get the value at the specified column and row.
    * @param {number} col - The column index.
    * @param {number} row - The row index.
@@ -88,101 +166,15 @@ class HexGrid {
    * @returns {Array} - An array of adjacent hexes.
    */
   getAdjacents(col, row) {
-    const ADD_ONE = +1;
-    const SUB_ONE = -1;
-    const NO_CHANGE = 0;
-
-    let directions;
-    switch (this.type) {
-      case 'odd-r':
-        directions = [
-          [
-            [SUB_ONE, SUB_ONE],
-            [NO_CHANGE, SUB_ONE],
-            [ADD_ONE, NO_CHANGE],
-            [NO_CHANGE, ADD_ONE],
-            [SUB_ONE, ADD_ONE],
-            [SUB_ONE, NO_CHANGE],
-          ], // Even rows
-          [
-            [NO_CHANGE, SUB_ONE],
-            [ADD_ONE, SUB_ONE],
-            [ADD_ONE, NO_CHANGE],
-            [ADD_ONE, ADD_ONE],
-            [NO_CHANGE, ADD_ONE],
-            [SUB_ONE, NO_CHANGE],
-          ], // Odd rows
-        ];
-        break;
-      case 'even-r':
-        directions = [
-          [
-            [NO_CHANGE, SUB_ONE],
-            [ADD_ONE, SUB_ONE],
-            [ADD_ONE, NO_CHANGE],
-            [ADD_ONE, ADD_ONE],
-            [NO_CHANGE, ADD_ONE],
-            [SUB_ONE, NO_CHANGE],
-          ], // Even rows
-          [
-            [SUB_ONE, SUB_ONE],
-            [NO_CHANGE, SUB_ONE],
-            [ADD_ONE, NO_CHANGE],
-            [NO_CHANGE, ADD_ONE],
-            [SUB_ONE, ADD_ONE],
-            [SUB_ONE, NO_CHANGE],
-          ], // Odd rows
-        ];
-        break;
-      case 'odd-q':
-        directions = [
-          [
-            [NO_CHANGE, SUB_ONE],
-            [ADD_ONE, SUB_ONE],
-            [ADD_ONE, NO_CHANGE],
-            [NO_CHANGE, ADD_ONE],
-            [SUB_ONE, NO_CHANGE],
-            [SUB_ONE, SUB_ONE],
-          ], // Even columns
-          [
-            [NO_CHANGE, SUB_ONE],
-            [ADD_ONE, NO_CHANGE],
-            [ADD_ONE, ADD_ONE],
-            [NO_CHANGE, ADD_ONE],
-            [SUB_ONE, ADD_ONE],
-            [SUB_ONE, NO_CHANGE],
-          ], // Odd columns
-        ];
-        break;
-      case 'even-q':
-        directions = [
-          [
-            [NO_CHANGE, SUB_ONE],
-            [ADD_ONE, NO_CHANGE],
-            [ADD_ONE, ADD_ONE],
-            [NO_CHANGE, ADD_ONE],
-            [SUB_ONE, ADD_ONE],
-            [SUB_ONE, NO_CHANGE],
-          ], // Even columns
-          [
-            [NO_CHANGE, SUB_ONE],
-            [ADD_ONE, SUB_ONE],
-            [ADD_ONE, NO_CHANGE],
-            [NO_CHANGE, ADD_ONE],
-            [SUB_ONE, NO_CHANGE],
-            [SUB_ONE, SUB_ONE],
-          ], // Odd columns
-        ];
-        break;
-      default:
-        throw new Error('Invalid grid type');
+    const directions = HexGrid.DIRECTIONS[this.type];
+    if (!directions) {
+      throw new Error('Invalid grid type');
     }
 
     const adjacents = [];
-
-    const TWO = 2;
-    const isOdd = (this.type.includes('r') ? row : col) % TWO !== 0;
+    const isOdd = (this.type.includes('r') ? row : col) % 2 !== 0;
     const dirSet = isOdd ? directions[1] : directions[0];
+
     for (const [dCol, dRow] of dirSet) {
       const newCol = col + dCol;
       const newRow = row + dRow;
