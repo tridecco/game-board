@@ -38,6 +38,10 @@ Include the following script tag in your HTML file:
 
 > **Note**: You can also download the `tridecco-board.min.js` file and include it in your project.
 
+## Usage
+
+Please refer to the [API documentation](docs/API.md) for detailed usage instructions and examples.
+
 ## License
 
 This project is licensed under the AGPL-3.0 License - see the [LICENSE](LICENSE) file for details.

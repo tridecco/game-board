@@ -22,10 +22,12 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
+    "test": "jest --verbose --silent --coverage --ci --bail",
     "build": "webpack"
   },
   "devDependencies": {
     "eslint": "^9.22.0",
+    "jest": "^29.7.0",
     "prettier": "^3.5.3",
     "webpack": "^5.98.0",
     "webpack-cli": "^6.0.1"
