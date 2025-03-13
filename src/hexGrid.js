@@ -196,6 +196,18 @@ class HexGrid {
   }
 
   /**
+   * @method forEach - Iterate over each hex in the grid.
+   * @param {Function} callback - The function to call for each hex.
+   */
+  forEach(callback) {
+    for (let r = 0; r < this.grid.length; r++) {
+      for (let c = 0; c < this.grid[r].length; c++) {
+        callback(this.get(c, r), c, r);
+      }
+    }
+  }
+
+  /**
    * @method clone - Create a deep copy of the grid.
    * @returns {HexGrid} - A new HexGrid instance with the same values.
    */
