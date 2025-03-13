@@ -301,6 +301,20 @@ describe('HexGrid', () => {
     });
   });
 
+  describe('forEach', () => {
+    it('should iterate over each cell in the grid and apply the callback function', () => {
+      const grid = new HexGrid(3, 3, 'even-r');
+      const values = [];
+      grid.forEach((value, col, row) => {
+        values.push({ value, col, row });
+      });
+
+      expect(values.length).toBe(9);
+      expect(values[0]).toEqual({ value: null, col: 0, row: 0 });
+      expect(values[4]).toEqual({ value: null, col: 1, row: 1 });
+    });
+  });
+
   describe('clone', () => {
     it('should create a deep copy of the grid', () => {
       const grid = new HexGrid(2, 2, 'odd-r');
