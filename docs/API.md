@@ -318,6 +318,8 @@ console.log(grid.get(3, 2)); // Output: null (after clearing)
 
 ## Triangular Hexagonal Grid
 
+![Triangular Hexagonal Grid](./img/triangular-hexagonal-grid.png)
+
 ### Constructor
 
 ```javascript
