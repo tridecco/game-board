@@ -22,7 +22,7 @@ class TriHexGrid extends HexGrid {
   }
 
   /**
-   * @method get - Get the value at the specified column, row, and triangles.
+   * @method get - Get the value at the specified column, row, and triangle.
    * @param {number} col - The column index.
    * @param {number} row - The row index.
    * @param {number} triangle - The triangle index (1-6).
