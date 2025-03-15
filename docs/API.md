@@ -29,6 +29,25 @@ This document provides a comprehensive guide to the API of the Tridecco Game Boa
       - [Example](#example-6)
     - [`clear()`](#clear)
       - [Example](#example-7)
+  - [Triangular Hexagonal Grid](#triangular-hexagonal-grid)
+    - [Constructor](#constructor-1)
+      - [Example](#example-8)
+    - [`get(col, row, triangle)`](#getcol-row-triangle)
+      - [Example](#example-9)
+    - [`set(positions, value)`](#setpositions-value)
+      - [Example](#example-10)
+    - [`remove(positions)`](#removepositions)
+      - [Example](#example-11)
+    - [`getHexagon(col, row)`](#gethexagoncol-row)
+      - [Example](#example-12)
+    - [`setHexagon(col, row, values)`](#sethexagoncol-row-values)
+      - [Example](#example-13)
+    - [`removeHexagon(col, row)`](#removehexagoncol-row)
+      - [Example](#example-14)
+    - [`isFull(col, row)`](#isfullcol-row)
+      - [Example](#example-15)
+    - [`clone()`](#clone-1)
+      - [Example](#example-16)
 
 ## Import the Library
 
@@ -40,6 +59,9 @@ const Tridecco = require('tridecco-board');
 
 // Hexagonal Grid
 const { HexGrid } = Tridecco;
+
+//Triangular Hexagonal Grid
+const { TriHexGrid } = Tridecco;
 ```
 
 ### Browser
@@ -52,6 +74,9 @@ const { HexGrid } = Tridecco;
 ```javascript
 // Hexagonal Grid
 const { HexGrid } = Tridecco;
+
+//Triangular Hexagonal Grid
+const { TriHexGrid } = Tridecco;
 ```
 
 ## Hexagonal Grid
@@ -289,4 +314,254 @@ Clears the entire grid by setting all cell values to `null`. This effectively em
 ```javascript
 grid.clear();
 console.log(grid.get(3, 2)); // Output: null (after clearing)
+```
+
+## Triangular Hexagonal Grid
+
+![Triangular Hexagonal Grid](./img/triangular-hexagonal-grid.png)
+
+### Constructor
+
+```javascript
+constructor(columns, rows, type);
+```
+
+**Description:**
+
+Creates a new instance of `TriHexGrid`. It extends the `HexGrid` class, so it inherits all the properties and methods of `HexGrid`. It represents a hexagonal grid where each hexagon is divided into six triangles.
+
+**Parameters:**
+
+- `columns` (number): The number of columns in the grid.
+- `rows` (number): The number of rows in the grid.
+- `type` (string): The type of the grid, inherited from `HexGrid`. Must be one of: 'odd-r', 'even-r', 'odd-q', or 'even-q'.
+
+#### Example
+
+```javascript
+const triHexGrid = new TriHexGrid(5, 4, 'odd-r');
+```
+
+### `get(col, row, triangle)`
+
+```javascript
+get(col, row, triangle);
+```
+
+**Description:**
+
+Retrieves the value of a specific triangle within a hexagon at the given column and row.
+
+**Parameters:**
+
+- `col` (number): The column index (0-based).
+- `row` (number): The row index (0-based).
+- `triangle` (number): The index of the triangle within the hexagon (1-based, from 1 to 6).
+
+**Returns:**
+
+- `* | null`: The value stored in the specified triangle, or `null` if the triangle is empty, the hexagon is out of bounds, or the hexagon has not been initialized.
+
+**Throws:**
+
+- `Error`: If triangle is less than 1 or bigger than 6.
+
+#### Example
+
+```javascript
+const value = triHexGrid.get(2, 1, 3); // Get the value of the 3rd triangle in the hexagon at (2, 1)
+```
+
+### `set(positions, value)`
+
+```javascript
+set(positions, value);
+```
+
+**Description:**
+
+Sets the value of multiple triangles within the grid. Each position in the `positions` array specifies a single triangle to be updated.
+
+**Parameters:**
+
+- `positions` (Array<Array<number>>): An array of positions. Each position is a three-element array: `[col, row, triangle]`.
+  - `col` (number): The column index (0-based).
+  - `row` (number): The row index (0-based).
+  - `triangle` (number): The index of the triangle within the hexagon (1-based, from 1 to 6).
+- `value` (\*): The value to be set for all specified triangles.
+
+**Returns:**
+
+- `void`
+
+**Throws:**
+
+- `Error`: If triangle is less than 1 or bigger than 6.
+
+#### Example
+
+```javascript
+triHexGrid.set(
+  [
+    [0, 0, 1],
+    [0, 0, 2],
+    [1, 2, 4],
+  ],
+  'myValue',
+); // Set triangles at (0, 0, 1), (0, 0, 2), and (1, 2, 4) to 'myValue'
+```
+
+### `remove(positions)`
+
+```javascript
+remove(positions);
+```
+
+**Description:**
+
+Removes the values from multiple triangles within the grid, effectively setting them to `null`.
+
+**Parameters:**
+
+- `positions` (Array<Array<number>>): An array of positions, where each position is a three-element array: `[col, row, triangle]`.
+  - `col` (number): The column index (0-based).
+  - `row` (number): The row index (0-based).
+  - `triangle` (number): The index of the triangle within the hexagon (1-based, from 1 to 6).
+
+**Returns:**
+
+- `Array<* | null>`: An array containing the removed values. The order of the values corresponds to the order of the positions in the input array. Returns `null` for each triangle that was already empty or out of bounds.
+  **Throws:**
+- `Error`: If triangle is less than 1 or bigger than 6.
+
+#### Example
+
+```javascript
+const removedValues = triHexGrid.remove([
+  [0, 0, 1],
+  [1, 2, 4],
+]); // Remove the values from (0, 0, 1) and (1, 2, 4)
+console.log(removedValues); // Output: ['myValue', null] (if only (0, 0, 1) had a value)
+```
+
+### `getHexagon(col, row)`
+
+```javascript
+getHexagon(col, row);
+```
+
+**Description:**
+
+Retrieves the values of all six triangles within a specified hexagon.
+
+**Parameters:**
+
+- `col` (number): The column index (0-based).
+- `row` (number): The row index (0-based).
+
+**Returns:**
+
+- `Array<* | null>`: An array of six elements, representing the values of the six triangles within the hexagon (in order from 1 to 6). If a triangle is empty or the hexagon is out of bounds, the corresponding element in the array will be `null`.
+
+#### Example
+
+```javascript
+const hexagonValues = triHexGrid.getHexagon(2, 1);
+console.log(hexagonValues); // Output: [null, null, 'value3', null, null, null] (if only the 3rd triangle had a value)
+```
+
+### `setHexagon(col, row, values)`
+
+```javascript
+setHexagon(col, row, values);
+```
+
+**Description:**
+
+Sets the values of all six triangles within a specified hexagon.
+
+**Parameters:**
+
+- `col` (number): The column index (0-based).
+- `row` (number): The row index (0-based).
+- `values` (Array<\*>): An array of six values to be assigned to the triangles of the hexagon, in order from 1 to 6. If fewer than six values are provided, the remaining triangles will be set to `null`.
+
+**Returns:**
+
+- `void`
+
+#### Example
+
+```javascript
+triHexGrid.setHexagon(2, 1, ['a', 'b', 'c', 'd', 'e', 'f']); // Set all triangles in the hexagon at (2, 1)
+```
+
+### `removeHexagon(col, row)`
+
+```javascript
+removeHexagon(col, row);
+```
+
+**Description:**
+
+Removes all values from the six triangles within a specified hexagon.
+
+**Parameters:**
+
+- `col` (number): The column index (0-based).
+- `row` (number): The row index (0-based).
+
+**Returns:**
+
+- `Array<* | null>`: An array containing the six removed values (or `null` for triangles that were already empty).
+
+#### Example
+
+```javascript
+const removedHexValues = triHexGrid.removeHexagon(2, 1); // Remove all triangle values from the hexagon at (2, 1)
+```
+
+### `isFull(col, row)`
+
+```javascript
+isFull(col, row);
+```
+
+**Description:**
+
+Checks if all six triangles within a specified hexagon have values (are not `null`).
+
+**Parameters:**
+
+- `col` (number): The column index (0-based).
+- `row` (number): The row index (0-based).
+
+**Returns:**
+
+- `boolean`: `true` if all six triangles within the hexagon have values; `false` otherwise.
+
+#### Example
+
+```javascript
+const isHexFull = triHexGrid.isFull(2, 1); // Check if the hexagon at (2, 1) is full
+```
+
+### `clone()`
+
+```javascript
+clone();
+```
+
+**Description:**
+
+Creates a deep copy of TriHexGrid object.
+
+**Returns:**
+
+- `TriHexGrid`: A new `TriHexGrid` instance.
+
+#### Example
+
+```javascript
+const newTriHexGrid = triHexGrid.clone();
 ```
