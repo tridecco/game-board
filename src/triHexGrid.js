@@ -27,6 +27,7 @@ class TriHexGrid extends HexGrid {
    * @param {number} row - The row index.
    * @param {number} triangle - The triangle index (1-6).
    * @returns {*} - The value at the specified position and triangle.
+   * @throws {Error} - Throws an error if the triangle index is out of range.
    */
   get(col, row, triangle) {
     if (triangle < 1 || triangle > TRIANGLE_COUNT) {
@@ -41,6 +42,7 @@ class TriHexGrid extends HexGrid {
    * @method set - Set the value at the specified column, row, and triangles.
    * @param {Array<Array<number>>} positions - The positions to set the value, each position is [col, row, triangle].
    * @param {*} value - The value to set.
+   * @throws {Error} - Throws an error if the triangle index is out of range.
    */
   set(positions, value) {
     positions.forEach(([col, row, triangle]) => {
@@ -58,6 +60,7 @@ class TriHexGrid extends HexGrid {
    * @method remove - Remove the value at the specified column, row, and triangles.
    * @param {Array<Array<number>>} positions - The positions to remove the value, each position is [col, row, triangle].
    * @returns {Array<*>} - The removed values.
+   * @throws {Error} - Throws an error if the triangle index is out of range.
    */
   remove(positions) {
     return positions.map(([col, row, triangle]) => {
