@@ -346,15 +346,17 @@ class Board {
         currentTriangleValue[Board.POSITION_INDEXES.F],
       ];
       let currentTriangleColorPositionIndex;
-      currentTrianglePositions.forEach((position, index) => {
+      for (let index = 0; index < currentTrianglePositions.length; index++) {
+        const position = currentTrianglePositions[index];
         if (
           position[0] === col &&
           position[1] === row &&
           position[Board.POSITION_INDEXES.B] === i + 1
         ) {
           currentTriangleColorPositionIndex = index;
+          break;
         }
-      });
+      }
       const currentTriangleColor =
         currentTriangleValue.colors[currentTriangleColorPositionIndex];
       if (i === 1) {
