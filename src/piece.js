@@ -27,12 +27,26 @@ class Piece {
     if (colors.some((color) => typeof color !== 'string')) {
       throw new Error('colors must be an array of strings');
     }
+
     if (params && typeof params !== 'object') {
       throw new Error('params must be an object');
     }
 
     Object.assign(this, params);
     this.colors = colors;
+  }
+
+  /**
+   * @method equals - Check if two pieces are equal. (compares colors)
+   * @param {Piece} other - The other piece to compare with.
+   * @returns {boolean} - True if the pieces are equal, false otherwise.
+   */
+  equals(other) {
+    if (!(other instanceof Piece)) {
+      return false;
+    }
+
+    return this.colors.every((color, index) => color === other.colors[index]);
   }
 }
 
