@@ -6,4 +6,5 @@
 module.exports = {
   HexGrid: require('./hexGrid'),
   TriHexGrid: require('./triHexGrid'),
+  Board: require('./board'),
 };
