@@ -4,6 +4,7 @@
  */
 
 const TriHexGrid = require('./triHexGrid');
+const Piece = require('./piece');
 
 const defaultMap = require('../maps/default');
 
@@ -66,11 +67,15 @@ class Board {
    * @method set - Set the value at the specified position in the map.
    * @param {number} index - The index of the position in the map. (0-based index)
    * @param {Piece} value - The value to set at the specified position.
-   * @throws {Error} - Throws an error if the index is out of bounds.
+   * @throws {Error} - Throws an error if the index is out of bounds or if the value is not an instance of Piece.
    */
   set(index, value) {
     if (index < 0 || index >= this.map.positions.length) {
       throw new Error('Index out of bounds');
+    }
+
+    if (!(value instanceof Piece)) {
+      throw new Error('Value must be an instance of Piece');
     }
 
     const position = this.map.positions[index];
@@ -111,7 +116,7 @@ class Board {
    * @param {number} index - The index of the position in the map. (0-based index)
    * @param {Piece} value - The piece to place at the specified position.
    * @returns {Array<Array<number>>} - An array of hexagons that can be formed with the piece at the specified position [col, row].
-   * @throws {Error} - Throws an error if the index is out of bounds or if the position is occupied.
+   * @throws {Error} - Throws an error if the index is out of bounds or if the position is occupied or if the value is not an instance of Piece.
    */
   place(index, value) {
     if (index < 0 || index >= this.map.positions.length) {
@@ -120,6 +125,10 @@ class Board {
 
     if (this.indexes[index]) {
       throw new Error('Position already occupied');
+    }
+
+    if (!(value instanceof Piece)) {
+      throw new Error('Value must be an instance of Piece');
     }
 
     const hexagonsBefore = this.hexagons.size;
@@ -268,8 +277,13 @@ class Board {
    * @method getHexagonPositions - Get positions that can form a hexagon.
    * @param {Piece} piece - The piece to place at the specified position.
    * @returns {Array<Array<number>>} - An array of positions (indexes) that can form a hexagon with how many hexagons can be formed.
+   * @throws {Error} - Throws an error if the piece is not an instance of Piece or if the index is out of bounds.
    */
   getHexagonPositions(piece) {
+    if (!(piece instanceof Piece)) {
+      throw new Error('Value must be an instance of Piece');
+    }
+
     const availablePositions = this.getAvailablePositions();
 
     const HEXAGON_FORMED_INDEX = 2;
@@ -290,11 +304,15 @@ class Board {
    * @param {number} index - The index of the position in the map. (0-based index)
    * @param {Piece} piece - The piece to place at the specified position.
    * @returns {number} - The number of hexagons that can be formed.
-   * @throws {Error} - Throws an error if the index is out of bounds.
+   * @throws {Error} - Throws an error if the index is out of bounds or if the piece is not an instance of Piece.
    */
   countHexagonsFormed(index, piece) {
     if (index < 0 || index >= this.map.positions.length) {
       throw new Error('Index out of bounds');
+    }
+
+    if (!(piece instanceof Piece)) {
+      throw new Error('Value must be an instance of Piece');
     }
 
     const hexagonsFormed = this.place(index, piece);
