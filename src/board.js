@@ -44,6 +44,8 @@ class Board {
     D: 4,
     E: 5,
     F: 6,
+    G: 7,
+    H: 8,
   };
 
   /**
@@ -85,6 +87,8 @@ class Board {
         position[Board.POSITION_INDEXES.D],
         position[Board.POSITION_INDEXES.E],
         position[Board.POSITION_INDEXES.F],
+        position[Board.POSITION_INDEXES.G],
+        position[Board.POSITION_INDEXES.H],
       ],
       value,
     );
@@ -155,6 +159,8 @@ class Board {
       position[Board.POSITION_INDEXES.D],
       position[Board.POSITION_INDEXES.E],
       position[Board.POSITION_INDEXES.F],
+      position[Board.POSITION_INDEXES.G],
+      position[Board.POSITION_INDEXES.H],
     ]);
 
     removedHexagons.forEach((hexagon) => {
@@ -344,6 +350,8 @@ class Board {
         currentTriangleValue[Board.POSITION_INDEXES.D],
         currentTriangleValue[Board.POSITION_INDEXES.E],
         currentTriangleValue[Board.POSITION_INDEXES.F],
+        currentTriangleValue[Board.POSITION_INDEXES.G],
+        currentTriangleValue[Board.POSITION_INDEXES.H],
       ];
       let currentTriangleColorPositionIndex;
       for (let index = 0; index < currentTrianglePositions.length; index++) {
