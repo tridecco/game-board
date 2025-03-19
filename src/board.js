@@ -99,7 +99,7 @@ class Board {
     );
 
     relatedHexagons.forEach((hexagon) => {
-      const [col, row] = hexagon;
+      const [col, row] = hexagon.split('-').map(Number);
       if (this.isCompleteHexagon(col, row)) {
         this.hexagons.add(`${col}-${row}`);
       }
@@ -173,7 +173,7 @@ class Board {
     ]);
 
     removedHexagons.forEach((hexagon) => {
-      this.hexagons.delete(hexagon);
+      this.hexagons.delete(hexagon.split('-').map(Number));
     });
 
     const removedValue = this.indexes[index];
