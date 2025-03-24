@@ -379,6 +379,7 @@ class Board {
 
       if (lastAction.op === 'set') {
         this.remove(lastAction.index);
+        this.history.pop(); // Remove the remove action from the history
       } else if (lastAction.op === 'remove') {
         this.set(lastAction.index, lastAction.value);
       }
