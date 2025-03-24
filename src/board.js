@@ -276,12 +276,12 @@ class Board {
 
     const availablePositions = this.getAvailablePositions();
 
-    const HEXAGON_FORMED_INDEX = 2;
+    const HEXAGON_FORMED_INDEX = 1;
 
     return availablePositions
       .map((index) => {
         const hexagonsFormed = this.countHexagonsFormed(index, piece);
-        return [index, this.map.positions[index], hexagonsFormed]; // Return index and position
+        return [index, hexagonsFormed]; // Return index and how many hexagons can be formed
       })
       .filter((position) => position[HEXAGON_FORMED_INDEX] > 0) // Filter out positions that cannot form a hexagon
       .sort((a, b) => {
