@@ -8,4 +8,7 @@ module.exports = {
   TriHexGrid: require('./triHexGrid'),
   Board: require('./board'),
   Piece: require('./piece'),
+  maps: {
+    default: require('../maps/default'),
+  },
 };
