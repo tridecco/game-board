@@ -90,12 +90,17 @@ class Board {
         position[Board.POSITION_INDEXES.B],
         position[Board.POSITION_INDEXES.C],
         position[Board.POSITION_INDEXES.D],
+      ],
+      value.colors[0],
+    );
+    this.grid.set(
+      [
+        position[Board.POSITION_INDEXES.D],
         position[Board.POSITION_INDEXES.E],
         position[Board.POSITION_INDEXES.F],
         position[Board.POSITION_INDEXES.G],
-        position[Board.POSITION_INDEXES.H],
       ],
-      value,
+      value.colors[1],
     );
 
     relatedHexagons.forEach((hexagon) => {
@@ -187,21 +192,6 @@ class Board {
     this.indexes[index] = null;
 
     return removedValue;
-  }
-
-  /**
-   * @method getHexagon - Get all the values of the hexagon at the specified column and row.
-   * @param {number} col - The column index.
-   * @param {number} row - The row index.
-   * @returns {Array<Piece>} - An array of values representing the hexagon at the specified column and row.
-   * @throws {Error} - Throws an error if the column or row is out of bounds.
-   */
-  getHexagon(col, row) {
-    if (col < 0 || col >= this.map.columns || row < 0 || row >= this.map.rows) {
-      throw new Error('Column or row out of bounds');
-    }
-
-    return this.grid.getHexagon(col, row);
   }
 
   /**
@@ -348,49 +338,10 @@ class Board {
       throw new Error('Column or row out of bounds');
     }
 
-    const hexagon = this.getHexagon(col, row);
-    const TRIANGLE_COUNT = 6;
-    if (
-      !hexagon ||
-      hexagon.length !== TRIANGLE_COUNT ||
-      hexagon.includes(null)
-    ) {
-      return false;
-    }
+    const hexagonColors = this.grid.get(col, row);
 
-    let lastTriangleColor;
-    for (let i = 1; i < TRIANGLE_COUNT; i++) {
-      const currentTriangleValue = hexagon[i];
-      const currentTrianglePositions = [
-        currentTriangleValue[Board.POSITION_INDEXES.A],
-        currentTriangleValue[Board.POSITION_INDEXES.B],
-        currentTriangleValue[Board.POSITION_INDEXES.C],
-        currentTriangleValue[Board.POSITION_INDEXES.D],
-        currentTriangleValue[Board.POSITION_INDEXES.E],
-        currentTriangleValue[Board.POSITION_INDEXES.F],
-        currentTriangleValue[Board.POSITION_INDEXES.G],
-        currentTriangleValue[Board.POSITION_INDEXES.H],
-      ];
-      let currentTriangleColorPositionIndex;
-      for (let index = 0; index < currentTrianglePositions.length; index++) {
-        const position = currentTrianglePositions[index];
-        if (
-          position[0] === col &&
-          position[1] === row &&
-          position[Board.POSITION_INDEXES.B] === i + 1
-        ) {
-          currentTriangleColorPositionIndex = index;
-          break;
-        }
-      }
-      const currentTriangleColor =
-        currentTriangleValue.colors[currentTriangleColorPositionIndex];
-      if (i === 1) {
-        lastTriangleColor = currentTriangleColor;
-      } else if (
-        currentTriangleColor !== lastTriangleColor ||
-        currentTriangleColor === null
-      ) {
+    for (let i = 1; i < hexagonColors.length; i++) {
+      if (hexagonColors[i] !== hexagonColors[i - 1]) {
         return false;
       }
     }
