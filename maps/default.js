@@ -1,12 +1,12 @@
 /**
  * @fileOverview This file contains the default map for the Tridecco game board.
- * @description The default map is the classic Tridecco map with 63 positions (8 columns and 11 rows with even-q type grid).
+ * @description The default map is the classic Tridecco map with 63 positions (11 columns and 10 rows with even-q type grid).
  */
 
 const map = {
   type: 'even-q',
-  columns: 8,
-  rows: 11,
+  columns: 11,
+  rows: 10,
   positions: [
     {
       1: [1, 0, 6],
