@@ -316,6 +316,87 @@ describe('Board', () => {
     });
   });
 
+  describe('getEmptyPositions', () => {
+    let board;
+    let piece;
+
+    beforeEach(() => {
+      board = new Board();
+      piece = new Piece(['red', 'blue']);
+      board.place(0, piece);
+    });
+
+    it('should return an array of empty position indexes', () => {
+      const emptyPositions = board.getEmptyPositions();
+      expect(emptyPositions).toBeInstanceOf(Array);
+      expect(emptyPositions).not.toContain(0);
+      expect(emptyPositions.length).toBe(board.map.positions.length - 1);
+    });
+
+    it('should return all position indexes if board is empty', () => {
+      board.remove(0);
+      const emptyPositions = board.getEmptyPositions();
+      expect(emptyPositions).toEqual(
+        board.map.positions.map((_, index) => index),
+      );
+      expect(emptyPositions.length).toBe(board.map.positions.length);
+    });
+  });
+
+  describe('getOccupiedPositions', () => {
+    let board;
+    let piece;
+
+    beforeEach(() => {
+      board = new Board();
+      piece = new Piece(['red', 'blue']);
+      board.place(0, piece);
+      board.place(1, piece);
+    });
+
+    it('should return an array of occupied position indexes', () => {
+      const occupiedPositions = board.getOccupiedPositions();
+      expect(occupiedPositions).toBeInstanceOf(Array);
+      expect(occupiedPositions).toContain(0);
+      expect(occupiedPositions).toContain(1);
+      expect(occupiedPositions.length).toBe(2);
+    });
+
+    it('should return an empty array if board is empty', () => {
+      board.clear();
+      const occupiedPositions = board.getOccupiedPositions();
+      expect(occupiedPositions).toBeInstanceOf(Array);
+      expect(occupiedPositions).toEqual([]);
+      expect(occupiedPositions.length).toBe(0);
+    });
+  });
+
+  describe('getAdjacentPositions', () => {
+    let board;
+    let piece;
+
+    beforeEach(() => {
+      board = new Board();
+      piece = new Piece(['red', 'blue']);
+      board.place(0, piece);
+      board.place(2, piece);
+    });
+
+    it('should return an array of adjacent position indexes to occupied positions', () => {
+      const adjacentPositions = board.getAdjacentPositions();
+      expect(adjacentPositions).toBeInstanceOf(Array);
+      expect(adjacentPositions).toEqual([1, 8, 3, 10, 11]);
+    });
+
+    it('should return an empty array if board is empty', () => {
+      board.clear();
+      const adjacentPositions = board.getAdjacentPositions();
+      expect(adjacentPositions).toBeInstanceOf(Array);
+      expect(adjacentPositions).toEqual([]);
+      expect(adjacentPositions.length).toBe(0);
+    });
+  });
+
   describe('getAvailablePositions', () => {
     let board;
     let piece;
@@ -326,20 +407,19 @@ describe('Board', () => {
       board.place(0, piece);
     });
 
-    it('should return an array of available position indexes', () => {
+    it('should return an array of available position indexes (empty and adjacent to occupied)', () => {
       const availablePositions = board.getAvailablePositions();
       expect(availablePositions).toBeInstanceOf(Array);
-      expect(availablePositions).not.toContain(0);
-      expect(availablePositions.length).toBe(board.map.positions.length - 1);
+      expect(availablePositions.length).toEqual(2);
+      expect(availablePositions).toEqual([1, 8]);
     });
 
-    it('should return all position indexes if board is empty', () => {
-      board.remove(0);
-      const availablePositions = board.getAvailablePositions();
-      expect(availablePositions).toEqual(
-        board.map.positions.map((_, index) => index),
-      );
-      expect(availablePositions.length).toBe(board.map.positions.length);
+    it('should return an empty array if no positions are available', () => {
+      board.clear();
+      let availablePositions = board.getAvailablePositions();
+      expect(availablePositions).toBeInstanceOf(Array);
+      expect(availablePositions).toEqual([]);
+      expect(availablePositions.length).toBe(0);
     });
   });
 
