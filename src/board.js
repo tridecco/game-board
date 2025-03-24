@@ -95,10 +95,10 @@ class Board {
     );
     this.grid.set(
       [
-        position[Board.POSITION_INDEXES.D],
         position[Board.POSITION_INDEXES.E],
         position[Board.POSITION_INDEXES.F],
         position[Board.POSITION_INDEXES.G],
+        position[Board.POSITION_INDEXES.H],
       ],
       value.colors[1],
     );
