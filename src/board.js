@@ -269,9 +269,10 @@ class Board {
    */
   getOccupiedPositions() {
     const emptyPositions = this.getEmptyPositions();
+    const emptySet = new Set(emptyPositions);
     const occupiedPositions = [];
     this.indexes.forEach((_, index) => {
-      if (!emptyPositions.includes(index)) {
+      if (!emptySet.has(index)) {
         occupiedPositions.push(index);
       }
     });
@@ -281,7 +282,7 @@ class Board {
 
   /**
    * @method getAdjacentPositions - Get all adjacent positions for a given position.
-   * @returns {Array<number>} - An array of indexes representing adjacent positions. (includes occupied and empty positions)
+   * @returns {Array<number>} - An array of indexes representing adjacent positions.
    */
   getAdjacentPositions() {
     const occupiedPositions = this.getOccupiedPositions();
@@ -303,11 +304,10 @@ class Board {
    */
   getAvailablePositions() {
     const emptyPositions = this.getEmptyPositions();
-    const adjacentPositions = this.getAdjacentPositions();
-
+    const adjacentSet = new Set(this.getAdjacentPositions());
     const availablePositions = [];
     emptyPositions.forEach((index) => {
-      if (adjacentPositions.includes(index)) {
+      if (adjacentSet.has(index)) {
         availablePositions.push(index);
       }
     });
