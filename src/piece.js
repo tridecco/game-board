@@ -11,17 +11,17 @@ class Piece {
    * @constructor
    * @param {Array<string>} colors - The colors of the piece.
    * @param {Object} [params={}] - Optional parameters for the piece.
-   * @throws {Error} If colors is not an array of 8 strings or if params is not an object.
+   * @throws {Error} If colors is not an array of 2 strings or if params is not an object.
    */
   constructor(colors, params = {}) {
-    const PIECE_COLOR_COUNT = 8;
+    const PIECE_COLOR_COUNT = 2;
 
     if (!Array.isArray(colors)) {
       throw new Error('colors must be an array of strings');
     }
     if (colors.length !== PIECE_COLOR_COUNT) {
       throw new Error(
-        'colors must be an array of 8 strings representing the colors of the piece',
+        'colors must be an array of 2 strings representing the colors of the piece',
       );
     }
     if (colors.some((color) => typeof color !== 'string')) {
@@ -34,6 +34,7 @@ class Piece {
 
     Object.assign(this, params);
     this.colors = colors;
+    this.colorsKey = colors.join('-');
   }
 
   /**
@@ -46,7 +47,7 @@ class Piece {
       return false;
     }
 
-    return this.colors.every((color, index) => color === other.colors[index]);
+    return this.colorsKey === other.colorsKey;
   }
 }
 
