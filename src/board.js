@@ -249,13 +249,65 @@ class Board {
   }
 
   /**
-   * @method getAvailablePositions - Get all available positions from the map.
+   * @method getEmptyPositions - Get all empty positions from the map.
+   * @returns {Array<number>} - An array of indexes representing empty positions.
+   */
+  getEmptyPositions() {
+    const emptyPositions = [];
+    this.indexes.forEach((value, index) => {
+      if (value === null) {
+        emptyPositions.push(index);
+      }
+    });
+
+    return emptyPositions;
+  }
+
+  /**
+   * @method getOccupiedPositions - Get all occupied positions from the map.
+   * @returns {Array<number>} - An array of indexes representing occupied positions.
+   */
+  getOccupiedPositions() {
+    const emptyPositions = this.getEmptyPositions();
+    const occupiedPositions = [];
+    this.indexes.forEach((_, index) => {
+      if (!emptyPositions.includes(index)) {
+        occupiedPositions.push(index);
+      }
+    });
+
+    return occupiedPositions;
+  }
+
+  /**
+   * @method getAdjacentPositions - Get all adjacent positions for a given position.
+   * @returns {Array<number>} - An array of indexes representing adjacent positions. (includes occupied and empty positions)
+   */
+  getAdjacentPositions() {
+    const occupiedPositions = this.getOccupiedPositions();
+
+    const adjacentPositions = new Set();
+    occupiedPositions.forEach((index) => {
+      const position = this.map.positions[index];
+      position.adjacents.forEach((adjacentIndex) => {
+        adjacentPositions.add(adjacentIndex);
+      });
+    });
+
+    return Array.from(adjacentPositions);
+  }
+
+  /**
+   * @method getAvailablePositions - Get all available positions from the map. (empty && adjacent)
    * @returns {Array<number>} - An array of indexes representing available positions.
    */
   getAvailablePositions() {
+    const emptyPositions = this.getEmptyPositions();
+    const adjacentPositions = this.getAdjacentPositions();
+
     const availablePositions = [];
-    this.indexes.forEach((value, index) => {
-      if (value === null) {
+    emptyPositions.forEach((index) => {
+      if (adjacentPositions.includes(index)) {
         availablePositions.push(index);
       }
     });
