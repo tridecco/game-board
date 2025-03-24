@@ -338,7 +338,7 @@ class Board {
       throw new Error('Column or row out of bounds');
     }
 
-    const hexagonColors = this.grid.get(col, row);
+    const hexagonColors = this.grid.getHexagon(col, row);
 
     for (let i = 1; i < hexagonColors.length; i++) {
       if (hexagonColors[i] !== hexagonColors[i - 1]) {
