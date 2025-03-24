@@ -281,9 +281,9 @@ class Board {
     return availablePositions
       .map((index) => {
         const hexagonsFormed = this.countHexagonsFormed(index, piece);
-        return [index, this.map.positions[index], hexagonsFormed.length]; // Return index and position
+        return [index, this.map.positions[index], hexagonsFormed]; // Return index and position
       })
-      .filter((position) => position.hexagonsFormed > 0)
+      .filter((position) => position[HEXAGON_FORMED_INDEX] > 0) // Filter out positions that cannot form a hexagon
       .sort((a, b) => {
         return b[HEXAGON_FORMED_INDEX] - a[HEXAGON_FORMED_INDEX]; // Sort by the number of hexagons formed
       }); // Sort by the number of hexagons formed
