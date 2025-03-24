@@ -28,8 +28,8 @@ class Piece {
       throw new Error('colors must be an array of strings');
     }
 
-    if (params && typeof params !== 'object') {
-      throw new Error('params must be an object');
+    if (params && (typeof params !== 'object' || Array.isArray(params))) {
+      throw new Error('params must be an object and not an array');
     }
 
     Object.assign(this, params);
