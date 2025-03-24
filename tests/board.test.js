@@ -1,0 +1,570 @@
+/**
+ * @fileoverview Tests for Game Board
+ * @description This file contains unit tests for the Board class.
+ */
+
+const Board = require('../').Board;
+const Piece = require('../').Piece;
+
+const defaultMap = require('../maps/default');
+
+describe('Board', () => {
+  describe('constructor', () => {
+    it('should create a Board instance with default map if no map is provided', () => {
+      const board = new Board();
+      expect(board).toBeInstanceOf(Board);
+      expect(board.map).toEqual(defaultMap);
+      expect(board.grid).toBeDefined();
+      expect(board.indexes).toBeDefined();
+      expect(board.hexagons).toBeDefined();
+      expect(board.history).toBeDefined();
+    });
+
+    it('should create a Board instance with provided map', () => {
+      const customMap = {
+        type: 'odd-r',
+        columns: 4,
+        rows: 4,
+        positions: [],
+      };
+      const board = new Board(customMap);
+      expect(board).toBeInstanceOf(Board);
+      expect(board.map).toEqual(customMap);
+      expect(board.grid).toBeDefined();
+      expect(board.indexes).toBeDefined();
+      expect(board.hexagons).toBeDefined();
+      expect(board.history).toBeDefined();
+    });
+
+    it('should throw an error if map is invalid (missing type)', () => {
+      const invalidMap = {
+        columns: 4,
+        rows: 4,
+        positions: [],
+      };
+      expect(() => new Board(invalidMap)).toThrowError('Invalid map provided');
+    });
+
+    it('should throw an error if map is invalid (missing columns)', () => {
+      const invalidMap = {
+        type: 'odd-r',
+        rows: 4,
+        positions: [],
+      };
+      expect(() => new Board(invalidMap)).toThrowError('Invalid map provided');
+    });
+
+    it('should throw an error if map is invalid (missing rows)', () => {
+      const invalidMap = {
+        type: 'odd-r',
+        columns: 4,
+        positions: [],
+      };
+      expect(() => new Board(invalidMap)).toThrowError('Invalid map provided');
+    });
+
+    it('should throw an error if map is invalid (missing positions)', () => {
+      const invalidMap = {
+        type: 'odd-r',
+        columns: 4,
+        rows: 4,
+      };
+      expect(() => new Board(invalidMap)).toThrowError('Invalid map provided');
+    });
+  });
+
+  describe('get', () => {
+    let board;
+    let piece;
+
+    beforeEach(() => {
+      board = new Board();
+      piece = new Piece(['red', 'blue']);
+      board.set(0, piece);
+    });
+
+    it('should return the piece at the specified index', () => {
+      expect(board.get(0)).toBe(piece);
+    });
+
+    it('should return null if no piece at the specified index', () => {
+      expect(board.get(1)).toBeNull();
+    });
+
+    it('should throw an error if index is out of bounds', () => {
+      expect(() => board.get(-1)).toThrowError('Index out of bounds');
+      expect(() => board.get(board.map.positions.length)).toThrowError(
+        'Index out of bounds',
+      );
+    });
+  });
+
+  describe('set', () => {
+    let board;
+    let piece;
+
+    beforeEach(() => {
+      board = new Board();
+      piece = new Piece(['red', 'blue']);
+    });
+
+    it('should set a piece at the specified index', () => {
+      board.set(0, piece);
+      expect(board.get(0)).toBe(piece);
+    });
+
+    it('should throw an error if index is out of bounds', () => {
+      expect(() => board.set(-1, piece)).toThrowError('Index out of bounds');
+      expect(() => board.set(board.map.positions.length, piece)).toThrowError(
+        'Index out of bounds',
+      );
+    });
+
+    it('should throw an error if value is not a Piece instance', () => {
+      expect(() => board.set(0, {})).toThrowError(
+        'Value must be an instance of Piece',
+      );
+      expect(() => board.set(0, 'not a piece')).toThrowError(
+        'Value must be an instance of Piece',
+      );
+    });
+
+    it('should update grid with piece colors', () => {
+      board.set(0, piece);
+      const position = board.map.positions[0];
+      expect(
+        board.grid.get(position[1][0], position[1][1], position[1][2]),
+      ).toBe('red');
+      expect(
+        board.grid.get(position[8][0], position[8][1], position[8][2]),
+      ).toBe('blue');
+    });
+
+    it('should add to history when set a piece', () => {
+      board.set(0, piece);
+      expect(board.history.length).toBe(1);
+      expect(board.history[0].op).toBe('set');
+      expect(board.history[0].index).toBe(0);
+    });
+  });
+
+  describe('place', () => {
+    let board;
+    let piece;
+
+    beforeEach(() => {
+      board = new Board();
+      piece = new Piece(['red', 'blue']);
+    });
+
+    it('should place a piece at the specified index if position is available', () => {
+      const result = board.place(0, piece);
+      expect(board.get(0)).toBe(piece);
+      expect(result).toEqual([]); // No hexagons formed on the first place
+    });
+
+    it('should return formed hexagons if any', () => {
+      const boardForHexagon = new Board();
+      const piece1 = new Piece(['red', 'green']);
+
+      boardForHexagon.place(0, piece1);
+
+      const pieceForHexagon = new Piece(['green', 'blue']);
+      const hexagons = boardForHexagon.place(8, pieceForHexagon);
+
+      expect(hexagons.length).toEqual(1);
+      if (hexagons.length > 0) {
+        hexagons.forEach((hexagon) => {
+          expect(hexagon).toBeInstanceOf(Array);
+          expect(hexagon.length).toBe(2);
+        });
+      }
+    });
+
+    it('should throw an error if index is out of bounds', () => {
+      expect(() => board.place(-1, piece)).toThrowError('Index out of bounds');
+      expect(() => board.place(board.map.positions.length, piece)).toThrowError(
+        'Index out of bounds',
+      );
+    });
+
+    it('should throw an error if position is already occupied', () => {
+      board.place(0, piece);
+      const anotherPiece = new Piece(['green', 'yellow']);
+      expect(() => board.place(0, anotherPiece)).toThrowError(
+        'Position already occupied',
+      );
+    });
+
+    it('should throw an error if value is not a Piece instance', () => {
+      expect(() => board.place(0, {})).toThrowError(
+        'Value must be an instance of Piece',
+      );
+      expect(() => board.place(0, 'not a piece')).toThrowError(
+        'Value must be an instance of Piece',
+      );
+    });
+  });
+
+  describe('remove', () => {
+    let board;
+    let piece;
+
+    beforeEach(() => {
+      board = new Board();
+      piece = new Piece(['red', 'blue']);
+      board.place(0, piece);
+    });
+
+    it('should remove a piece at the specified index', () => {
+      const removedPiece = board.remove(0);
+      expect(removedPiece).toBe(piece);
+      expect(board.get(0)).toBeNull();
+    });
+
+    it('should return null if no piece at the specified index', () => {
+      expect(board.remove(1)).toBeNull();
+    });
+
+    it('should throw an error if index is out of bounds', () => {
+      expect(() => board.remove(-1)).toThrowError('Index out of bounds');
+      expect(() => board.remove(board.map.positions.length)).toThrowError(
+        'Index out of bounds',
+      );
+    });
+
+    it('should update grid after remove piece', () => {
+      board.remove(0);
+      const position = board.map.positions[0];
+      expect(
+        board.grid.get(position[1][0], position[1][1], position[1][2]),
+      ).toBeNull();
+      expect(
+        board.grid.get(position[8][0], position[8][1], position[8][2]),
+      ).toBeNull();
+    });
+
+    it('should add to history when remove a piece', () => {
+      board.remove(0);
+      expect(board.history.length).toBe(2); // place + remove
+      expect(board.history[1].op).toBe('remove');
+      expect(board.history[1].index).toBe(0);
+      expect(board.history[1].value).toBe(piece);
+    });
+  });
+
+  describe('getRelatedHexagons', () => {
+    let board;
+
+    beforeEach(() => {
+      board = new Board();
+    });
+
+    it('should return related hexagons for a valid index', () => {
+      const hexagons = board.getRelatedHexagons(0);
+      expect(hexagons).toBeInstanceOf(Array);
+      const expectedHexagons = new Set();
+      const position0 = board.map.positions[0];
+      for (let i = 1; i <= Board.POSITION_INDEXES.F; i++) {
+        const hexagon = position0[i];
+        if (hexagon) {
+          expectedHexagons.add(`${hexagon[0]}-${hexagon[1]}`);
+        }
+      }
+      expect(new Set(hexagons)).toEqual(expectedHexagons);
+    });
+
+    it('should throw an error if index is out of bounds', () => {
+      expect(() => board.getRelatedHexagons(-1)).toThrowError(
+        'Index out of bounds',
+      );
+      expect(() =>
+        board.getRelatedHexagons(board.map.positions.length),
+      ).toThrowError('Index out of bounds');
+    });
+  });
+
+  describe('getRandomPosition', () => {
+    let board;
+
+    beforeEach(() => {
+      board = new Board();
+    });
+
+    it('should return a random position index', () => {
+      const randomIndex = board.getRandomPosition();
+      expect(randomIndex).toBeGreaterThanOrEqual(0);
+      expect(randomIndex).toBeLessThan(board.map.positions.length);
+    });
+
+    it('should return -1 if no valid position is found with excludedIndexes covering all positions', () => {
+      const excludedIndexes = board.map.positions.map((_, index) => index); // Exclude all positions
+      const randomIndex = board.getRandomPosition(false, excludedIndexes);
+      expect(randomIndex).toBe(-1);
+    });
+
+    it('should return a random edge position index if isEdge is true', () => {
+      const randomIndex = board.getRandomPosition(true);
+      const position = board.map.positions[randomIndex];
+      expect(position.isEdge).toBe(true);
+    });
+
+    it('should respect excludedIndexes', () => {
+      const excludedIndex = 0;
+      const randomIndex = board.getRandomPosition(false, [excludedIndex]);
+      expect(randomIndex).not.toBe(excludedIndex);
+    });
+  });
+
+  describe('getAvailablePositions', () => {
+    let board;
+    let piece;
+
+    beforeEach(() => {
+      board = new Board();
+      piece = new Piece(['red', 'blue']);
+      board.place(0, piece);
+    });
+
+    it('should return an array of available position indexes', () => {
+      const availablePositions = board.getAvailablePositions();
+      expect(availablePositions).toBeInstanceOf(Array);
+      expect(availablePositions).not.toContain(0);
+      expect(availablePositions.length).toBe(board.map.positions.length - 1);
+    });
+
+    it('should return all position indexes if board is empty', () => {
+      board.remove(0);
+      const availablePositions = board.getAvailablePositions();
+      expect(availablePositions).toEqual(
+        board.map.positions.map((_, index) => index),
+      );
+      expect(availablePositions.length).toBe(board.map.positions.length);
+    });
+  });
+
+  describe('getHexagonPositions', () => {
+    let board;
+    let piece;
+
+    beforeEach(() => {
+      board = new Board();
+      piece = new Piece(['red', 'blue']);
+    });
+
+    it('should return an array of positions that can form hexagons', () => {
+      const pieceForHexagon = new Piece(['blue', 'green']);
+      board.place(0, piece);
+
+      const hexagonPositions = board.getHexagonPositions(pieceForHexagon);
+      expect(hexagonPositions).toBeInstanceOf(Array);
+      expect(hexagonPositions.length).toEqual(1);
+      expect(hexagonPositions[0][0]).toEqual(8);
+      expect(hexagonPositions[0][1]).toEqual(1);
+    });
+
+    it('should throw an error if value is not a Piece instance', () => {
+      expect(() => board.getHexagonPositions({})).toThrowError(
+        'Value must be an instance of Piece',
+      );
+      expect(() => board.getHexagonPositions('not a piece')).toThrowError(
+        'Value must be an instance of Piece',
+      );
+    });
+  });
+
+  describe('countHexagonsFormed', () => {
+    let board;
+    let piece;
+
+    beforeEach(() => {
+      board = new Board();
+      piece = new Piece(['red', 'blue']);
+    });
+
+    it('should return the number of hexagons formed by placing a piece at a given index', () => {
+      const hexagonsFormedCount = board.countHexagonsFormed(0, piece);
+      expect(typeof hexagonsFormedCount).toBe('number');
+      expect(hexagonsFormedCount).toEqual(0); // No hexagons formed on the first place
+    });
+
+    it('should throw an error if index is out of bounds', () => {
+      expect(() => board.countHexagonsFormed(-1, piece)).toThrowError(
+        'Index out of bounds',
+      );
+      expect(() =>
+        board.countHexagonsFormed(board.map.positions.length, piece),
+      ).toThrowError('Index out of bounds');
+    });
+
+    it('should throw an error if value is not a Piece instance', () => {
+      expect(() => board.countHexagonsFormed(0, {})).toThrowError(
+        'Value must be an instance of Piece',
+      );
+      expect(() => board.countHexagonsFormed(0, 'not a piece')).toThrowError(
+        'Value must be an instance of Piece',
+      );
+    });
+  });
+
+  describe('isAvailable', () => {
+    let board;
+    let piece;
+
+    beforeEach(() => {
+      board = new Board();
+      piece = new Piece(['red', 'blue']);
+    });
+
+    it('should return true if position is available', () => {
+      expect(board.isAvailable(0)).toBe(true);
+    });
+
+    it('should return false if position is not available', () => {
+      board.place(0, piece);
+      expect(board.isAvailable(0)).toBe(false);
+    });
+
+    it('should throw an error if index is out of bounds', () => {
+      expect(() => board.isAvailable(-1)).toThrowError('Index out of bounds');
+      expect(() => board.isAvailable(board.map.positions.length)).toThrowError(
+        'Index out of bounds',
+      );
+    });
+  });
+
+  describe('isCompleteHexagon', () => {
+    let board;
+
+    beforeEach(() => {
+      const piece1 = new Piece(['red', 'blue']);
+      const piece2 = new Piece(['blue', 'green']);
+
+      board = new Board();
+      board.place(0, piece1);
+      board.place(8, piece2);
+    });
+
+    it('should return true if hexagon is complete (all triangles same color)', () => {
+      const testBoard = new Board();
+      expect(testBoard.isCompleteHexagon(1, 1)).toBe(true);
+    });
+
+    it('should return false if hexagon is not complete (triangles different colors)', () => {
+      const testBoard = new Board();
+      testBoard.grid.setHexagon(0, 0, [
+        'red',
+        'blue',
+        'red',
+        'red',
+        'red',
+        'red',
+      ]);
+      expect(testBoard.isCompleteHexagon(0, 0)).toBe(false);
+    });
+
+    it('should throw an error if column or row is out of bounds', () => {
+      expect(() => board.isCompleteHexagon(-1, 0)).toThrowError(
+        'Column or row out of bounds',
+      );
+      expect(() => board.isCompleteHexagon(0, -1)).toThrowError(
+        'Column or row out of bounds',
+      );
+      expect(() => board.isCompleteHexagon(board.map.columns, 0)).toThrowError(
+        'Column or row out of bounds',
+      );
+      expect(() => board.isCompleteHexagon(0, board.map.rows)).toThrowError(
+        'Column or row out of bounds',
+      );
+    });
+  });
+
+  describe('getCompleteHexagons', () => {
+    let board;
+
+    beforeEach(() => {
+      board = new Board();
+    });
+
+    it('should return an array of complete hexagon coordinates', () => {
+      const testBoard = new Board();
+      const piece1 = new Piece(['red', 'blue']);
+      const piece2 = new Piece(['blue', 'green']);
+      testBoard.place(0, piece1);
+      testBoard.place(8, piece2);
+      const completeHexagons = testBoard.getCompleteHexagons();
+      expect(completeHexagons).toBeInstanceOf(Array);
+      expect(completeHexagons).toEqual([[1, 1]]);
+    });
+
+    it('should return an empty array if no complete hexagons', () => {
+      const completeHexagons = board.getCompleteHexagons();
+      expect(completeHexagons).toBeInstanceOf(Array);
+      expect(completeHexagons).toEqual([]);
+    });
+  });
+
+  describe('back', () => {
+    let board;
+    let piece;
+
+    beforeEach(() => {
+      board = new Board();
+      piece = new Piece(['red', 'blue']);
+      board.place(0, piece);
+    });
+
+    it('should undo the last move (place piece)', () => {
+      board.back();
+      expect(board.get(0)).toBeNull();
+      expect(board.history.length).toBe(0);
+    });
+
+    it('should undo multiple steps if steps is specified', () => {
+      const piece2 = new Piece(['green', 'yellow']);
+      board.place(1, piece2);
+      board.back(2);
+      expect(board.get(0)).toBeNull();
+      expect(board.get(1)).toBeNull();
+      expect(board.history.length).toBe(0);
+    });
+
+    it('should not undo if history is empty', () => {
+      board.back(2);
+      const initialHistoryLength = board.history.length;
+      board.back();
+      expect(board.history.length).toBe(initialHistoryLength);
+    });
+
+    it('should return the number of steps undone', () => {
+      expect(board.back()).toBe(1);
+      expect(board.back(2)).toBe(0);
+    });
+  });
+
+  describe('clear', () => {
+    let board;
+    let piece;
+
+    beforeEach(() => {
+      board = new Board();
+      piece = new Piece(['red', 'blue']);
+      board.place(0, piece);
+      board.hexagons.add('0-0');
+      board.history.push({ op: 'set', index: 0 });
+    });
+
+    it('should clear the board and reset history and hexagons', () => {
+      board.clear();
+      expect(board.get(0)).toBeNull();
+      expect(
+        board.grid.getHexagon(
+          board.map.positions[0][1][0],
+          board.map.positions[0][1][1],
+        ),
+      ).toEqual([null, null, null, null, null, null]);
+      expect(board.history).toEqual([]);
+      expect(Array.from(board.hexagons)).toEqual([]);
+    });
+  });
+});
