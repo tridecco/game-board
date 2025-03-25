@@ -1,0 +1,23 @@
+# Node.js
+node_modules/
+
+# Tests
+tests/
+coverage/
+
+# Linting and formatting
+eslint.config.js
+.prettierrc
+
+# Documenation
+docs/
+
+# Git
+.gitignore
+.gitattributes
+
+# GitHub
+.github/
+
+# Webpack
+webpack.config.js
