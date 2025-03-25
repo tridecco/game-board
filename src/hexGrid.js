@@ -12,6 +12,7 @@ class HexGrid {
    * @param {number} columns - The number of columns in the grid.
    * @param {number} rows - The number of rows in the grid.
    * @param {string} type - The type of the grid ('odd-r' or 'even-r' or 'odd-q' or 'even-q').
+   * @throws {Error} - Throws an error if the type is invalid.
    */
   constructor(columns, rows, type) {
     if (!['odd-r', 'even-r', 'odd-q', 'even-q'].includes(type)) {
@@ -187,6 +188,7 @@ class HexGrid {
    * @param {number} col - The column index.
    * @param {number} row - The row index.
    * @returns {Array} - An array of adjacent hexes.
+   * @throws {Error} - Throws an error if the grid type is invalid.
    */
   getAdjacents(col, row) {
     const directions = HexGrid.DIRECTIONS[this.type];
