@@ -304,15 +304,9 @@ class Board {
    */
   getAvailablePositions() {
     const emptyPositions = this.getEmptyPositions();
-    const adjacentSet = new Set(this.getAdjacentPositions());
-    const availablePositions = [];
-    emptyPositions.forEach((index) => {
-      if (adjacentSet.has(index)) {
-        availablePositions.push(index);
-      }
-    });
+    const adjacentPositionsSet = new Set(this.getAdjacentPositions());
 
-    return availablePositions;
+    return emptyPositions.filter((index) => adjacentPositionsSet.has(index));
   }
 
   /**
