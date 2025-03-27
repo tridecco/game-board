@@ -136,19 +136,15 @@ class Board {
       throw new Error('Value must be an instance of Piece');
     }
 
-    const hexagonsBefore = this.hexagons.size;
+    const hexagonsBefore = new Set(this.hexagons);
 
     this.set(index, value);
 
-    const hexagonsDifference = this.hexagons.size - hexagonsBefore;
+    const newHexagons = Array.from(this.hexagons).filter(
+      (hexagon) => !hexagonsBefore.has(hexagon),
+    );
 
-    return hexagonsDifference > 0
-      ? Array.from(this.hexagons)
-          .slice(hexagonsBefore)
-          .map((hexagon) => {
-            return hexagon.split('-').map(Number);
-          })
-      : [];
+    return newHexagons.map((hexagon) => hexagon.split('-').map(Number));
   }
 
   /**
