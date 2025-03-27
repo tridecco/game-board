@@ -226,26 +226,21 @@ class Board {
    * @returns {number} - A random index from the map. If no valid position is found, returns -1.
    */
   getRandomPosition(isEdge = false, excludedIndexes = []) {
-    const validIndexes = this.map.positions
-      .map((position, index) => {
-        if (excludedIndexes.includes(index)) {
-          return null;
-        }
-        if (isEdge && !position.isEdge) {
-          return null;
-        }
-        return index;
-      })
-      .filter((index) => index !== null);
+    const excludedSet = new Set(excludedIndexes);
+    const validIndexes = [];
+
+    this.map.positions.forEach((position, index) => {
+      if (!excludedSet.has(index) && (!isEdge || position.isEdge)) {
+        validIndexes.push(index);
+      }
+    });
 
     if (validIndexes.length === 0) {
       const NOT_FOUND = -1;
       return NOT_FOUND;
     }
 
-    const randomIndex =
-      validIndexes[Math.floor(Math.random() * validIndexes.length)];
-    return randomIndex;
+    return validIndexes[Math.floor(Math.random() * validIndexes.length)];
   }
 
   /**
