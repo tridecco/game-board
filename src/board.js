@@ -136,19 +136,15 @@ class Board {
       throw new Error('Value must be an instance of Piece');
     }
 
-    const hexagonsBefore = this.hexagons.size;
+    const hexagonsBefore = new Set(this.hexagons);
 
     this.set(index, value);
 
-    const hexagonsDifference = this.hexagons.size - hexagonsBefore;
+    const newHexagons = Array.from(this.hexagons).filter(
+      (hexagon) => !hexagonsBefore.has(hexagon),
+    );
 
-    return hexagonsDifference > 0
-      ? Array.from(this.hexagons)
-          .slice(hexagonsBefore)
-          .map((hexagon) => {
-            return hexagon.split('-').map(Number);
-          })
-      : [];
+    return newHexagons.map((hexagon) => hexagon.split('-').map(Number));
   }
 
   /**
@@ -226,26 +222,21 @@ class Board {
    * @returns {number} - A random index from the map. If no valid position is found, returns -1.
    */
   getRandomPosition(isEdge = false, excludedIndexes = []) {
-    const validIndexes = this.map.positions
-      .map((position, index) => {
-        if (excludedIndexes.includes(index)) {
-          return null;
-        }
-        if (isEdge && !position.isEdge) {
-          return null;
-        }
-        return index;
-      })
-      .filter((index) => index !== null);
+    const excludedSet = new Set(excludedIndexes);
+    const validIndexes = [];
+
+    this.map.positions.forEach((position, index) => {
+      if (!excludedSet.has(index) && (!isEdge || position.isEdge)) {
+        validIndexes.push(index);
+      }
+    });
 
     if (validIndexes.length === 0) {
       const NOT_FOUND = -1;
       return NOT_FOUND;
     }
 
-    const randomIndex =
-      validIndexes[Math.floor(Math.random() * validIndexes.length)];
-    return randomIndex;
+    return validIndexes[Math.floor(Math.random() * validIndexes.length)];
   }
 
   /**
@@ -304,15 +295,9 @@ class Board {
    */
   getAvailablePositions() {
     const emptyPositions = this.getEmptyPositions();
-    const adjacentSet = new Set(this.getAdjacentPositions());
-    const availablePositions = [];
-    emptyPositions.forEach((index) => {
-      if (adjacentSet.has(index)) {
-        availablePositions.push(index);
-      }
-    });
+    const adjacentPositionsSet = new Set(this.getAdjacentPositions());
 
-    return availablePositions;
+    return emptyPositions.filter((index) => adjacentPositionsSet.has(index));
   }
 
   /**
