@@ -647,4 +647,99 @@ describe('Board', () => {
       expect(Array.from(board.hexagons)).toEqual([]);
     });
   });
+
+  describe('Board Event Listeners', () => {
+    let board;
+    let piece;
+
+    beforeEach(() => {
+      board = new Board();
+      piece = new Piece(['red', 'blue']);
+    });
+
+    describe('addEventListener', () => {
+      it('should add an event listener for a valid event type', () => {
+        const listener = jest.fn();
+        board.addEventListener('set', listener);
+        board.set(0, piece);
+        expect(listener).toHaveBeenCalledWith(0, piece);
+      });
+
+      it('should throw an error for an invalid event type', () => {
+        const listener = jest.fn();
+        expect(() => board.addEventListener('invalid', listener)).toThrowError(
+          'Invalid event type',
+        );
+      });
+    });
+
+    describe('removeEventListener', () => {
+      it('should remove an event listener for a valid event type', () => {
+        const listener = jest.fn();
+        board.addEventListener('set', listener);
+        board.removeEventListener('set', listener);
+        board.set(0, piece);
+        expect(listener).not.toHaveBeenCalled();
+      });
+
+      it('should throw an error for an invalid event type', () => {
+        const listener = jest.fn();
+        expect(() =>
+          board.removeEventListener('invalid', listener),
+        ).toThrowError('Invalid event type');
+      });
+    });
+
+    describe('Event Triggering', () => {
+      it('should trigger "set" event when a piece is set', () => {
+        const listener = jest.fn();
+        board.addEventListener('set', listener);
+        board.set(0, piece);
+        expect(listener).toHaveBeenCalledWith(0, piece);
+      });
+
+      it('should trigger "remove" event when a piece is removed', () => {
+        const listener = jest.fn();
+        board.addEventListener('remove', listener);
+        board.place(0, piece);
+        board.remove(0);
+        expect(listener).toHaveBeenCalledWith(0, piece);
+      });
+
+      it('should trigger "form" event when a hexagon is formed', () => {
+        const listener = jest.fn();
+        board.addEventListener('form', listener);
+        const piece1 = new Piece(['red', 'green']);
+        const piece2 = new Piece(['green', 'blue']);
+        board.place(0, piece1);
+        board.place(8, piece2);
+        expect(listener).toHaveBeenCalledWith([[1, 1]]);
+      });
+
+      it('should trigger "destroy" event when a hexagon is destroyed', () => {
+        const listener = jest.fn();
+        board.addEventListener('destroy', listener);
+        const piece1 = new Piece(['red', 'green']);
+        const piece2 = new Piece(['green', 'blue']);
+        board.place(0, piece1);
+        board.place(8, piece2);
+        board.remove(8);
+        expect(listener).toHaveBeenCalledWith([1, 1]);
+      });
+
+      it('should not trigger any events if is counting hexagons', () => {
+        const piece1 = new Piece(['red', 'green']);
+        board.place(0, piece1);
+
+        const listener = jest.fn();
+        board.addEventListener('set', listener);
+        board.addEventListener('remove', listener);
+        board.addEventListener('form', listener);
+        board.addEventListener('destroy', listener);
+        const piece2 = new Piece(['green', 'blue']);
+        board.countHexagonsFormed(8, piece2); // This should not trigger any events
+        expect(listener).not.toHaveBeenCalled();
+      });
+    });
+  });
 });
