@@ -81,15 +81,19 @@ This document provides a comprehensive guide to the API of the Tridecco Game Boa
       - [Example](#example-31)
     - [`getCompleteHexagons()`](#getcompletehexagons)
       - [Example](#example-32)
-    - [`back(steps)`](#backsteps)
+    - [`addEventListener(event, callback)`](#addeventlistenerevent-callback)
       - [Example](#example-33)
-    - [`clear()`](#clear-1)
+    - [`removeEventListener(event, callback)`](#removeeventlistenerevent-callback)
       - [Example](#example-34)
+    - [`back(steps)`](#backsteps)
+      - [Example](#example-35)
+    - [`clear()`](#clear-1)
+      - [Example](#example-36)
   - [Game Piece](#game-piece)
     - [Constructor](#constructor-3)
-      - [Example](#example-35)
+      - [Example](#example-37)
     - [`equals(other)`](#equalsother)
-      - [Example](#example-36)
+      - [Example](#example-38)
 
 ## Import the Library
 
@@ -1083,6 +1087,77 @@ if (completeHexagons.length > 0) {
 } else {
   console.log('No complete hexagons on the board.');
 }
+```
+
+### `addEventListener(event, callback)`
+
+```javascript
+addEventListener(event, callback);
+```
+
+**Description:**
+
+Adds an event listener for a specific event on the board. This allows you to listen for events such as `set`, `remove`, and others that are triggered during the game. The callback function will be executed whenever the specified event occurs.
+
+**Parameters:**
+
+- `event` (string): The name of the event to listen for. Common events include:
+  - `'set'`: Triggered when a piece is set on the board.
+  - `'remove'`: Triggered when a piece is removed from the board.
+  - `'form'`: Triggered when a hexagon is formed after placing a piece.
+  - `'destroy'`: Triggered when a hexagon is destroyed (removed) from the board.
+- `callback` (Function): The callback function to execute when the event occurs.
+  - `'set'` event: The callback will be passed the following parameters:
+    - `index` (number): The index where the piece was set.
+    - `piece` (Piece): The piece that was set.
+  - `'remove'` event: The callback will be passed the following parameters:
+    - `index` (number): The index from which the piece was removed.
+    - `piece` (Piece | null): The piece that was removed (or `null` if no piece was present).
+  - `'form'` event: The callback will be passed the following parameters:
+    - `hexagons` (Array<Array<number>>): An array of hexagon coordinates that were formed as a result of placing the piece.
+  - `'destroy'` event: The callback will be passed the following parameters:
+    - `hexagons` (Array<Array<number>>): An array of hexagon coordinates that were destroyed.
+
+**Throws:**
+
+- `Error`: If the `event` parameter is not a valid event name.
+
+#### Example
+
+```javascript
+board.addEventListener('set', (index, piece) => {
+  console.log(`Piece set at index ${index} with piece:`, piece);
+});
+```
+
+### `removeEventListener(event, callback)`
+
+```javascript
+removeEventListener(event, callback);
+```
+
+**Description:**
+
+Removes an event listener for a specific event on the board. This stops the specified callback function from being executed when the event occurs.
+
+**Parameters:**
+
+- `event` (string): The name of the event to stop listening for. This should match the event name used when adding the listener.
+- `callback` (Function): The callback function to remove. This should be the same function that was passed to `addEventListener`.
+
+**Throws:**
+
+- `Error`: If the `event` parameter is not a valid event name.
+
+#### Example
+
+```javascript
+function handleSetEvent(index, piece) {
+  console.log(`Piece set at index ${index} with piece:`, piece);
+}
+board.addEventListener('set', handleSetEvent);
+// Later, if you want to remove the listener
+board.removeEventListener('set', handleSetEvent);
 ```
 
 ### `back(steps)`

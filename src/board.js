@@ -32,6 +32,14 @@ class Board {
 
     this.hexagons = new Set();
 
+    this.eventListeners = {
+      set: new Set(), // Listeners for set events
+      remove: new Set(), // Listeners for remove events
+      form: new Set(), // Listeners for form events (when a hexagon is formed)
+      destroy: new Set(), // Listeners for destroy events (when a hexagon is destroyed)
+    };
+    this._isCountingHexagons = false; // Flag to prevent event triggering during hexagon counting
+
     this.history = new Array();
   }
 
@@ -48,6 +56,24 @@ class Board {
     G: 7,
     H: 8,
   };
+
+  /**
+   * @method _triggerEvent - Trigger an event for a specific action.
+   * @param {string} eventType - The type of event to trigger (set, remove, form, destroy).
+   * @param {...any} args - The arguments to pass to the event listeners.
+   */
+  _triggerEvent(eventType, ...args) {
+    if (this.eventListeners[eventType]) {
+      if (this._isCountingHexagons) {
+        // Prevent triggering events when counting hexagons
+        return;
+      }
+
+      this.eventListeners[eventType].forEach((listener) => {
+        listener(...args);
+      });
+    }
+  }
 
   /**
    * @method get - Get the value at the specified position in the map.
@@ -114,6 +140,8 @@ class Board {
       op: 'set',
       index: index,
     });
+
+    this._triggerEvent('set', index, value); // Trigger set event
   }
 
   /**
@@ -144,7 +172,16 @@ class Board {
       (hexagon) => !hexagonsBefore.has(hexagon),
     );
 
-    return newHexagons.map((hexagon) => hexagon.split('-').map(Number));
+    const hexagonsFormed = newHexagons.map((hexagon) =>
+      hexagon.split('-').map(Number),
+    );
+
+    if (newHexagons.length > 0) {
+      // If new hexagons are formed, trigger the form event
+      this._triggerEvent('form', hexagonsFormed); // Trigger form event for new hexagons formed
+    }
+
+    return hexagonsFormed;
   }
 
   /**
@@ -174,7 +211,11 @@ class Board {
     ]);
 
     removedHexagons.forEach((hexagon) => {
-      this.hexagons.delete(hexagon.split('-').map(Number));
+      const destroyedHexagon = hexagon.split('-').map(Number);
+
+      this.hexagons.delete(destroyedHexagon);
+
+      this._triggerEvent('destroy', destroyedHexagon); // Trigger destroy event for each hexagon removed
     });
 
     const removedValue = this.indexes[index];
@@ -186,6 +227,8 @@ class Board {
     });
 
     this.indexes[index] = null;
+
+    this._triggerEvent('remove', index, removedValue); // Trigger remove event
 
     return removedValue;
   }
@@ -342,9 +385,13 @@ class Board {
       throw new Error('Value must be an instance of Piece');
     }
 
+    this._isCountingHexagons = true; // Set a flag to indicate we are counting hexagons to avoid triggering events
+
     const hexagonsFormed = this.place(index, piece);
 
     this.back(1); // Undo the placement to avoid side effects
+
+    this._isCountingHexagons = false; // Reset the flag
 
     return hexagonsFormed.length;
   }
@@ -394,6 +441,34 @@ class Board {
     return Array.from(this.hexagons).map((hexagon) => {
       return hexagon.split('-').map(Number);
     });
+  }
+
+  /**
+   * @method addEventListener - Add an event listener for a specific event type.
+   * @param {string} eventType - The type of event to listen for (set, remove, form, destroy).
+   * @param {Function} listener - The listener function to be called when the event is triggered.
+   * @throws {Error} - Throws an error if the event type is invalid.
+   */
+  addEventListener(eventType, listener) {
+    if (!this.eventListeners[eventType]) {
+      throw new Error('Invalid event type');
+    }
+
+    this.eventListeners[eventType].add(listener);
+  }
+
+  /**
+   * @method removeEventListener - Remove an event listener for a specific event type.
+   * @param {string} eventType - The type of event to stop listening for (set, remove, form, destroy).
+   * @param {Function} listener - The listener function to remove.
+   * @throws {Error} - Throws an error if the event type is invalid.
+   */
+  removeEventListener(eventType, listener) {
+    if (!this.eventListeners[eventType]) {
+      throw new Error('Invalid event type');
+    }
+
+    this.eventListeners[eventType].delete(listener);
   }
 
   /**
