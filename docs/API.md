@@ -1106,6 +1106,7 @@ Adds an event listener for a specific event on the board. This allows you to lis
   - `'remove'`: Triggered when a piece is removed from the board.
   - `'form'`: Triggered when a hexagon is formed after placing a piece.
   - `'destroy'`: Triggered when a hexagon is destroyed (removed) from the board.
+  - `'clear'`: Triggered when the board is cleared.
 - `callback` (Function): The callback function to execute when the event occurs.
   - `'set'` event: The callback will be passed the following parameters:
     - `index` (number): The index where the piece was set.
@@ -1117,6 +1118,7 @@ Adds an event listener for a specific event on the board. This allows you to lis
     - `hexagons` (Array<Array<number>>): An array of hexagon coordinates that were formed as a result of placing the piece.
   - `'destroy'` event: The callback will be passed the following parameters:
     - `hexagons` (Array<Array<number>>): An array of hexagon coordinates that were destroyed.
+  - `'clear'` event: The callback will be passed no parameters.
 
 **Throws:**
 
