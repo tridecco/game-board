@@ -13,7 +13,7 @@ class TexturePack {
    * @param {Function} callback - A callback function to be executed after loading the textures.
    * @throws {Error} - If textures is not an string or if the callback is not a function or if the environment is not a browser.
    */
-  constructor(texturesUrl, callback) {
+  constructor(texturesUrl, callback = () => {}) {
     if (typeof texturesUrl !== 'string') {
       throw new Error(
         'texturesUrl must be a string representing the URL of the texture pack',
