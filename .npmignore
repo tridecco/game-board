@@ -21,3 +21,6 @@ docs/
 
 # Webpack
 webpack.config.js
+
+# Assets
+assets/
