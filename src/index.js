@@ -9,7 +9,9 @@ module.exports = {
   Board: require('./board'),
   Piece: require('./piece'),
   maps: {
-    default: require('../maps/default'),
+    board: {
+      default: require('../maps/board/default'),
+    },
   },
   TexturePack: require('./texturePack'),
 };

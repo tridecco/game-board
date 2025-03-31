@@ -6,7 +6,7 @@
 const Board = require('../').Board;
 const Piece = require('../').Piece;
 
-const defaultMap = require('../maps/default');
+const defaultMap = require('../maps/board/default');
 
 describe('Board', () => {
   describe('constructor', () => {

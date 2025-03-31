@@ -116,7 +116,7 @@ const { Board } = Tridecco;
 const { Piece } = Tridecco;
 
 // Default Map
-const defaultMap = Tridecco.maps.default;
+const defaultMap = Tridecco.maps.board.default;
 ```
 
 ### Browser
@@ -140,7 +140,7 @@ const { Board } = Tridecco;
 const { Piece } = Tridecco;
 
 // Default Map
-const defaultMap = Tridecco.maps.default;
+const defaultMap = Tridecco.maps.board.default;
 ```
 
 ## Hexagonal Grid

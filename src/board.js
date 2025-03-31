@@ -6,7 +6,7 @@
 const TriHexGrid = require('./triHexGrid');
 const Piece = require('./piece');
 
-const defaultMap = require('../maps/default');
+const defaultMap = require('../maps/board/default');
 
 /**
  * @class Board - A class representing the game board.
