@@ -11,4 +11,5 @@ module.exports = {
   maps: {
     default: require('../maps/default'),
   },
+  TexturePack: require('./texturePack'),
 };
