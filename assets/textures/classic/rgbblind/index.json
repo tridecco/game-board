@@ -1,0 +1,20 @@
+{
+    "tiles": {
+        "blue-white": "tiles/blue-white.png",
+        "blue-white-flipped": "tiles/blue-white-flipped.png",
+        "red-blue": "tiles/red-blue.png",
+        "red-blue-flipped": "tiles/red-blue-flipped.png",
+        "red-yellow": "tiles/red-yellow.png",
+        "red-yellow-flipped": "tiles/red-yellow-flipped.png",
+        "white-red": "tiles/white-red.png",
+        "white-red-flipped": "tiles/white-red-flipped.png",
+        "yellow-blue": "tiles/yellow-blue.png",
+        "yellow-blue-flipped": "tiles/yellow-blue-flipped.png"
+    },
+    "hexagons": {
+        "blue": "hexagons/blue.png",
+        "white": "hexagons/white.png",
+        "red": "hexagons/red.png",
+        "yellow": "hexagons/yellow.png"
+    }
+}
