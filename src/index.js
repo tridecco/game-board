@@ -12,6 +12,9 @@ module.exports = {
     board: {
       default: require('../maps/board/default'),
     },
+    renderer: {
+      default: require('../maps/renderer/default'),
+    },
   },
   TexturePack: require('./texturePack'),
 };
