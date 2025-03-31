@@ -727,6 +727,13 @@ describe('Board', () => {
         expect(listener).toHaveBeenCalledWith([1, 1]);
       });
 
+      it('should trigger "clear" event when the board is cleared', () => {
+        const listener = jest.fn();
+        board.addEventListener('clear', listener);
+        board.clear();
+        expect(listener).toHaveBeenCalled();
+      });
+
       it('should not trigger any events if is counting hexagons', () => {
         const piece1 = new Piece(['red', 'green']);
         board.place(0, piece1);
@@ -736,6 +743,7 @@ describe('Board', () => {
         board.addEventListener('remove', listener);
         board.addEventListener('form', listener);
         board.addEventListener('destroy', listener);
+        board.addEventListener('clear', listener);
         const piece2 = new Piece(['green', 'blue']);
         board.countHexagonsFormed(8, piece2); // This should not trigger any events
         expect(listener).not.toHaveBeenCalled();

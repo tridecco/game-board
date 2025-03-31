@@ -37,6 +37,7 @@ class Board {
       remove: new Set(), // Listeners for remove events
       form: new Set(), // Listeners for form events (when a hexagon is formed)
       destroy: new Set(), // Listeners for destroy events (when a hexagon is destroyed)
+      clear: new Set(), // Listeners for clear events (when the board is cleared)
     };
     this._isCountingHexagons = false; // Flag to prevent event triggering during hexagon counting
 
@@ -59,7 +60,7 @@ class Board {
 
   /**
    * @method _triggerEvent - Trigger an event for a specific action.
-   * @param {string} eventType - The type of event to trigger (set, remove, form, destroy).
+   * @param {string} eventType - The type of event to trigger (set, remove, form, destroy, clear).
    * @param {...any} args - The arguments to pass to the event listeners.
    */
   _triggerEvent(eventType, ...args) {
@@ -507,6 +508,8 @@ class Board {
     this.indexes.fill(null);
     this.hexagons.clear();
     this.history = [];
+
+    this._triggerEvent('clear'); // Trigger clear event
   }
 }
 
