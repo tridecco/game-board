@@ -9,13 +9,15 @@
 class TexturePack {
   /**
    * @constructor
-   * @param {Object} textures - An object containing texture paths for the game.
-   * @param {Function} callback - A callback function to be executed after the texture pack is loaded.
-   * @throws {Error} If textures is not an object or if callback is not a function or the environment not browser.
+   * @param {string} texturesUrl - The URL of the texture pack.
+   * @param {Function} callback - A callback function to be executed after loading the textures.
+   * @throws {Error} - If textures is not an string or if the callback is not a function or if the environment is not a browser.
    */
-  constructor(textures, callback) {
-    if (typeof textures !== 'object' || textures === null) {
-      throw new Error('textures must be a non-null object');
+  constructor(texturesUrl, callback) {
+    if (typeof textures !== 'string') {
+      throw new Error(
+        'texturesUrl must be a string representing the URL of the texture pack',
+      );
     }
     if (typeof callback !== 'function') {
       throw new Error('callback must be a function');
@@ -24,56 +26,96 @@ class TexturePack {
       throw new Error('TexturePack can only be used in a browser environment');
     }
 
-    this.textures = new Map();
+    this.textures = {
+      tiles: new Map(),
+      hexagons: new Map(),
+    };
 
-    this.loadTextures(textures, callback);
+    this.loadTextures(texturesUrl, callback);
   }
 
   /**
    * @method loadTextures - Loads textures from the provided paths and stores them in the textures map.
-   * @param {Object} textures - An object containing texture paths.
+   * @param {string} texturesUrl - The URL of the texture pack.
    * @param {Function} callback - The callback to execute after loading textures.
    */
-  loadTextures(textures, callback) {
-    const loadPromises = Object.entries(textures).map(([key, path]) => {
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.src = path;
-        img.onload = () => {
-          this.textures.set(key, img);
-          resolve();
-        };
-        img.onerror = (error) => {
-          reject(new Error(`Failed to load texture: ${path}`));
-        };
-      });
-    });
+  loadTextures(texturesUrl, callback) {
+    fetch(`${texturesUrl}/index.json`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Failed to fetch texture index from ${texturesUrl}`);
+        }
+        return response.json(); // Parse the JSON response
+      })
+      .then((textures) => {
+        const tiles = textures.tiles || {};
+        const pieces = textures.pieces || {};
 
-    // Wait for all textures to load
-    Promise.all(loadPromises)
-      .then(() => {
-        // All textures loaded successfully
-        callback(this);
+        const loadTilePromises = Object.entries(tiles).map(([key, path]) => {
+          return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.src = `${texturesUrl}/${path}`;
+            img.onload = () => {
+              this.textures.tiles.set(key, img); // Store tile texture
+              resolve();
+            };
+            img.onerror = () => {
+              reject(new Error(`Failed to load tile texture: ${path}`));
+            };
+          });
+        });
+
+        const loadHexPromises = Object.entries(pieces).map(([key, path]) => {
+          return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.src = `${texturesUrl}/${path}`;
+            img.onload = () => {
+              this.textures.hexagons.set(key, img); // Store hexagon texture
+              resolve();
+            };
+            img.onerror = () => {
+              reject(new Error(`Failed to load hexagon texture: ${path}`));
+            };
+          });
+        });
+
+        // Wait for all tile and hexagon textures to load
+        Promise.all([...loadTilePromises, ...loadHexPromises])
+          .then(() => {
+            // All textures loaded successfully
+            callback(this); // Execute the callback with the loaded TexturePack instance
+          })
+          .catch((error) => {
+            // Handle any error that occurred during loading
+            console.error('Error loading textures:', error);
+            callback(null, error); // Pass null to callback in case of error
+          });
       })
       .catch((error) => {
-        // Handle any error that occurred during loading
-        console.error('Error loading textures:', error);
-        callback(null, error); // Pass null to callback in case of error
+        // Handle fetch error
+        console.error('Error fetching texture index:', error);
+        callback(null, error); // Pass null to callback in case of fetch error
       });
   }
 
   /**
-   * @method get - Retrieve a texture by its key.
+   * @method get - Retrieve a texture by its type and key.
+   * @param {string} type - The type of texture to retrieve ('tiles' or 'hexagons').
    * @param {string} key - The key of the texture to retrieve.
    * @returns {HTMLImageElement|null} - The texture image if found, otherwise null.
    */
-  get(key) {
+  get(type, key) {
     // Retrieve a texture by its key
-    if (this.textures.has(key)) {
-      return this.textures.get(key);
+    if (type === 'tiles') {
+      // Return tile texture
+      return this.textures.tiles.get(key) || null;
+    } else if (type === 'hexagons') {
+      // Return hexagon texture
+      return this.textures.hexagons.get(key) || null;
     } else {
-      console.warn(`Texture with key "${key}" not found`);
-      return null; // Return null if the texture is not found
+      // Invalid type
+      console.error(`Invalid texture type: ${type}`);
+      return null;
     }
   }
 }
