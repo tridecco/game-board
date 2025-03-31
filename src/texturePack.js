@@ -14,7 +14,7 @@ class TexturePack {
    * @throws {Error} - If textures is not an string or if the callback is not a function or if the environment is not a browser.
    */
   constructor(texturesUrl, callback) {
-    if (typeof textures !== 'string') {
+    if (typeof texturesUrl !== 'string') {
       throw new Error(
         'texturesUrl must be a string representing the URL of the texture pack',
       );
@@ -49,7 +49,7 @@ class TexturePack {
       })
       .then((textures) => {
         const tiles = textures.tiles || {};
-        const pieces = textures.pieces || {};
+        const hexagons = textures.hexagons || {};
 
         const loadTilePromises = Object.entries(tiles).map(([key, path]) => {
           return new Promise((resolve, reject) => {
@@ -65,7 +65,7 @@ class TexturePack {
           });
         });
 
-        const loadHexPromises = Object.entries(pieces).map(([key, path]) => {
+        const loadHexPromises = Object.entries(hexagons).map(([key, path]) => {
           return new Promise((resolve, reject) => {
             const img = new Image();
             img.src = `${texturesUrl}/${path}`;
