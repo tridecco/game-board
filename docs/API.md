@@ -744,7 +744,9 @@ Places a `Piece` object at the specified position index on the board. This metho
 
 **Returns:**
 
-- `Array<Array<number>>`: An array of hexagon coordinates `[col, row]` that were completed as a result of placing the piece. Returns an empty array if no hexagons were formed.
+- `Array<Object>`: An array of objects representing the hexagons formed. Each object contains the following properties:
+  - `coordinate` (Array<number>): The coordinates of the completed hexagon in the format `[col, row]`.
+  - `color` (string): The color of the completed hexagon.
 
 **Throws:**
 
@@ -1076,7 +1078,9 @@ Retrieves an array of coordinates for all hexagons on the board that are current
 
 **Returns:**
 
-- `Array<Array<number>>`: An array of hexagon coordinates, where each coordinate is an array `[col, row]`.
+- `Array<Object>`: An array of objects, each representing a complete hexagon. Each object contains the following properties:
+  - `coordinate` (Array<number>): The coordinates of the complete hexagon in the format `[col, row]`.
+  - `color` (string): The color of the complete hexagon.
 
 #### Example
 
@@ -1115,7 +1119,9 @@ Adds an event listener for a specific event on the board. This allows you to lis
     - `index` (number): The index from which the piece was removed.
     - `piece` (Piece | null): The piece that was removed (or `null` if no piece was present).
   - `'form'` event: The callback will be passed the following parameters:
-    - `hexagons` (Array<Array<number>>): An array of hexagon coordinates that were formed as a result of placing the piece.
+    - `hexagons` (Array<Object>): An array of objects representing the hexagons formed. Each object contains:
+      - `coordinate` (Array<number>): The coordinates of the formed hexagon in the format `[col, row]`.
+      - `color` (string): The color of the formed hexagon.
   - `'destroy'` event: The callback will be passed the following parameters:
     - `hexagons` (Array<Array<number>>): An array of hexagon coordinates that were destroyed.
   - `'clear'` event: The callback will be passed no parameters.

@@ -175,8 +175,9 @@ describe('Board', () => {
       expect(hexagons.length).toEqual(1);
       if (hexagons.length > 0) {
         hexagons.forEach((hexagon) => {
-          expect(hexagon).toBeInstanceOf(Array);
-          expect(hexagon.length).toBe(2);
+          expect(hexagon).toBeInstanceOf(Object);
+          expect(hexagon.coordinate.length).toBe(2);
+          expect(hexagon.color).toBe('green');
         });
       }
     });
@@ -574,7 +575,12 @@ describe('Board', () => {
       testBoard.place(8, piece2);
       const completeHexagons = testBoard.getCompleteHexagons();
       expect(completeHexagons).toBeInstanceOf(Array);
-      expect(completeHexagons).toEqual([[1, 1]]);
+      expect(completeHexagons).toEqual([
+        {
+          coordinate: [1, 1],
+          color: 'blue',
+        },
+      ]);
     });
 
     it('should return an empty array if no complete hexagons', () => {
@@ -713,7 +719,9 @@ describe('Board', () => {
         const piece2 = new Piece(['green', 'blue']);
         board.place(0, piece1);
         board.place(8, piece2);
-        expect(listener).toHaveBeenCalledWith([[1, 1]]);
+        expect(listener).toHaveBeenCalledWith([
+          { coordinate: [1, 1], color: 'green' },
+        ]);
       });
 
       it('should trigger "destroy" event when a hexagon is destroyed', () => {
