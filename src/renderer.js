@@ -115,6 +115,8 @@ class Renderer {
     });
     this.resizeObserver.observe(this.container);
 
+    this.eventListeners = new Map();
+
     this._setUpBoard();
     this._loadAssets(texturesUrl, backgroundUrl, gridUrl, callback).then(() => {
       this._setUpCanvas();
@@ -125,28 +127,40 @@ class Renderer {
    * @method _setUpBoard - Sets up the board event listeners for rendering.
    */
   _setUpBoard() {
-    this.board.addEventListener('set', (index, piece) => {
+    const renderPiece = function renderPiece(index, piece) {
       this._renderPiece(index, piece.colorsKey, this.map.tiles[index].flipped);
       this._render();
-    });
-    this.board.addEventListener('remove', () => {
+    }.bind(this);
+
+    const renderPiecesAndHexagons = function renderPiecesAndHexagons() {
       this._renderPiecesAndHexagons();
       this._render();
-    });
-    this.board.addEventListener('form', (hexagons) => {
+    }.bind(this);
+
+    const renderHexagons = function renderHexagons(hexagons) {
       for (const hexagon of hexagons) {
         this._renderHexagon(hexagon.coordinate, hexagon.color);
       }
       this._render();
-    });
-    this.board.addEventListener('destroy', (hexagons) => {
-      this._renderPiecesAndHexagons();
-      this._render();
-    });
-    this.board.addEventListener('clear', () => {
+    }.bind(this);
+
+    const clearBoard = function clearBoard() {
       this._clearBoard();
       this._render();
-    });
+    }.bind(this);
+
+    this.board.addEventListener('set', renderPiece);
+    this.board.addEventListener('remove', renderPiecesAndHexagons);
+    this.board.addEventListener('form', renderHexagons);
+    this.board.addEventListener('destroy', renderPiecesAndHexagons);
+    this.board.addEventListener('clear', clearBoard);
+
+    // Store references to the bound functions for potential cleanup
+    this.eventListeners.set('set', renderPiece);
+    this.eventListeners.set('remove', renderPiecesAndHexagons);
+    this.eventListeners.set('form', renderHexagons);
+    this.eventListeners.set('destroy', renderPiecesAndHexagons);
+    this.eventListeners.set('clear', clearBoard);
   }
 
   /**
@@ -484,6 +498,177 @@ class Renderer {
         this.offScreenCanvases[key].width,
         this.offScreenCanvases[key].height,
       );
+    }
+  }
+
+  /**
+   * @method getTexture - Gets a texture from the texture pack.
+   * @param {string} type - The type of texture (e.g., 'tiles', 'hexagons').
+   * @param {string} key - The key of the texture to retrieve.
+   * @returns {HTMLImageElement} - The texture image.
+   * @throws {Error} - If textures are not loaded yet.
+   */
+  getTexture(type, key) {
+    if (!this.textures) {
+      throw new Error('Textures not loaded yet.');
+    }
+    return this.textures.get(type, key);
+  }
+
+  /**
+   * @method updateMap - Updates the map of the renderer.
+   * @param {Object} newMap - The new map object to be set.
+   * @throws {Error} - If newMap is not a valid map object.
+   */
+  updateMap(newMap) {
+    if (
+      !newMap ||
+      !newMap.height ||
+      !newMap.width ||
+      !newMap.tiles ||
+      !newMap.tiles.length ||
+      !newMap.hexagons
+    ) {
+      throw new Error('newMap must be a valid map object');
+    }
+
+    this.map = newMap;
+
+    // Recalculate the ratio based on the new map dimensions
+    this.ratio = this.map.width / this.map.height;
+
+    // Re-setup the board listeners to ensure they are using the new map
+    this.board.removeEventListener('set', this.eventListeners.get('set'));
+    this.board.removeEventListener('remove', this.eventListeners.get('remove'));
+    this.board.removeEventListener('form', this.eventListeners.get('form'));
+    this.board.removeEventListener(
+      'destroy',
+      this.eventListeners.get('destroy'),
+    );
+    this.board.removeEventListener('clear', this.eventListeners.get('clear'));
+    this.eventListeners.clear(); // Clear old event listeners
+    this._setUpBoard(); // Re-setup the board event listeners
+
+    // Clear the board and re-render everything
+    this._setUpCanvas(); // Re-setup canvas to apply new map dimensions
+  }
+
+  /**
+   * @method updateTextures - Updates the texture pack of the renderer.
+   * @param {string} texturesUrl - The URL of the new texture pack.
+   * @returns {Promise} - A promise that resolves when the new textures are loaded and rendered.
+   * @throws {Error} - If texturesUrl is not a string or if the texture pack fails to load.
+   */
+  async updateTextures(texturesUrl) {
+    if (typeof texturesUrl !== 'string') {
+      throw new Error(
+        'texturesUrl must be a string representing the URL of the texture pack',
+      );
+    }
+
+    return new Promise((resolve, reject) => {
+      this.textures = new TexturePack(
+        texturesUrl,
+        () => {
+          this._renderPiecesAndHexagons(); // Re-render pieces and hexagons with new textures
+          this._render(); // Re-render the main canvas to show the new textures
+          resolve();
+        },
+        (error) => {
+          console.error('Error loading new texture pack:', error);
+          reject(new Error('Failed to load new texture pack'));
+        },
+      );
+    });
+  }
+
+  /**
+   * @method updateBackground - Changes the background image of the renderer.
+   * @param {string} backgroundUrl - The URL of the new background image.
+   * @returns {Promise} - A promise that resolves when the new background is loaded and rendered.
+   * @throws {Error} - If backgroundUrl is not a string or if the image fails to load.
+   */
+  async updateBackground(backgroundUrl) {
+    if (typeof backgroundUrl !== 'string') {
+      throw new Error('backgroundUrl must be a string');
+    }
+
+    return new Promise((resolve, reject) => {
+      const newBackground = new Image();
+      newBackground.src = backgroundUrl;
+      newBackground.onload = () => {
+        this.background = newBackground;
+        this._renderBackgroundAndGrid(); // Re-render the background and grid
+        this._render(); // Re-render the main canvas to show the new background
+        resolve();
+      };
+      newBackground.onerror = (error) => {
+        console.error('Error loading new background image:', error);
+        reject(new Error('Failed to load new background image'));
+      };
+    });
+  }
+
+  /**
+   * @method updateGrid - Changes the grid image of the renderer.
+   * @param {string} gridUrl - The URL of the new grid image.
+   * @returns {Promise} - A promise that resolves when the new grid is loaded and rendered.
+   * @throws {Error} - If gridUrl is not a string or if the image fails to load.
+   */
+  async updateGrid(gridUrl) {
+    if (typeof gridUrl !== 'string') {
+      throw new Error('gridUrl must be a string');
+    }
+
+    return new Promise((resolve, reject) => {
+      const newGrid = new Image();
+      newGrid.src = gridUrl;
+      newGrid.onload = () => {
+        this.grid = newGrid;
+        this._renderBackgroundAndGrid(); // Re-render the background and grid
+        this._render(); // Re-render the main canvas to show the new grid
+        resolve();
+      };
+      newGrid.onerror = (error) => {
+        console.error('Error loading new grid image:', error);
+        reject(new Error('Failed to load new grid image'));
+      };
+    });
+  }
+
+  /**
+   * @method destroy - Cleans up the renderer by removing event listeners and clearing canvases.
+   */
+  destroy() {
+    // Remove event listeners from the board
+    this.board.removeEventListener('set', this.eventListeners.get('set'));
+    this.board.removeEventListener('remove', this.eventListeners.get('remove'));
+    this.board.removeEventListener('form', this.eventListeners.get('form'));
+    this.board.removeEventListener(
+      'destroy',
+      this.eventListeners.get('destroy'),
+    );
+    this.board.removeEventListener('clear', this.eventListeners.get('clear'));
+
+    // Clear all canvases
+    this._clearAllCanvases();
+
+    // Stop observing the container resize
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+    }
+
+    // Remove the canvas from the container
+    if (this.canvas.parentNode) {
+      this.container.removeChild(this.canvas);
+    }
+
+    // Nullify references to free up memory
+    this.canvas = null;
+    this.context = null;
+    for (const key in this.offScreenCanvases) {
+      this.offScreenCanvases[key] = null;
+      this.offScreenContexts[key] = null;
     }
   }
 }
