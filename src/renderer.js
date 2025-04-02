@@ -117,9 +117,23 @@ class Renderer {
       requestAnimationFrame(() => {
         this._setUpCanvas();
       });
+
+      this._triggerEvent('resize', {
+        canvas: {
+          width: this.canvas.width,
+          height: this.canvas.height,
+        },
+        container: {
+          width: this.container.clientWidth,
+          height: this.container.clientHeight,
+        },
+      });
     });
     this.resizeObserver.observe(this.container);
 
+    this.eventListeners = {
+      resize: new Set(), // Listeners for resize events
+    };
     this.eventHandlers = new Map();
 
     this._setUpBoard();
@@ -127,6 +141,24 @@ class Renderer {
       this._setUpCanvas();
       callback(this); // Call the callback function after loading assets and setting up the canvas
     });
+  }
+
+  /**
+   * @method _triggerEvent - Trigger an event for a specific action.
+   * @param {string} eventType - The type of event to trigger (set, remove, form, destroy, clear).
+   * @param {...any} args - The arguments to pass to the event listeners.
+   */
+  _triggerEvent(eventType, ...args) {
+    if (this.eventListeners[eventType]) {
+      if (this._isCountingHexagons) {
+        // Prevent triggering events when counting hexagons
+        return;
+      }
+
+      this.eventListeners[eventType].forEach((listener) => {
+        listener(...args);
+      });
+    }
   }
 
   /**
