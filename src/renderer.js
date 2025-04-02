@@ -235,7 +235,7 @@ class Renderer {
     this.heightRatio = canvasHeight / this.map.height;
 
     // Clear the canvas
-    this._clearCanvas();
+    this._clearAllCanvases();
 
     // Render the background and grid images
     this._renderBackgroundAndGrid();
@@ -247,21 +247,6 @@ class Renderer {
 
     // Render the main canvas
     this._render();
-  }
-
-  /**
-   * @method _clearCanvas - Clears all canvases. (off-screen and main)
-   */
-  _clearCanvas() {
-    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    for (const key in this.offScreenCanvases) {
-      this.offScreenContexts[key].clearRect(
-        0,
-        0,
-        this.offScreenCanvases[key].width,
-        this.offScreenCanvases[key].height,
-      );
-    }
   }
 
   /**
@@ -485,6 +470,21 @@ class Renderer {
       this.offScreenCanvases.pieces.width,
       this.offScreenCanvases.pieces.height,
     );
+  }
+
+  /**
+   * @method _clearAllCanvases - Clears all canvases. (off-screen and main)
+   */
+  _clearAllCanvases() {
+    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    for (const key in this.offScreenCanvases) {
+      this.offScreenContexts[key].clearRect(
+        0,
+        0,
+        this.offScreenCanvases[key].width,
+        this.offScreenCanvases[key].height,
+      );
+    }
   }
 }
 
