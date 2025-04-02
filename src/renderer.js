@@ -661,6 +661,34 @@ class Renderer {
   }
 
   /**
+   * @method addEventListener - Add an event listener for a specific event type.
+   * @param {string} eventType - The type of event to listen for (set, remove, form, destroy).
+   * @param {Function} listener - The listener function to be called when the event is triggered.
+   * @throws {Error} - Throws an error if the event type is invalid.
+   */
+  addEventListener(eventType, listener) {
+    if (!this.eventListeners[eventType]) {
+      throw new Error('Invalid event type');
+    }
+
+    this.eventListeners[eventType].add(listener);
+  }
+
+  /**
+   * @method removeEventListener - Remove an event listener for a specific event type.
+   * @param {string} eventType - The type of event to stop listening for (set, remove, form, destroy).
+   * @param {Function} listener - The listener function to remove.
+   * @throws {Error} - Throws an error if the event type is invalid.
+   */
+  removeEventListener(eventType, listener) {
+    if (!this.eventListeners[eventType]) {
+      throw new Error('Invalid event type');
+    }
+
+    this.eventListeners[eventType].delete(listener);
+  }
+
+  /**
    * @method destroy - Cleans up the renderer by removing event listeners and clearing canvases.
    */
   destroy() {
