@@ -108,7 +108,12 @@ class Renderer {
     this.grid = null;
     this.textures = null;
 
+    this.resizeObserverInitialized = false;
     this.resizeObserver = new ResizeObserver(() => {
+      if (!this.resizeObserverInitialized) {
+        this.resizeObserverInitialized = true;
+        return; // Skip the first call to avoid unnecessary rendering
+      }
       requestAnimationFrame(() => {
         this._setUpCanvas();
       });
@@ -118,8 +123,9 @@ class Renderer {
     this.eventListeners = new Map();
 
     this._setUpBoard();
-    this._loadAssets(texturesUrl, backgroundUrl, gridUrl, callback).then(() => {
+    this._loadAssets(texturesUrl, backgroundUrl, gridUrl).then(() => {
       this._setUpCanvas();
+      callback(this); // Call the callback function after loading assets and setting up the canvas
     });
   }
 
@@ -129,19 +135,19 @@ class Renderer {
   _setUpBoard() {
     const renderPiece = function renderPiece(index, piece) {
       this._renderPiece(index, piece.colorsKey, this.map.tiles[index].flipped);
-      this._render();
+      this._render(this.offScreenCanvases.pieces); // Render the pieces canvas to the main canvas
     }.bind(this);
 
     const renderPiecesAndHexagons = function renderPiecesAndHexagons() {
       this._renderPiecesAndHexagons();
-      this._render();
+      this._render(); // Render all canvases to the main canvas
     }.bind(this);
 
     const renderHexagons = function renderHexagons(hexagons) {
       for (const hexagon of hexagons) {
         this._renderHexagon(hexagon.coordinate, hexagon.color);
       }
-      this._render();
+      this._render(this.offScreenCanvases.pieces);
     }.bind(this);
 
     const clearBoard = function clearBoard() {
@@ -168,9 +174,8 @@ class Renderer {
    * @param {string} texturesUrl - The URL of the texture pack.
    * @param {string} backgroundUrl - The URL of the background image.
    * @param {string} gridUrl - The URL of the grid image.
-   * @param {Function} callback - The callback to execute after loading assets.
    */
-  async _loadAssets(texturesUrl, backgroundUrl, gridUrl, callback) {
+  async _loadAssets(texturesUrl, backgroundUrl, gridUrl) {
     const loadingAssetsPromises = [
       new Promise((resolve) => {
         this.textures = new TexturePack(texturesUrl, () => {
@@ -192,13 +197,8 @@ class Renderer {
         };
       }),
     ];
-    return Promise.all(loadingAssetsPromises)
-      .then(() => {
-        callback(this);
-      })
-      .catch((error) => {
-        console.error('Error loading assets:', error);
-      });
+
+    return Promise.all(loadingAssetsPromises);
   }
 
   /**
@@ -333,15 +333,6 @@ class Renderer {
       gridDrawWidth,
       gridDrawHeight,
     );
-
-    // Render the background canvas onto the main canvas
-    this.context.drawImage(
-      this.offScreenCanvases.background,
-      0,
-      0,
-      this.width,
-      this.height,
-    );
   }
 
   /**
@@ -414,8 +405,6 @@ class Renderer {
       height,
     );
     this.offScreenContexts.pieces.restore();
-
-    this.context.drawImage(this.offScreenCanvases.pieces, 0, 0);
   }
 
   /**
@@ -449,29 +438,32 @@ class Renderer {
       : (hexagon.width * this.widthRatio * imageHeight) / imageWidth;
 
     this.offScreenContexts.pieces.drawImage(texture, x, y, width, height);
-
-    this.context.drawImage(this.offScreenCanvases.pieces, 0, 0);
   }
 
   /**
    * @method _render - Renders the main canvas.
+   * @param {CanvasRenderingContext2D} context - The context of the canvas to draw from.
    */
-  _render() {
-    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.context.drawImage(
-      this.offScreenCanvases.background,
-      0,
-      0,
-      this.width,
-      this.height,
-    );
-    this.context.drawImage(
-      this.offScreenCanvases.pieces,
-      0,
-      0,
-      this.width,
-      this.height,
-    );
+  _render(context) {
+    if (!context) {
+      this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.context.drawImage(
+        this.offScreenCanvases.background,
+        0,
+        0,
+        this.width,
+        this.height,
+      );
+      this.context.drawImage(
+        this.offScreenCanvases.pieces,
+        0,
+        0,
+        this.width,
+        this.height,
+      );
+    } else {
+      this.context.drawImage(context, 0, 0, this.width, this.height);
+    }
   }
 
   /**
