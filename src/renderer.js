@@ -120,7 +120,7 @@ class Renderer {
     });
     this.resizeObserver.observe(this.container);
 
-    this.eventListeners = new Map();
+    this.eventHandlers = new Map();
 
     this._setUpBoard();
     this._loadAssets(texturesUrl, backgroundUrl, gridUrl).then(() => {
@@ -162,11 +162,11 @@ class Renderer {
     this.board.addEventListener('clear', clearBoard);
 
     // Store references to the bound functions for potential cleanup
-    this.eventListeners.set('set', renderPiece);
-    this.eventListeners.set('remove', renderPiecesAndHexagons);
-    this.eventListeners.set('form', renderHexagons);
-    this.eventListeners.set('destroy', renderPiecesAndHexagons);
-    this.eventListeners.set('clear', clearBoard);
+    this.eventHandlers.set('set', renderPiece);
+    this.eventHandlers.set('remove', renderPiecesAndHexagons);
+    this.eventHandlers.set('form', renderHexagons);
+    this.eventHandlers.set('destroy', renderPiecesAndHexagons);
+    this.eventHandlers.set('clear', clearBoard);
   }
 
   /**
@@ -530,15 +530,15 @@ class Renderer {
     this.ratio = this.map.width / this.map.height;
 
     // Re-setup the board listeners to ensure they are using the new map
-    this.board.removeEventListener('set', this.eventListeners.get('set'));
-    this.board.removeEventListener('remove', this.eventListeners.get('remove'));
-    this.board.removeEventListener('form', this.eventListeners.get('form'));
+    this.board.removeEventListener('set', this.eventHandlers.get('set'));
+    this.board.removeEventListener('remove', this.eventHandlers.get('remove'));
+    this.board.removeEventListener('form', this.eventHandlers.get('form'));
     this.board.removeEventListener(
       'destroy',
-      this.eventListeners.get('destroy'),
+      this.eventHandlers.get('destroy'),
     );
-    this.board.removeEventListener('clear', this.eventListeners.get('clear'));
-    this.eventListeners.clear(); // Clear old event listeners
+    this.board.removeEventListener('clear', this.eventHandlers.get('clear'));
+    this.eventHandlers.clear(); // Clear old event listeners
     this._setUpBoard(); // Re-setup the board event listeners
 
     // Clear the board and re-render everything
@@ -633,14 +633,14 @@ class Renderer {
    */
   destroy() {
     // Remove event listeners from the board
-    this.board.removeEventListener('set', this.eventListeners.get('set'));
-    this.board.removeEventListener('remove', this.eventListeners.get('remove'));
-    this.board.removeEventListener('form', this.eventListeners.get('form'));
+    this.board.removeEventListener('set', this.eventHandlers.get('set'));
+    this.board.removeEventListener('remove', this.eventHandlers.get('remove'));
+    this.board.removeEventListener('form', this.eventHandlers.get('form'));
     this.board.removeEventListener(
       'destroy',
-      this.eventListeners.get('destroy'),
+      this.eventHandlers.get('destroy'),
     );
-    this.board.removeEventListener('clear', this.eventListeners.get('clear'));
+    this.board.removeEventListener('clear', this.eventHandlers.get('clear'));
 
     // Clear all canvases
     this._clearAllCanvases();
