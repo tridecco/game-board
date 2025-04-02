@@ -17,4 +17,5 @@ module.exports = {
     },
   },
   TexturePack: require('./texturePack'),
+  Renderer: require('./renderer'),
 };

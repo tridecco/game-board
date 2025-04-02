@@ -1,0 +1,491 @@
+/**
+ * @fileoverview Game Renderer
+ * @description This file contains the implementation of a game board renderer for the Tridecco game.
+ */
+
+const DEFAULT_ASSETS_URL =
+  'https://cdn.jsdelivr.net/gh/tridecco/game-board@v0.2.0/assets/';
+
+const Board = require('./board');
+const TexturePack = require('./texturePack');
+
+const defaultMap = require('../maps/renderer/default');
+
+const HALF = 2;
+const HALF_PI_DEGREES = 180;
+
+/**
+ * @class Renderer - A class representing the game board renderer.
+ */
+class Renderer {
+  /**
+   * @constructor
+   * @param {Object} options - The options for the renderer.
+   * @param {Board} options.board - The game board to be rendered.
+   * @param {HTMLElement} options.container - The DOM element to be used for rendering the board.
+   * @param {Object} options.map - The map to be used for rendering the board.
+   * @param {string} options.texturesUrl - The URL of the texture pack.
+   * @param {string} options.backgroundUrl - The URL of the background image.
+   * @param {string} options.gridUrl - The URL of the grid image.
+   * @param {Function} callback - A callback function to be executed after loading the textures, background, and grid.
+   * @throws {Error} - If board is not an instance of Board, if canvas is not an HTMLElement, or if map is not a valid map object, or if texturesUrl, backgroundUrl, or gridUrl are not strings, or if the callback is not a function, or if the environment is not a browser.
+   */
+  constructor(
+    {
+      board,
+      container,
+      map = defaultMap,
+      texturesUrl = DEFAULT_ASSETS_URL + 'textures/classic/normal',
+      backgroundUrl = DEFAULT_ASSETS_URL + 'backgrounds/wooden-board.jpg',
+      gridUrl = DEFAULT_ASSETS_URL + 'grids/black.png',
+    },
+    callback = () => {},
+  ) {
+    if (!(board instanceof Board)) {
+      throw new Error('board must be an instance of Board');
+    }
+    if (!(container instanceof HTMLElement)) {
+      throw new Error('canvas must be an instance of HTMLElement');
+    }
+    if (
+      !map ||
+      !map.height ||
+      !map.width ||
+      !map.tiles ||
+      !map.tiles.length ||
+      !map.hexagons
+    ) {
+      throw new Error('map must be a valid map object');
+    }
+    if (typeof texturesUrl !== 'string') {
+      throw new Error(
+        'texturesUrl must be a string representing the URL of the texture pack',
+      );
+    }
+    if (typeof backgroundUrl !== 'string') {
+      throw new Error('backgroundUrl must be a string');
+    }
+    if (typeof gridUrl !== 'string') {
+      throw new Error('gridUrl must be a string');
+    }
+    if (typeof callback !== 'function') {
+      throw new Error('callback must be a function');
+    }
+    if (typeof window === 'undefined') {
+      throw new Error('Renderer can only be used in a browser environment');
+    }
+
+    this.board = board;
+    this.map = map;
+
+    this.container = container;
+    this.container.style.position = 'relative';
+    this.canvas = document.createElement('canvas');
+    this.context = this.canvas.getContext('2d', {
+      willReadFrequently: true,
+    });
+
+    this.width = null;
+    this.height = null;
+    this.ratio = this.map.width / this.map.height; // Ratio of the map width to the map height
+    this.widthRatio = null; // Ratio of the canvas width to the map width
+    this.heightRatio = null; // Ratio of the canvas height to the map height
+
+    this.offScreenCanvases = {
+      background: document.createElement('canvas'), // Background Image + Grid Image
+      pieces: document.createElement('canvas'), // Pieces + Hexagons
+      reactions: document.createElement('canvas'), // Reactions
+    };
+    this.offScreenContexts = {
+      background: this.offScreenCanvases.background.getContext('2d'),
+      pieces: this.offScreenCanvases.pieces.getContext('2d'),
+      reactions: this.offScreenCanvases.reactions.getContext('2d', {
+        willReadFrequently: true,
+      }),
+    };
+
+    this.background = null;
+    this.grid = null;
+    this.textures = null;
+
+    this.resizeObserver = new ResizeObserver(() => {
+      requestAnimationFrame(() => {
+        this._setUpCanvas();
+      });
+    });
+    this.resizeObserver.observe(this.container);
+
+    this._setUpBoard();
+    this._loadAssets(texturesUrl, backgroundUrl, gridUrl, callback).then(() => {
+      this._setUpCanvas();
+    });
+  }
+
+  /**
+   * @method _setUpBoard - Sets up the board event listeners for rendering.
+   */
+  _setUpBoard() {
+    this.board.addEventListener('set', (index, piece) => {
+      this._renderPiece(index, piece.colorsKey, this.map.tiles[index].flipped);
+      this._render();
+    });
+    this.board.addEventListener('remove', () => {
+      this._renderPiecesAndHexagons();
+      this._render();
+    });
+    this.board.addEventListener('form', (hexagons) => {
+      for (const hexagon of hexagons) {
+        this._renderHexagon(hexagon.coordinate, hexagon.color);
+      }
+      this._render();
+    });
+    this.board.addEventListener('destroy', (hexagons) => {
+      this._renderPiecesAndHexagons();
+      this._render();
+    });
+    this.board.addEventListener('clear', () => {
+      this._clearBoard();
+      this._render();
+    });
+  }
+
+  /**
+   * @method _loadAssets - Loads textures, background, and grid images.
+   * @param {string} texturesUrl - The URL of the texture pack.
+   * @param {string} backgroundUrl - The URL of the background image.
+   * @param {string} gridUrl - The URL of the grid image.
+   * @param {Function} callback - The callback to execute after loading assets.
+   */
+  async _loadAssets(texturesUrl, backgroundUrl, gridUrl, callback) {
+    const loadingAssetsPromises = [
+      new Promise((resolve) => {
+        this.textures = new TexturePack(texturesUrl, () => {
+          resolve();
+        });
+      }),
+      new Promise((resolve) => {
+        this.background = new Image();
+        this.background.src = backgroundUrl;
+        this.background.onload = () => {
+          resolve();
+        };
+      }),
+      new Promise((resolve) => {
+        this.grid = new Image();
+        this.grid.src = gridUrl;
+        this.grid.onload = () => {
+          resolve();
+        };
+      }),
+    ];
+    return Promise.all(loadingAssetsPromises)
+      .then(() => {
+        callback(this);
+      })
+      .catch((error) => {
+        console.error('Error loading assets:', error);
+      });
+  }
+
+  /**
+   * @method _setUpCanvas - Sets up the canvas dimensions.
+   */
+  _setUpCanvas() {
+    const containerWidth = this.container.clientWidth;
+    const containerHeight = this.container.clientHeight;
+    const mapRatio = this.ratio;
+    let canvasWidth, canvasHeight;
+
+    if (containerWidth / containerHeight > mapRatio) {
+      // Container is wider than map ratio: fill height and adjust width
+      canvasHeight = containerHeight;
+      canvasWidth = canvasHeight * mapRatio;
+    } else {
+      // Container is taller than map ratio: fill width and adjust height
+      canvasWidth = containerWidth;
+      canvasHeight = canvasWidth / mapRatio;
+    }
+
+    // Set main canvas size
+    this.canvas.width = canvasWidth;
+    this.canvas.height = canvasHeight;
+
+    // Center the canvas within the container
+    const leftOffset = (containerWidth - canvasWidth) / HALF;
+    const topOffset = (containerHeight - canvasHeight) / HALF;
+    this.canvas.style.position = 'absolute';
+    this.canvas.style.left = `${leftOffset}px`;
+    this.canvas.style.top = `${topOffset}px`;
+
+    // Append canvas to container if it's not added yet
+    if (!this.canvas.parentNode) {
+      this.container.appendChild(this.canvas);
+    }
+
+    // Initialize all off-screen canvases to the same dimensions
+    for (const key in this.offScreenCanvases) {
+      this.offScreenCanvases[key].width = canvasWidth;
+      this.offScreenCanvases[key].height = canvasHeight;
+    }
+
+    // Save dimensions and ratios for future rendering calculations
+    this.width = canvasWidth;
+    this.height = canvasHeight;
+    this.widthRatio = canvasWidth / this.map.width;
+    this.heightRatio = canvasHeight / this.map.height;
+
+    // Clear the canvas
+    this._clearCanvas();
+
+    // Render the background and grid images
+    this._renderBackgroundAndGrid();
+
+    // Render pieces and hexagons (if any)
+    if (this.board.indexes.length) {
+      this._renderPiecesAndHexagons();
+    }
+
+    // Render the main canvas
+    this._render();
+  }
+
+  /**
+   * @method _clearCanvas - Clears all canvases. (off-screen and main)
+   */
+  _clearCanvas() {
+    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    for (const key in this.offScreenCanvases) {
+      this.offScreenContexts[key].clearRect(
+        0,
+        0,
+        this.offScreenCanvases[key].width,
+        this.offScreenCanvases[key].height,
+      );
+    }
+  }
+
+  /**
+   * @method _renderBackgroundAndGrid - Renders the background and grid images.
+   */
+  _renderBackgroundAndGrid() {
+    // Clear the background canvas
+    const backgroundContext = this.offScreenContexts.background;
+    backgroundContext.clearRect(
+      0,
+      0,
+      this.offScreenCanvases.background.width,
+      this.offScreenCanvases.background.height,
+    );
+
+    // Draw the background image (centered and fully covering the canvas)
+    const bgWidth = this.background.width;
+    const bgHeight = this.background.height;
+    const bgRatio = bgWidth / bgHeight;
+
+    let bgDrawWidth, bgDrawHeight, bgOffsetX, bgOffsetY;
+
+    if (this.width / this.height > bgRatio) {
+      // Canvas is wider than the background image ratio
+      bgDrawWidth = this.width;
+      bgDrawHeight = this.width / bgRatio;
+      bgOffsetX = 0;
+      bgOffsetY = (this.height - bgDrawHeight) / HALF;
+    } else {
+      // Canvas is taller than the background image ratio
+      bgDrawHeight = this.height;
+      bgDrawWidth = this.height * bgRatio;
+      bgOffsetX = (this.width - bgDrawWidth) / HALF;
+      bgOffsetY = 0;
+    }
+
+    backgroundContext.drawImage(
+      this.background,
+      bgOffsetX,
+      bgOffsetY,
+      bgDrawWidth,
+      bgDrawHeight,
+    );
+
+    // Draw the grid image (centered and filling as much as possible without overflow)
+    const gridWidth = this.grid.width;
+    const gridHeight = this.grid.height;
+    const gridRatio = gridWidth / gridHeight;
+
+    let gridDrawWidth, gridDrawHeight, gridOffsetX, gridOffsetY;
+
+    if (this.width / this.height > gridRatio) {
+      // Canvas is wider than the grid image ratio
+      gridDrawHeight = this.height;
+      gridDrawWidth = this.height * gridRatio;
+      gridOffsetX = (this.width - gridDrawWidth) / HALF;
+      gridOffsetY = 0;
+    } else {
+      // Canvas is taller than the grid image ratio
+      gridDrawWidth = this.width;
+      gridDrawHeight = this.width / gridRatio;
+      gridOffsetX = 0;
+      gridOffsetY = (this.height - gridDrawHeight) / HALF;
+    }
+
+    backgroundContext.drawImage(
+      this.grid,
+      gridOffsetX,
+      gridOffsetY,
+      gridDrawWidth,
+      gridDrawHeight,
+    );
+
+    // Render the background canvas onto the main canvas
+    this.context.drawImage(
+      this.offScreenCanvases.background,
+      0,
+      0,
+      this.width,
+      this.height,
+    );
+  }
+
+  /**
+   * @method _renderPiecesAndHexagons - Renders all pieces and hexagons on the board.
+   */
+  _renderPiecesAndHexagons() {
+    this.offScreenContexts.pieces.clearRect(
+      0,
+      0,
+      this.canvas.width,
+      this.canvas.height,
+    );
+
+    this._renderPieces();
+    this._renderHexagons();
+  }
+
+  /**
+   * @method _renderPieces - Renders all pieces on the board.
+   */
+  _renderPieces() {
+    const pieces = this.board.indexes;
+    for (let i = 0; i < pieces.length; i++) {
+      const piece = pieces[i];
+      if (piece) {
+        const flipped = this.map.tiles[i].flipped;
+        this._renderPiece(i, piece.colorsKey, flipped);
+      }
+    }
+  }
+
+  /**
+   * @method _renderPiece - Renders a piece on the canvas.
+   * @param {number} index - The index of the piece.
+   * @param {string} colorsKey - The colors key of the piece.
+   * @param {boolean} flipped - Whether the piece is flipped or not.
+   */
+  _renderPiece(index, colorsKey, flipped) {
+    const tile = this.map.tiles[index];
+    const texture = this.textures.get(
+      'tiles',
+      flipped ? `${colorsKey}-flipped` : colorsKey,
+    );
+    const x = tile.x * this.widthRatio;
+    const y = tile.y * this.heightRatio;
+    const imageWidth = texture.width;
+    const imageHeight = texture.height;
+
+    const width = tile.width
+      ? tile.width * this.widthRatio
+      : (tile.height * this.heightRatio * imageWidth) / imageHeight;
+    const height = tile.height
+      ? tile.height * this.heightRatio
+      : (tile.width * this.widthRatio * imageHeight) / imageWidth;
+
+    const rotation = tile.rotation;
+    const angle = (rotation * Math.PI) / HALF_PI_DEGREES;
+
+    this.offScreenContexts.pieces.save();
+    this.offScreenContexts.pieces.translate(
+      x + width / HALF,
+      y + height / HALF,
+    );
+    this.offScreenContexts.pieces.rotate(angle);
+    this.offScreenContexts.pieces.drawImage(
+      texture,
+      -width / HALF,
+      -height / HALF,
+      width,
+      height,
+    );
+    this.offScreenContexts.pieces.restore();
+
+    this.context.drawImage(this.offScreenCanvases.pieces, 0, 0);
+  }
+
+  /**
+   * @method _renderHexagons - Renders all hexagons on the board.
+   */
+  _renderHexagons() {
+    const hexagons = this.board.getCompleteHexagons();
+    for (const hexagon of hexagons) {
+      this._renderHexagon(hexagon.coordinate, hexagon.color);
+    }
+  }
+
+  /**
+   * @method _renderHexagon - Renders a hexagon on the canvas.
+   * @param {Object} coordinate - The coordinate of the hexagon.
+   * @param {string} color - The color of the hexagon.
+   */
+  _renderHexagon(coordinate, color) {
+    const hexagon = this.map.hexagons[`${coordinate[0]}-${coordinate[1]}`]; // col-row
+    const texture = this.textures.get('hexagons', color);
+    const x = hexagon.x * this.widthRatio;
+    const y = hexagon.y * this.heightRatio;
+    const imageWidth = texture.width;
+    const imageHeight = texture.height;
+
+    const width = hexagon.width
+      ? hexagon.width * this.widthRatio
+      : (hexagon.height * this.heightRatio * imageWidth) / imageHeight;
+    const height = hexagon.height
+      ? hexagon.height * this.heightRatio
+      : (hexagon.width * this.widthRatio * imageHeight) / imageWidth;
+
+    this.offScreenContexts.pieces.drawImage(texture, x, y, width, height);
+
+    this.context.drawImage(this.offScreenCanvases.pieces, 0, 0);
+  }
+
+  /**
+   * @method _render - Renders the main canvas.
+   */
+  _render() {
+    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.context.drawImage(
+      this.offScreenCanvases.background,
+      0,
+      0,
+      this.width,
+      this.height,
+    );
+    this.context.drawImage(
+      this.offScreenCanvases.pieces,
+      0,
+      0,
+      this.width,
+      this.height,
+    );
+  }
+
+  /**
+   * @method _clearBoard - Clears the board.
+   */
+  _clearBoard() {
+    this.offScreenContexts.pieces.clearRect(
+      0,
+      0,
+      this.offScreenCanvases.pieces.width,
+      this.offScreenCanvases.pieces.height,
+    );
+  }
+}
+
+module.exports = Renderer;
