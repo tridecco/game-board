@@ -135,7 +135,10 @@ class Board {
       const [col, row] = hexagon.split('-').map(Number);
       if (this.isCompleteHexagon(col, row)) {
         this.hexagons.add(`${col}-${row}`);
-        this.hexagonsColor.set(`${col}-${row}`, value.colors[0]); // Store the color of the hexagon
+        this.hexagonsColor.set(
+          `${col}-${row}`,
+          this.grid.getHexagon(col, row)[0],
+        );
       }
     });
 
@@ -432,7 +435,11 @@ class Board {
     const hexagonColors = this.grid.getHexagon(col, row);
 
     for (let i = 1; i < hexagonColors.length; i++) {
-      if (hexagonColors[i] !== hexagonColors[i - 1]) {
+      if (
+        hexagonColors[i] === null ||
+        hexagonColors[i - 1] === null ||
+        hexagonColors[i] !== hexagonColors[i - 1]
+      ) {
         return false;
       }
     }
