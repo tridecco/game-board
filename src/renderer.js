@@ -101,12 +101,16 @@ class Renderer {
     this.offScreenCanvases = {
       background: new OffscreenCanvas(1, 1), // Background Image + Grid Image
       pieces: new OffscreenCanvas(1, 1), // Pieces + Hexagons
+      piecesPreview: new OffscreenCanvas(1, 1), // Preview of pieces
+      mask: new OffscreenCanvas(1, 1), // Mask for displaying avilable positions
       hitmap: new OffscreenCanvas(1, 1), // Hitmap for detecting pieces
       temp: new OffscreenCanvas(1, 1), // Temporary canvas for rendering
     };
     this.offScreenContexts = {
       background: this.offScreenCanvases.background.getContext('2d'),
       pieces: this.offScreenCanvases.pieces.getContext('2d'),
+      piecesPreview: this.offScreenCanvases.piecesPreview.getContext('2d'),
+      mask: this.offScreenCanvases.mask.getContext('2d'),
       hitmap: this.offScreenCanvases.hitmap.getContext('2d', {
         willReadFrequently: true,
         initialImageSmoothingEnabled: false,
@@ -166,6 +170,8 @@ class Renderer {
     };
     this._initEventListeners(); // Initialize event listeners
     this.eventHandlers = new Map();
+
+    this._isPreviewing = false; // Flag to check if a piece is being previewed
 
     this._setUpBoard();
     this._loadAssets(texturesUrl, backgroundUrl, gridUrl).then(() => {
@@ -658,6 +664,13 @@ class Renderer {
         this.width,
         this.height,
       );
+      this.context.drawImage(
+        this.offScreenCanvases.piecesPreview,
+        0,
+        0,
+        this.width,
+        this.height,
+      );
     } else {
       this.context.drawImage(canvas, 0, 0, this.width, this.height);
     }
@@ -763,6 +776,64 @@ class Renderer {
     }
 
     return pieceIndex - 1; // Return the index of the piece (0-based)
+  }
+
+  /**
+   * @method previewPiece - Previews a lightly transparent version of a piece on the canvas.
+   * @param {number} index - The index of the piece to preview.
+   * @param {Piece} piece - The piece object to preview.
+   */
+  previewPiece(index, piece) {
+    if (!piece || !piece.colorsKey) {
+      console.error('Invalid piece object for preview.');
+      return;
+    }
+
+    const tile = this.map.tiles[index];
+    if (!tile) {
+      console.error('Tile not found for index:', index);
+      return;
+    }
+
+    this._renderPiece(
+      index,
+      piece.colorsKey,
+      tile.flipped,
+      this.offScreenContexts.piecesPreview,
+    );
+    this._renderPiece(
+      index,
+      piece.colorsKey,
+      tile.flipped,
+      this.offScreenContexts.piecesPreview,
+      'rgba(255, 255, 255, 0.5)', // Lightly transparent white
+    );
+
+    // Render the preview canvas to the main canvas
+    if (!this._isPreviewing) {
+      this._render(this.offScreenCanvases.piecesPreview);
+    } else {
+      this._render(); // If already previewing, must re-render the main canvas to update the preview
+    }
+
+    this._isPreviewing = true; // Set the preview flag to true
+  }
+
+  /**
+   * @method clearPreview - Clears the preview of pieces on the canvas.
+   */
+  clearPreview() {
+    this.offScreenContexts.piecesPreview.clearRect(
+      0,
+      0,
+      this.offScreenCanvases.piecesPreview.width,
+      this.offScreenCanvases.piecesPreview.height,
+    );
+
+    // Re-render the main canvas to remove the preview
+    this._render();
+
+    this._isPreviewing = false; // Reset the preview flag
   }
 
   /**
