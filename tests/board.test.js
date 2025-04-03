@@ -527,8 +527,7 @@ describe('Board', () => {
     });
 
     it('should return true if hexagon is complete (all triangles same color)', () => {
-      const testBoard = new Board();
-      expect(testBoard.isCompleteHexagon(1, 1)).toBe(true);
+      expect(board.isCompleteHexagon(1, 1)).toBe(true);
     });
 
     it('should return false if hexagon is not complete (triangles different colors)', () => {
