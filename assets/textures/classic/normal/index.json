@@ -9,7 +9,9 @@
         "white-red": "tiles/white-red.png",
         "white-red-flipped": "tiles/white-red-flipped.png",
         "yellow-blue": "tiles/yellow-blue.png",
-        "yellow-blue-flipped": "tiles/yellow-blue-flipped.png"
+        "yellow-blue-flipped": "tiles/yellow-blue-flipped.png",
+        "empty": "tiles/empty.png",
+        "empty-flipped": "tiles/empty-flipped.png"
     },
     "hexagons": {
         "blue": "hexagons/blue.png",
