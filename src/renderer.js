@@ -13,6 +13,8 @@ const defaultMap = require('../maps/renderer/default');
 
 const HALF = 2;
 const HALF_PI_DEGREES = 180;
+const ALPHA_CHANNEL_INDEX = 3;
+const NOT_FOUND = -1;
 
 /**
  * @class Renderer - A class representing the game board renderer.
@@ -101,6 +103,8 @@ class Renderer {
       pieces: this.offScreenCanvases.pieces.getContext('2d'),
       reactions: this.offScreenCanvases.reactions.getContext('2d', {
         willReadFrequently: true,
+        initialImageSmoothingEnabled: false,
+        imageSmoothingEnabled: false,
       }),
     };
 
@@ -109,13 +113,20 @@ class Renderer {
     this.textures = null;
 
     this.resizeObserverInitialized = false;
+    this.frameRequested = false;
     this.resizeObserver = new ResizeObserver(() => {
       if (!this.resizeObserverInitialized) {
         this.resizeObserverInitialized = true;
         return; // Skip the first call to avoid unnecessary rendering
       }
+      if (this.frameRequested) {
+        return; // Skip if a frame is already requested
+      }
+
+      this.frameRequested = true; // Set the flag to indicate a frame is requested
       requestAnimationFrame(() => {
         this._setUpCanvas();
+        this.frameRequested = false; // Reset the flag after rendering
       });
 
       this._triggerEvent('resize', {
@@ -132,14 +143,58 @@ class Renderer {
     this.resizeObserver.observe(this.container);
 
     this.eventListeners = {
+      dragover: new Set(), // Listeners for dragover events
+      drop: new Set(), // Listeners for drop events
+      mousemove: new Set(), // Listeners for hover events
+      click: new Set(), // Listeners for click events
       resize: new Set(), // Listeners for resize events
     };
+    this._initEventListeners(); // Initialize event listeners
     this.eventHandlers = new Map();
 
     this._setUpBoard();
     this._loadAssets(texturesUrl, backgroundUrl, gridUrl).then(() => {
       this._setUpCanvas();
       callback(this); // Call the callback function after loading assets and setting up the canvas
+    });
+  }
+
+  /**
+   * @method _initEventListeners - Initializes event listeners for the canvas.
+   */
+  _initEventListeners() {
+    this.canvas.addEventListener('dragover', (event) => {
+      const coords = getCanvasCoordinates(event);
+      event.preventDefault(); // Prevent default behavior to allow dropping
+      this._triggerEvent(
+        'dragover',
+        this._getPieceFromCoordinate(coords.x, coords.y),
+      );
+    });
+
+    this.canvas.addEventListener('drop', (event) => {
+      const coords = getCanvasCoordinates(event);
+      event.preventDefault(); // Prevent default behavior to allow dropping
+      this._triggerEvent(
+        'drop',
+        this._getPieceFromCoordinate(coords.x, coords.y),
+      );
+    });
+
+    this.canvas.addEventListener('click', (event) => {
+      const coords = getCanvasCoordinates(event);
+      this._triggerEvent(
+        'click',
+        this._getPieceFromCoordinate(coords.x, coords.y),
+      );
+    });
+
+    this.canvas.addEventListener('mousemove', (event) => {
+      const coords = getCanvasCoordinates(event);
+      this._triggerEvent(
+        'mousemove',
+        this._getPieceFromCoordinate(coords.x, coords.y),
+      );
     });
   }
 
@@ -401,8 +456,14 @@ class Renderer {
    * @param {number} index - The index of the piece.
    * @param {string} colorsKey - The colors key of the piece.
    * @param {boolean} flipped - Whether the piece is flipped or not.
+   * @param {CanvasRenderingContext2D} targetContext - The context to render the piece on.
    */
-  _renderPiece(index, colorsKey, flipped) {
+  _renderPiece(
+    index,
+    colorsKey,
+    flipped,
+    targetContext = this.offScreenContexts.pieces,
+  ) {
     const tile = this.map.tiles[index];
     const texture = this.textures.get(
       'tiles',
@@ -423,20 +484,17 @@ class Renderer {
     const rotation = tile.rotation;
     const angle = (rotation * Math.PI) / HALF_PI_DEGREES;
 
-    this.offScreenContexts.pieces.save();
-    this.offScreenContexts.pieces.translate(
-      x + width / HALF,
-      y + height / HALF,
-    );
-    this.offScreenContexts.pieces.rotate(angle);
-    this.offScreenContexts.pieces.drawImage(
+    targetContext.save();
+    targetContext.translate(x + width / HALF, y + height / HALF);
+    targetContext.rotate(angle);
+    targetContext.drawImage(
       texture,
       -width / HALF,
       -height / HALF,
       width,
       height,
     );
-    this.offScreenContexts.pieces.restore();
+    targetContext.restore();
   }
 
   /**
@@ -523,6 +581,48 @@ class Renderer {
         this.offScreenCanvases[key].height,
       );
     }
+  }
+
+  /**
+   * @method _getPieceFromCoordinate - Gets the piece from a specific coordinate. (rendering pixel to piece index)
+   * @param {number} x - The x coordinate.
+   * @param {number} y - The y coordinate.
+   * @param {boolean} [onlyAvailable=true] - Whether to only consider available pieces.
+   * @returns {number} - The index of the piece at the specified coordinate. (-1 if not found)
+   */
+  _getPieceFromCoordinate(x, y, onlyAvailable = true) {
+    const piecesIndexes = onlyAvailable
+      ? this.board.getAdjacentPositions()
+      : Array.from({ length: this.board.map.length }, (_, index) => index);
+
+    for (const index of piecesIndexes) {
+      this._renderPiece(
+        index,
+        'empty',
+        this.map.tiles[index].flipped,
+        this.offScreenContexts.reactions,
+      );
+      const imageData = this.offScreenContexts.reactions.getImageData(
+        x,
+        y,
+        1,
+        1,
+      );
+      const pixelData = imageData.data;
+      const alpha = pixelData[ALPHA_CHANNEL_INDEX];
+      if (alpha > 0) {
+        return index;
+      }
+
+      // Clear the pixel data for the next iteration
+      this.offScreenContexts.reactions.clearRect(
+        0,
+        0,
+        this.offScreenCanvases.reactions.width,
+        this.offScreenCanvases.reactions.height,
+      );
+    }
+    return NOT_FOUND; // No piece found at the specified coordinate
   }
 
   /**
