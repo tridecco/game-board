@@ -12,9 +12,14 @@ const TexturePack = require('./texturePack');
 const defaultMap = require('../maps/renderer/default');
 
 const HALF = 2;
+const TWO = 2;
 const HALF_PI_DEGREES = 180;
 const ALPHA_CHANNEL_INDEX = 3;
 const NOT_FOUND = -1;
+const MAX_PIECE_ID_RGB = 0xffffff;
+const MAX_COLOR_COMPONENT = 0xff;
+const BITS_PER_BYTE = 8;
+const BITS_PER_TWO_BYTES = 16;
 
 /**
  * @class Renderer - A class representing the game board renderer.
@@ -96,12 +101,18 @@ class Renderer {
     this.offScreenCanvases = {
       background: document.createElement('canvas'), // Background Image + Grid Image
       pieces: document.createElement('canvas'), // Pieces + Hexagons
-      reactions: document.createElement('canvas'), // Reactions
+      hitmap: document.createElement('canvas'), // Hitmap for detecting pieces
+      temp: document.createElement('canvas'), // Temporary canvas for rendering
     };
     this.offScreenContexts = {
       background: this.offScreenCanvases.background.getContext('2d'),
       pieces: this.offScreenCanvases.pieces.getContext('2d'),
-      reactions: this.offScreenCanvases.reactions.getContext('2d', {
+      hitmap: this.offScreenCanvases.hitmap.getContext('2d', {
+        willReadFrequently: true,
+        initialImageSmoothingEnabled: false,
+        imageSmoothingEnabled: false,
+      }),
+      temp: this.offScreenCanvases.temp.getContext('2d', {
         willReadFrequently: true,
         initialImageSmoothingEnabled: false,
         imageSmoothingEnabled: false,
@@ -164,7 +175,10 @@ class Renderer {
    */
   _initEventListeners() {
     this.canvas.addEventListener('dragover', (event) => {
-      const coords = getCanvasCoordinates(event);
+      const coords = {
+        x: event.offsetX,
+        y: event.offsetY,
+      };
       event.preventDefault(); // Prevent default behavior to allow dropping
       this._triggerEvent(
         'dragover',
@@ -173,7 +187,10 @@ class Renderer {
     });
 
     this.canvas.addEventListener('drop', (event) => {
-      const coords = getCanvasCoordinates(event);
+      const coords = {
+        x: event.offsetX,
+        y: event.offsetY,
+      };
       event.preventDefault(); // Prevent default behavior to allow dropping
       this._triggerEvent(
         'drop',
@@ -182,7 +199,10 @@ class Renderer {
     });
 
     this.canvas.addEventListener('click', (event) => {
-      const coords = getCanvasCoordinates(event);
+      const coords = {
+        x: event.offsetX,
+        y: event.offsetY,
+      };
       this._triggerEvent(
         'click',
         this._getPieceFromCoordinate(coords.x, coords.y),
@@ -190,7 +210,10 @@ class Renderer {
     });
 
     this.canvas.addEventListener('mousemove', (event) => {
-      const coords = getCanvasCoordinates(event);
+      const coords = {
+        x: event.offsetX,
+        y: event.offsetY,
+      };
       this._triggerEvent(
         'mousemove',
         this._getPieceFromCoordinate(coords.x, coords.y),
@@ -346,6 +369,9 @@ class Renderer {
       this._renderPiecesAndHexagons();
     }
 
+    // Render the hitmap for detecting pieces
+    this._setUpHitmap();
+
     // Render the main canvas
     this._render();
   }
@@ -457,43 +483,90 @@ class Renderer {
    * @param {string} colorsKey - The colors key of the piece.
    * @param {boolean} flipped - Whether the piece is flipped or not.
    * @param {CanvasRenderingContext2D} targetContext - The context to render the piece on.
+   * @param {string} [fillColor] - The fill color for the piece (used for hitmap). If provided, texture colors are ignored.
    */
   _renderPiece(
     index,
     colorsKey,
     flipped,
     targetContext = this.offScreenContexts.pieces,
+    fillColor,
   ) {
     const tile = this.map.tiles[index];
-    const texture = this.textures.get(
-      'tiles',
-      flipped ? `${colorsKey}-flipped` : colorsKey,
-    );
+    if (!tile) {
+      return;
+    }
+
+    const textureKey = flipped ? `${colorsKey}-flipped` : colorsKey;
+    const texture = this.textures.get('tiles', textureKey);
+    if (!texture) {
+      return;
+    }
+
     const x = tile.x * this.widthRatio;
     const y = tile.y * this.heightRatio;
     const imageWidth = texture.width;
     const imageHeight = texture.height;
 
-    const width = tile.width
-      ? tile.width * this.widthRatio
-      : (tile.height * this.heightRatio * imageWidth) / imageHeight;
-    const height = tile.height
-      ? tile.height * this.heightRatio
-      : (tile.width * this.widthRatio * imageHeight) / imageWidth;
+    let width, height;
+    if (tile.width !== undefined && tile.width !== null) {
+      width = tile.width * this.widthRatio;
+      height =
+        tile.height !== undefined && tile.height !== null
+          ? tile.height * this.heightRatio
+          : (width * imageHeight) / imageWidth;
+    } else if (tile.height !== undefined && tile.height !== null) {
+      height = tile.height * this.heightRatio;
+      width = (height * imageWidth) / imageHeight;
+    } else {
+      width = imageWidth * (this.widthRatio || 1);
+      height = imageHeight * (this.heightRatio || 1);
+    }
 
-    const rotation = tile.rotation;
-    const angle = (rotation * Math.PI) / HALF_PI_DEGREES;
+    // Ensure width and height are valid numbers > 0
+    if (!(width > 0 && height > 0)) {
+      return;
+    }
+
+    const rotation = tile.rotation || 0;
+    const angle = (rotation * Math.PI) / HALF_PI_DEGREES; // Convert degrees to radians
 
     targetContext.save();
     targetContext.translate(x + width / HALF, y + height / HALF);
     targetContext.rotate(angle);
-    targetContext.drawImage(
-      texture,
-      -width / HALF,
-      -height / HALF,
-      width,
-      height,
-    );
+
+    if (fillColor) {
+      const tempCanvas = this.offScreenCanvases.temp;
+      const tempCtx = this.offScreenContexts.temp;
+
+      tempCanvas.width = Math.max(1, Math.ceil(width));
+      tempCanvas.height = Math.max(1, Math.ceil(height));
+
+      tempCtx.drawImage(texture, 0, 0, tempCanvas.width, tempCanvas.height);
+
+      tempCtx.globalCompositeOperation = 'source-in';
+      tempCtx.fillStyle = fillColor;
+      tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+      tempCtx.globalCompositeOperation = 'source-over';
+
+      targetContext.drawImage(
+        tempCanvas,
+        -width / HALF,
+        -height / HALF,
+        width,
+        height,
+      );
+    } else {
+      targetContext.drawImage(
+        texture,
+        -width / HALF,
+        -height / HALF,
+        width,
+        height,
+      );
+    }
+
     targetContext.restore();
   }
 
@@ -584,45 +657,78 @@ class Renderer {
   }
 
   /**
-   * @method _getPieceFromCoordinate - Gets the piece from a specific coordinate. (rendering pixel to piece index)
-   * @param {number} x - The x coordinate.
-   * @param {number} y - The y coordinate.
-   * @param {boolean} [onlyAvailable=true] - Whether to only consider available pieces.
-   * @returns {number} - The index of the piece at the specified coordinate. (-1 if not found)
+   * @method _setUpHitmap - Sets up the hitmap for the canvas.
    */
-  _getPieceFromCoordinate(x, y, onlyAvailable = true) {
-    const piecesIndexes = onlyAvailable
-      ? this.board.getAdjacentPositions()
-      : Array.from({ length: this.board.map.length }, (_, index) => index);
+  _setUpHitmap() {
+    this.offScreenContexts.hitmap.clearRect(
+      0,
+      0,
+      this.offScreenCanvases.hitmap.width,
+      this.offScreenCanvases.hitmap.height,
+    );
 
-    for (const index of piecesIndexes) {
+    const pieceIndices = this.board.map.positions.map((_, index) => index);
+
+    for (const index of pieceIndices) {
+      const pieceId = index + 1;
+      if (pieceId > MAX_PIECE_ID_RGB) {
+        console.warn(
+          `Piece index ${index} is too large to be encoded into RGB color.`,
+        );
+        continue;
+      }
+      const r = pieceId & MAX_COLOR_COMPONENT;
+      const g = (pieceId >> BITS_PER_BYTE) & MAX_COLOR_COMPONENT;
+      const b = (pieceId >> BITS_PER_TWO_BYTES) & MAX_COLOR_COMPONENT;
+      const hitColor = `rgb(${r}, ${g}, ${b})`;
+
       this._renderPiece(
         index,
         'empty',
         this.map.tiles[index].flipped,
-        this.offScreenContexts.reactions,
-      );
-      const imageData = this.offScreenContexts.reactions.getImageData(
-        x,
-        y,
-        1,
-        1,
-      );
-      const pixelData = imageData.data;
-      const alpha = pixelData[ALPHA_CHANNEL_INDEX];
-      if (alpha > 0) {
-        return index;
-      }
-
-      // Clear the pixel data for the next iteration
-      this.offScreenContexts.reactions.clearRect(
-        0,
-        0,
-        this.offScreenCanvases.reactions.width,
-        this.offScreenCanvases.reactions.height,
+        this.offScreenContexts.hitmap,
+        hitColor,
       );
     }
-    return NOT_FOUND; // No piece found at the specified coordinate
+  }
+
+  /**
+   * @method _getPieceFromCoordinate - Gets the piece from a specific coordinate. (using hitmap)
+   * @param {number} x - The x coordinate.
+   * @param {number} y - The y coordinate.
+   * @param {boolean} [onlyAvailable=false] - Whether to only consider available pieces.
+   * @returns {number} - The index of the piece at the specified coordinate. (-1 if not found)
+   */
+  _getPieceFromCoordinate(x, y, onlyAvailable = false) {
+    const imageData = this.offScreenContexts.hitmap.getImageData(x, y, 1, 1);
+    const pixelData = imageData.data;
+    const r = pixelData[0];
+    const g = pixelData[1];
+    const b = pixelData[TWO];
+
+    // Check if the pixel is transparent
+    if (pixelData[ALPHA_CHANNEL_INDEX] === 0) {
+      return NOT_FOUND; // No piece found at the specified coordinate
+    }
+
+    // Decode the piece index from the RGB values
+    const pieceIndex = r | (g << BITS_PER_BYTE) | (b << BITS_PER_TWO_BYTES);
+
+    if (pieceIndex === 0 || !this.board.map.positions[pieceIndex - 1]) {
+      return NOT_FOUND; // No piece found at the specified coordinate
+    }
+
+    if (onlyAvailable) {
+      const availablePositions = new Set(this.board.getAvailablePositions());
+      if (!availablePositions.has(pieceIndex - 1)) {
+        console.warn(
+          `Piece ${pieceIndex} is not available at coordinates (${x}, ${y}).`,
+        );
+        return NOT_FOUND; // Piece is not available
+      }
+    }
+
+    return pieceIndex - 1; // Return the index of the piece (0-based)
   }
 
   /**
@@ -696,6 +802,7 @@ class Renderer {
         () => {
           this._renderPiecesAndHexagons(); // Re-render pieces and hexagons with new textures
           this._render(); // Re-render the main canvas to show the new textures
+          this._setUpHitmap(); // Re-render the hitmap with new textures
           resolve();
         },
         (error) => {
