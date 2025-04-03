@@ -20,6 +20,7 @@ const MAX_PIECE_ID_RGB = 0xffffff;
 const MAX_COLOR_COMPONENT = 0xff;
 const BITS_PER_BYTE = 8;
 const BITS_PER_TWO_BYTES = 16;
+const COLOR_GAP_FACTOR = 10;
 
 /**
  * @class Renderer - A class representing the game board renderer.
@@ -704,7 +705,7 @@ class Renderer {
   }
 
   /**
-   * @method _setUpHitmap - Sets up the hitmap for the canvas.
+   * @method _setUpHitmap - Sets up the hitmap for the canvas using gapped colors.
    */
   _setUpHitmap() {
     this.offScreenContexts.hitmap.clearRect(
@@ -717,16 +718,18 @@ class Renderer {
     const pieceIndices = this.board.map.positions.map((_, index) => index);
 
     for (const index of pieceIndices) {
-      const pieceId = index + 1;
-      if (pieceId > MAX_PIECE_ID_RGB) {
+      const gappedPieceId = index * COLOR_GAP_FACTOR + 1;
+
+      if (gappedPieceId > MAX_PIECE_ID_RGB) {
         console.warn(
-          `Piece index ${index} is too large to be encoded into RGB color.`,
+          `Gapped ID ${gappedPieceId} for index ${index} exceeds limit.`,
         );
         continue;
       }
-      const r = pieceId & MAX_COLOR_COMPONENT;
-      const g = (pieceId >> BITS_PER_BYTE) & MAX_COLOR_COMPONENT;
-      const b = (pieceId >> BITS_PER_TWO_BYTES) & MAX_COLOR_COMPONENT;
+
+      const r = gappedPieceId & MAX_COLOR_COMPONENT;
+      const g = (gappedPieceId >> BITS_PER_BYTE) & MAX_COLOR_COMPONENT;
+      const b = (gappedPieceId >> BITS_PER_TWO_BYTES) & MAX_COLOR_COMPONENT;
       const hitColor = `rgb(${r}, ${g}, ${b})`;
 
       this._renderPiece(
@@ -740,7 +743,7 @@ class Renderer {
   }
 
   /**
-   * @method _getPieceFromCoordinate - Gets the piece from a specific coordinate. (using hitmap)
+   * @method _getPieceFromCoordinate - Gets the piece index from a coordinate using the gapped hitmap.
    * @param {number} x - The x coordinate.
    * @param {number} y - The y coordinate.
    * @param {boolean} [onlyAvailable=false] - Whether to only consider available pieces.
@@ -752,30 +755,41 @@ class Renderer {
     const r = pixelData[0];
     const g = pixelData[1];
     const b = pixelData[TWO];
+    const alpha = pixelData[ALPHA_CHANNEL_INDEX];
 
-    // Check if the pixel is transparent
-    if (pixelData[ALPHA_CHANNEL_INDEX] === 0) {
-      return NOT_FOUND; // No piece found at the specified coordinate
+    // Fully transparent pixel, no piece found
+    if (alpha === 0) {
+      return NOT_FOUND;
     }
 
-    // Decode the piece index from the RGB values
-    const pieceIndex = r | (g << BITS_PER_BYTE) | (b << BITS_PER_TWO_BYTES);
+    // Decode the read color back to a potential Gapped ID
+    const decodedGappedId =
+      r | (g << BITS_PER_BYTE) | (b << BITS_PER_TWO_BYTES);
 
-    if (pieceIndex === 0 || !this.board.map.positions[pieceIndex - 1]) {
-      return NOT_FOUND; // No piece found at the specified coordinate
+    // Check if it's the background ID (should be caught by alpha check, but double-check)
+    if (decodedGappedId === 0) {
+      return NOT_FOUND;
+    }
+
+    // Validate the Decoded ID against the Gap Rule
+    if ((decodedGappedId - 1) % COLOR_GAP_FACTOR !== 0) {
+      return NOT_FOUND;
+    }
+
+    // Calculate the original index
+    const pieceIndex = (decodedGappedId - 1) / COLOR_GAP_FACTOR;
+    if (!(pieceIndex >= 0 && pieceIndex < this.board.map.positions.length)) {
+      return NOT_FOUND;
     }
 
     if (onlyAvailable) {
-      const availablePositions = new Set(this.board.getAvailablePositions());
-      if (!availablePositions.has(pieceIndex - 1)) {
-        console.warn(
-          `Piece ${pieceIndex} is not available at coordinates (${x}, ${y}).`,
-        );
+      const availablePositions = new Set(this.board.getAvailablePositions()); // Ensure this returns 0-based indices
+      if (!availablePositions.has(pieceIndex)) {
         return NOT_FOUND; // Piece is not available
       }
     }
 
-    return pieceIndex - 1; // Return the index of the piece (0-based)
+    return pieceIndex; // Return the calculated 0-based index
   }
 
   /**
