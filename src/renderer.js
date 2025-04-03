@@ -99,10 +99,10 @@ class Renderer {
     this.heightRatio = null; // Ratio of the canvas height to the map height
 
     this.offScreenCanvases = {
-      background: document.createElement('canvas'), // Background Image + Grid Image
-      pieces: document.createElement('canvas'), // Pieces + Hexagons
-      hitmap: document.createElement('canvas'), // Hitmap for detecting pieces
-      temp: document.createElement('canvas'), // Temporary canvas for rendering
+      background: new OffscreenCanvas(1, 1), // Background Image + Grid Image
+      pieces: new OffscreenCanvas(1, 1), // Pieces + Hexagons
+      hitmap: new OffscreenCanvas(1, 1), // Hitmap for detecting pieces
+      temp: new OffscreenCanvas(1, 1), // Temporary canvas for rendering
     };
     this.offScreenContexts = {
       background: this.offScreenCanvases.background.getContext('2d'),
@@ -644,10 +644,10 @@ class Renderer {
 
   /**
    * @method _render - Renders the main canvas.
-   * @param {CanvasRenderingContext2D} context - The context of the canvas to draw from.
+   * @param {OffscreenCanvas} [canvas] - The off-screen canvas to render. If not provided, it renders the background and pieces canvases.
    */
-  _render(context) {
-    if (!context) {
+  _render(canvas) {
+    if (!canvas) {
       this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
       this.context.drawImage(
         this.offScreenCanvases.background,
@@ -664,7 +664,7 @@ class Renderer {
         this.height,
       );
     } else {
-      this.context.drawImage(context, 0, 0, this.width, this.height);
+      this.context.drawImage(canvas, 0, 0, this.width, this.height);
     }
   }
 
