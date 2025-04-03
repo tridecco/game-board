@@ -267,11 +267,6 @@ class Renderer {
    */
   _triggerEvent(eventType, ...args) {
     if (this.eventListeners[eventType]) {
-      if (this._isCountingHexagons) {
-        // Prevent triggering events when counting hexagons
-        return;
-      }
-
       this.eventListeners[eventType].forEach((listener) => {
         listener(...args);
       });
