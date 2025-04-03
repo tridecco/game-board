@@ -155,9 +155,13 @@ class Renderer {
 
     this.eventListeners = {
       dragover: new Set(), // Listeners for dragover events
+      dragoverAvailable: new Set(), // Listeners for dragover events with available positions
       drop: new Set(), // Listeners for drop events
+      dropAvailable: new Set(), // Listeners for drop events with available positions
       mousemove: new Set(), // Listeners for hover events
+      mousemoveAvailable: new Set(), // Listeners for hover events with available positions
       click: new Set(), // Listeners for click events
+      clickAvailable: new Set(), // Listeners for click events with available positions
       resize: new Set(), // Listeners for resize events
     };
     this._initEventListeners(); // Initialize event listeners
@@ -186,6 +190,18 @@ class Renderer {
       );
     });
 
+    this.canvas.addEventListener('dragoverAvailable', (event) => {
+      const coords = {
+        x: event.offsetX,
+        y: event.offsetY,
+      };
+      event.preventDefault(); // Prevent default behavior to allow dropping
+      this._triggerEvent(
+        'dragoverAvailable',
+        this._getPieceFromCoordinate(coords.x, coords.y, true), // Only consider available pieces
+      );
+    });
+
     this.canvas.addEventListener('drop', (event) => {
       const coords = {
         x: event.offsetX,
@@ -198,6 +214,18 @@ class Renderer {
       );
     });
 
+    this.canvas.addEventListener('dropAvailable', (event) => {
+      const coords = {
+        x: event.offsetX,
+        y: event.offsetY,
+      };
+      event.preventDefault(); // Prevent default behavior to allow dropping
+      this._triggerEvent(
+        'dropAvailable',
+        this._getPieceFromCoordinate(coords.x, coords.y, true), // Only consider available pieces
+      );
+    });
+
     this.canvas.addEventListener('click', (event) => {
       const coords = {
         x: event.offsetX,
@@ -206,6 +234,17 @@ class Renderer {
       this._triggerEvent(
         'click',
         this._getPieceFromCoordinate(coords.x, coords.y),
+      );
+    });
+
+    this.canvas.addEventListener('clickAvailable', (event) => {
+      const coords = {
+        x: event.offsetX,
+        y: event.offsetY,
+      };
+      this._triggerEvent(
+        'clickAvailable',
+        this._getPieceFromCoordinate(coords.x, coords.y, true), // Only consider available pieces
       );
     });
 
@@ -871,14 +910,19 @@ class Renderer {
    * @method addEventListener - Add an event listener for a specific event type.
    * @param {string} eventType - The type of event to listen for (set, remove, form, destroy).
    * @param {Function} listener - The listener function to be called when the event is triggered.
+   * @param {Object} [options] - Optional parameters for the event listener.
    * @throws {Error} - Throws an error if the event type is invalid.
    */
-  addEventListener(eventType, listener) {
+  addEventListener(eventType, listener, options = {}) {
     if (!this.eventListeners[eventType]) {
       throw new Error('Invalid event type');
     }
 
-    this.eventListeners[eventType].add(listener);
+    if (eventType !== 'resize' && options.onlyAvailable) {
+      this.eventListeners[`${eventType}Available`].add(listener);
+    } else {
+      this.eventListeners[eventType].add(listener);
+    }
   }
 
   /**
