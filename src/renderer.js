@@ -197,10 +197,15 @@ class Renderer {
         'dragover',
         this._getPieceFromCoordinate(coords.x, coords.y),
       );
-      this._triggerEvent(
-        'dragoverAvailable',
-        this._getPieceFromCoordinate(coords.x, coords.y, true), // Only consider available pieces
-      );
+
+      const availablePiece = this._getPieceFromCoordinate(
+        coords.x,
+        coords.y,
+        true,
+      ); // Only consider available pieces
+      if (availablePiece !== NOT_FOUND) {
+        this._triggerEvent('dragoverAvailable', availablePiece);
+      }
     });
 
     this.canvas.addEventListener('drop', (event) => {
@@ -213,10 +218,15 @@ class Renderer {
         'drop',
         this._getPieceFromCoordinate(coords.x, coords.y),
       );
-      this._triggerEvent(
-        'dropAvailable',
-        this._getPieceFromCoordinate(coords.x, coords.y, true), // Only consider available pieces
-      );
+
+      const availablePiece = this._getPieceFromCoordinate(
+        coords.x,
+        coords.y,
+        true,
+      ); // Only consider available pieces
+      if (availablePiece !== NOT_FOUND) {
+        this._triggerEvent('dropAvailable', availablePiece);
+      }
     });
 
     this.canvas.addEventListener('click', (event) => {
@@ -228,10 +238,15 @@ class Renderer {
         'click',
         this._getPieceFromCoordinate(coords.x, coords.y),
       );
-      this._triggerEvent(
-        'clickAvailable',
-        this._getPieceFromCoordinate(coords.x, coords.y, true), // Only consider available pieces
-      );
+
+      const availablePiece = this._getPieceFromCoordinate(
+        coords.x,
+        coords.y,
+        true,
+      ); // Only consider available pieces
+      if (availablePiece !== NOT_FOUND) {
+        this._triggerEvent('clickAvailable', availablePiece);
+      }
     });
 
     this.canvas.addEventListener('mousemove', (event) => {
@@ -243,10 +258,15 @@ class Renderer {
         'mousemove',
         this._getPieceFromCoordinate(coords.x, coords.y),
       );
-      this._triggerEvent(
-        'mousemoveAvailable',
-        this._getPieceFromCoordinate(coords.x, coords.y, true), // Only consider available pieces
-      );
+
+      const availablePiece = this._getPieceFromCoordinate(
+        coords.x,
+        coords.y,
+        true,
+      ); // Only consider available pieces
+      if (availablePiece !== NOT_FOUND) {
+        this._triggerEvent('mousemoveAvailable', availablePiece);
+      }
     });
   }
 
