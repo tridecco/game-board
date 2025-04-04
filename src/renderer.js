@@ -840,13 +840,16 @@ class Renderer {
    * @method showAvailablePositions - Highlights available positions on the board using a mask on the mask off-screen canvas.
    * @param {Array<number>} [positions=this.board.getAvailablePositions()] - An array of position indexes to highlight as available.
    * @param {string} [fillColor='rgba(0, 0, 0, 0.5)'] - Optional fill color for the highlight mask, default is semi-transparent black.
+   * @throws {Error} - If positions is not an array.
    */
   showAvailablePositions(
     positions = this.board.getAvailablePositions(),
     fillColor = 'rgba(0, 0, 0, 0.5)',
   ) {
-    if (!Array.isArray(positions) || positions.length === 0) {
-      return; // No positions to highlight
+    if (!Array.isArray(positions)) {
+      throw new Error(
+        'positions must be an array of available position indexes',
+      );
     }
 
     if (this._isShowingAvailablePositions) {
@@ -953,7 +956,7 @@ class Renderer {
    */
   getTexture(type, key) {
     if (!this.textures) {
-      throw new Error('Textures not loaded yet.');
+      throw new Error('Textures not loaded yet');
     }
     return this.textures.get(type, key);
   }
