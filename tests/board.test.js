@@ -304,10 +304,10 @@ describe('Board', () => {
       expect(randomIndex).toBe(-1);
     });
 
-    it('should return a random edge position index if isEdge is true', () => {
-      const randomIndex = board.getRandomPosition(true);
+    it('should not return a random edge position index if isEdge is false', () => {
+      const randomIndex = board.getRandomPosition(false);
       const position = board.map.positions[randomIndex];
-      expect(position.isEdge).toBe(true);
+      expect(position.isEdge).toBe(false);
     });
 
     it('should respect excludedIndexes', () => {

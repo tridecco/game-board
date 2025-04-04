@@ -279,7 +279,7 @@ class Board {
     const validIndexes = [];
 
     this.map.positions.forEach((position, index) => {
-      if (!excludedSet.has(index) && (!isEdge || position.isEdge)) {
+      if (!excludedSet.has(index) && (isEdge || !position.isEdge)) {
         validIndexes.push(index);
       }
     });
