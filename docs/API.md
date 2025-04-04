@@ -265,10 +265,6 @@ Sets a value at the specified column and row in the grid.
 - `row` (number): The row index (0-based).
 - `value` (\*): The value to be stored at the specified position.
 
-**Returns:**
-
-- `void`: This method does not return a value.
-
 #### Example
 
 ```javascript
@@ -361,10 +357,6 @@ Iterates over each cell in the grid and executes a provided callback function fo
 
 - `callback` (function): A function to execute for each cell in the grid. The function should accept three parameters: `value`, `col`, and `row`.
 
-**Returns:**
-
-- `void`: This method does not return a value.
-
 #### Example
 
 ```javascript
@@ -414,10 +406,6 @@ clear();
 **Description:**
 
 Clears the entire grid by setting all cell values to `null`. This effectively empties the grid while preserving its dimensions and type.
-
-**Returns:**
-
-- `void`: This method does not return a value.
 
 #### Example
 
@@ -499,10 +487,6 @@ Sets the value of multiple triangles within the grid. Each position in the `posi
   - `row` (number): The row index (0-based).
   - `triangle` (number): The index of the triangle within the hexagon (1-based, from 1 to 6).
 - `value` (\*): The value to be set for all specified triangles.
-
-**Returns:**
-
-- `void`
 
 **Throws:**
 
@@ -595,10 +579,6 @@ Sets the values of all six triangles within a specified hexagon.
 - `col` (number): The column index (0-based).
 - `row` (number): The row index (0-based).
 - `values` (Array<\*>): An array of six values to be assigned to the triangles of the hexagon, in order from 1 to 6. If fewer than six values are provided, the remaining triangles will be set to `null`.
-
-**Returns:**
-
-- `void`
 
 #### Example
 
@@ -1249,10 +1229,6 @@ clear();
 
 Clears the entire game board, removing all pieces, resetting the history, and clearing the record of completed hexagons. This effectively resets the board to its initial state.
 
-**Returns:**
-
-- `void`: This method does not return a value.
-
 #### Example
 
 ```javascript
@@ -1456,10 +1432,6 @@ Renders a semi-transparent preview of a given `Piece` at a specified board posit
 - `piece` (Piece): The `Piece` object to preview.
 - `fillColor` (string, optional): The CSS color string for the semi-transparent overlay applied to the preview. Defaults to `'rgba(255, 255, 255, 0.5)'`.
 
-**Returns:**
-
-- `void`
-
 #### Example
 
 ```javascript
@@ -1476,10 +1448,6 @@ clearPreview();
 **Description:**
 
 Clears any currently displayed piece previews from the renderer.
-
-**Returns:**
-
-- `void`
 
 #### Example
 
@@ -1502,10 +1470,6 @@ Highlights the specified available positions on the board by overlaying a semi-t
 - `positions` (Array<number>, optional): An array of 0-based position indexes to highlight. Defaults to the result of `board.getAvailablePositions()`.
 - `fillColor` (string, optional): The CSS color string for the mask overlay. Defaults to `'rgba(0, 0, 0, 0.5)'`.
 
-**Returns:**
-
-- `void`
-
 **Throws:**
 
 - `Error`: If `positions` is provided but is not an array.
@@ -1527,10 +1491,6 @@ clearAvailablePositions();
 **Description:**
 
 Removes the highlight mask, clearing any highlighted available positions from the board.
-
-**Returns:**
-
-- `void`
 
 #### Example
 
@@ -1581,10 +1541,6 @@ Updates the renderer to use a new map configuration. This involves recalculating
 **Parameters:**
 
 - `newMap` (Object): The new map configuration object (must conform to the expected map structure).
-
-**Returns:**
-
-- `void`
 
 **Throws:**
 
@@ -1711,10 +1667,6 @@ Adds an event listener for specific renderer interaction events (drag/drop, mous
 - `options` (Object, optional): Optional parameters.
   - `onlyAvailable` (boolean): If `true`, the listener will only be triggered for drop events on available positions. Defaults to `false`. This is useful for distinguishing between general drop events and those specifically on available positions. (`resize` events do not use this option.)
 
-**Returns:**
-
-- `void`
-
 **Throws:**
 
 - `Error`: If `eventType` is not a valid event type.
@@ -1762,10 +1714,6 @@ Removes a previously added event listener for a specific renderer event type.
 - `eventType` (string): The event type from which to remove the listener.
 - `listener` (Function): The listener function that was originally added.
 
-**Returns:**
-
-- `void`
-
 **Throws:**
 
 - `Error`: If `eventType` is not a valid event type.
@@ -1790,10 +1738,6 @@ destroy();
 **Description:**
 
 Cleans up the renderer instance, removes event listeners, disconnects the `ResizeObserver`, removes the canvas from the DOM, and nullifies internal references to potentially free up memory and prevent memory leaks. Should be called when the renderer is no longer needed.
-
-**Returns:**
-
-- `void`
 
 #### Example
 
