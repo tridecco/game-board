@@ -127,20 +127,20 @@ class Renderer {
     this.textures = null;
 
     this.resizeObserverInitialized = false;
-    this.frameRequested = false;
+    this.resizeFrameRequested = false;
     this.resizeObserver = new ResizeObserver(() => {
       if (!this.resizeObserverInitialized) {
         this.resizeObserverInitialized = true;
         return; // Skip the first call to avoid unnecessary rendering
       }
-      if (this.frameRequested) {
+      if (this.resizeFrameRequested) {
         return; // Skip if a frame is already requested
       }
 
-      this.frameRequested = true; // Set the flag to indicate a frame is requested
+      this.resizeFrameRequested = true; // Set the flag to indicate a frame is requested
       requestAnimationFrame(() => {
         this._setUpCanvas();
-        this.frameRequested = false; // Reset the flag after rendering
+        this.resizeFrameRequested = false; // Reset the flag after rendering
       });
 
       this._triggerEvent('resize', {
@@ -1156,10 +1156,12 @@ class Renderer {
     this.grid = null;
     this.textures = null;
     this.resizeObserverInitialized = false;
-    this.frameRequested = false;
+    this.resizeFrameRequested = false;
     this.eventListeners = null;
     this.eventHandlers.clear();
     this.eventHandlers = null;
+    this._isPreviewing = false;
+    this._isShowingAvailablePositions = false;
   }
 }
 
