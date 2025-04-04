@@ -175,6 +175,7 @@ class Renderer {
     this._isPreviewing = false; // Flag to check if a piece is being previewed
     this._isShowingAvailablePositions = false; // Flag to check if available positions are being shown
     this._showingAvailablePositions = new Array(); // Store currently shown available positions
+    this._previewingPositions = new Set(); // Store currently shown previewing positions
 
     this._setUpBoard();
     this._loadAssets(texturesUrl, backgroundUrl, gridUrl).then(() => {
@@ -396,6 +397,16 @@ class Renderer {
     // Render the available positions mask if they are being shown
     if (this._isShowingAvailablePositions) {
       this.showAvailablePositions(this._showingAvailablePositions);
+    }
+
+    // If pieces are being previewed, render the preview
+    if (this._isPreviewing) {
+      this._previewingPositions.forEach((index) => {
+        const piece = this.board.get(index);
+        if (piece) {
+          this.previewPiece(index, piece);
+        }
+      });
     }
 
     // Render the hitmap for detecting pieces
@@ -836,6 +847,7 @@ class Renderer {
     }
 
     this._isPreviewing = true; // Set the preview flag to true
+    this._previewingPositions.add(index); // Store the currently previewing piece
   }
 
   /**
@@ -853,6 +865,7 @@ class Renderer {
     this._render();
 
     this._isPreviewing = false; // Reset the preview flag
+    this._previewingPositions.clear();
   }
 
   /**
@@ -1184,6 +1197,8 @@ class Renderer {
     this._isPreviewing = false;
     this._isShowingAvailablePositions = false;
     this._showingAvailablePositions = null;
+    this._previewingPositions.clear();
+    this._previewingPositions = null;
   }
 }
 
