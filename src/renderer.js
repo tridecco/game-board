@@ -173,6 +173,7 @@ class Renderer {
     this.eventHandlers = new Map();
 
     this._isPreviewing = false; // Flag to check if a piece is being previewed
+    this._isShowingAvailablePositions = false; // Flag to check if available positions are being shown
 
     this._setUpBoard();
     this._loadAssets(texturesUrl, backgroundUrl, gridUrl).then(() => {
@@ -672,6 +673,13 @@ class Renderer {
         this.width,
         this.height,
       );
+      this.context.drawImage(
+        this.offScreenCanvases.mask,
+        0,
+        0,
+        this.width,
+        this.height,
+      );
     } else {
       this.context.drawImage(canvas, 0, 0, this.width, this.height);
     }
@@ -848,6 +856,110 @@ class Renderer {
     this._render();
 
     this._isPreviewing = false; // Reset the preview flag
+  }
+
+  /**
+   * @method showAvailablePositions - Highlights available positions on the board.
+   * @param {Array<number>} [positions=this.board.getAvailablePositions()] - The array of available positions to highlight.
+   */
+  showAvailablePositions(positions = this.board.getAvailablePositions()) {
+    if (!Array.isArray(positions) || positions.length === 0) {
+      return; // No positions to highlight
+    }
+
+    if (this._isShowingAvailablePositions) {
+      this.clearAvailablePositions(); // Clear existing highlights before showing new ones
+    }
+
+    const maskContext = this.offScreenContexts.mask;
+
+    // Fill the entire canvas with a semi-transparent black overlay
+    maskContext.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    maskContext.fillRect(
+      0,
+      0,
+      this.offScreenCanvases.mask.width,
+      this.offScreenCanvases.mask.height,
+    );
+
+    // Use the empty texture as a stencil to "cut out" the available positions
+    for (const index of positions) {
+      const tile = this.map.tiles[index];
+      if (!tile) {
+        continue;
+      }
+
+      const texture = this.textures.get(
+        'tiles',
+        `${this.map.tiles[index].flipped ? 'empty-flipped' : 'empty'}`,
+      );
+
+      const x = tile.x * this.widthRatio;
+      const y = tile.y * this.heightRatio;
+      const imageWidth = texture.width;
+      const imageHeight = texture.height;
+
+      let width, height;
+      if (tile.width !== undefined && tile.width !== null) {
+        width = tile.width * this.widthRatio;
+        height =
+          tile.height !== undefined && tile.height !== null
+            ? tile.height * this.heightRatio
+            : (width * imageHeight) / imageWidth;
+      } else if (tile.height !== undefined && tile.height !== null) {
+        height = tile.height * this.heightRatio;
+        width = (height * imageWidth) / imageHeight;
+      } else {
+        width = imageWidth * (this.widthRatio || 1);
+        height = imageHeight * (this.heightRatio || 1);
+      }
+
+      // Ensure width and height are valid numbers > 0
+      if (!(width > 0 && height > 0)) {
+        continue;
+      }
+
+      const rotation = tile.rotation || 0;
+      const angle = (rotation * Math.PI) / HALF_PI_DEGREES; // Convert degrees to radians
+
+      maskContext.save();
+      maskContext.translate(x + width / HALF, y + height / HALF);
+      maskContext.rotate(angle);
+
+      // Use the empty texture to clear the overlay at the available position
+      maskContext.globalCompositeOperation = 'destination-out';
+      maskContext.drawImage(
+        texture,
+        -width / HALF,
+        -height / HALF,
+        width,
+        height,
+      );
+
+      maskContext.restore();
+    }
+
+    // Render the mask canvas to the main canvas
+    this._render(this.offScreenCanvases.mask);
+
+    this._isShowingAvailablePositions = true; // Set the flag to indicate available positions are being shown
+  }
+
+  /**
+   * @method clearAvailablePositions - Clears the highlights of available positions on the board.
+   */
+  clearAvailablePositions() {
+    this.offScreenContexts.mask.clearRect(
+      0,
+      0,
+      this.offScreenCanvases.mask.width,
+      this.offScreenCanvases.mask.height,
+    );
+
+    // Re-render the main canvas to remove the highlights
+    this._render();
+
+    this._isShowingAvailablePositions = false; // Reset the flag
   }
 
   /**
