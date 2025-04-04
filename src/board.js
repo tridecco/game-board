@@ -31,7 +31,7 @@ class Board {
     this.indexes = new Array(map.positions.length).fill(null); // Initialize indexes to null
 
     this.hexagons = new Set();
-    this.hexagonsColor = new Map(); // Map to store hexagon colors
+    this.hexagonColors = new Map(); // Map to store hexagon colors
 
     this.eventListeners = {
       set: new Set(), // Listeners for set events
@@ -135,7 +135,7 @@ class Board {
       const [col, row] = hexagon.split('-').map(Number);
       if (this.isCompleteHexagon(col, row)) {
         this.hexagons.add(`${col}-${row}`);
-        this.hexagonsColor.set(
+        this.hexagonColors.set(
           `${col}-${row}`,
           this.grid.getHexagon(col, row)[0],
         );
@@ -181,7 +181,7 @@ class Board {
     const hexagonsFormed = newHexagons.map((hexagon) => {
       return {
         coordinate: hexagon.split('-').map(Number),
-        color: this.hexagonsColor.get(hexagon), // Get the color of the hexagon
+        color: this.hexagonColors.get(hexagon), // Get the color of the hexagon
       };
     });
 
@@ -228,7 +228,7 @@ class Board {
 
     removedHexagons.forEach((hexagon) => {
       this.hexagons.delete(hexagon); // Remove the hexagon from the set
-      this.hexagonsColor.delete(hexagon); // Remove the color of the hexagon
+      this.hexagonColors.delete(hexagon); // Remove the color of the hexagon
     });
 
     // Trigger destroy event for all removed hexagons
@@ -464,7 +464,7 @@ class Board {
     return Array.from(this.hexagons).map((hexagon) => {
       return {
         coordinate: hexagon.split('-').map(Number),
-        color: this.hexagonsColor.get(hexagon), // Get the color of the hexagon
+        color: this.hexagonColors.get(hexagon), // Get the color of the hexagon
       };
     });
   }
@@ -532,7 +532,7 @@ class Board {
     this.grid.clear();
     this.indexes.fill(null);
     this.hexagons.clear();
-    this.hexagonsColor.clear(); // Clear the hexagon colors
+    this.hexagonColors.clear(); // Clear the hexagon colors
     this.history = [];
 
     this._triggerEvent('clear'); // Trigger clear event
