@@ -801,8 +801,9 @@ class Renderer {
    * @method previewPiece - Previews a lightly transparent version of a piece on the canvas.
    * @param {number} index - The index of the piece to preview.
    * @param {Piece} piece - The piece object to preview.
+   * @param {string} [fillColor='rgba(255, 255, 255, 0.5)'] - The fill color for the preview.
    */
-  previewPiece(index, piece) {
+  previewPiece(index, piece, fillColor = 'rgba(255, 255, 255, 0.5)') {
     if (!piece || !piece.colorsKey) {
       console.error('Invalid piece object for preview.');
       return;
@@ -825,7 +826,7 @@ class Renderer {
       piece.colorsKey,
       tile.flipped,
       this.offScreenContexts.piecesPreview,
-      'rgba(255, 255, 255, 0.5)', // Lightly transparent white
+      fillColor, // Lightly transparent white
     );
 
     // Render the preview canvas to the main canvas
