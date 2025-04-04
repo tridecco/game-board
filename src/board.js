@@ -407,12 +407,12 @@ class Board {
   }
 
   /**
-   * @method isAvailable - Check if the specified position is available.
+   * @method isEmpty - Check if the specified position is empty.
    * @param {number} index - The index of the position in the map. (0-based index)
-   * @returns {boolean} - True if the position is available, false otherwise.
+   * @returns {boolean} - True if the position is empty, false otherwise.
    * @throws {Error} - Throws an error if the index is out of bounds.
    */
-  isAvailable(index) {
+  isEmpty(index) {
     if (index < 0 || index >= this.map.positions.length) {
       throw new Error('Index out of bounds');
     }

@@ -75,7 +75,7 @@ This document provides a comprehensive guide to the API of the Tridecco Game Boa
       - [Example](#example-28)
     - [`countHexagonsFormed(index, piece)`](#counthexagonsformedindex-piece)
       - [Example](#example-29)
-    - [`isAvailable(index)`](#isavailableindex)
+    - [`isEmpty(index)`](#isemptyindex)
       - [Example](#example-30)
     - [`isCompleteHexagon(col, row)`](#iscompletehexagoncol-row)
       - [Example](#example-31)
@@ -999,15 +999,15 @@ console.log(
 );
 ```
 
-### `isAvailable(index)`
+### `isEmpty(index)`
 
 ```javascript
-isAvailable(index);
+isEmpty(index);
 ```
 
 **Description:**
 
-Checks if a position at the specified index is currently empty (available for placing a piece).
+Checks if a position at the specified index is currently empty.
 
 **Parameters:**
 
@@ -1024,9 +1024,9 @@ Checks if a position at the specified index is currently empty (available for pl
 #### Example
 
 ```javascript
-const isPositionAvailable = board.isAvailable(4);
+const isPositionAvailable = board.isEmpty(4);
 if (isPositionAvailable) {
-  console.log('Position 4 is available.');
+  console.log('Position 4 is empty.');
 } else {
   console.log('Position 4 is occupied.');
 }

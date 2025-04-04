@@ -488,7 +488,7 @@ describe('Board', () => {
     });
   });
 
-  describe('isAvailable', () => {
+  describe('isEmpty', () => {
     let board;
     let piece;
 
@@ -497,18 +497,18 @@ describe('Board', () => {
       piece = new Piece(['red', 'blue']);
     });
 
-    it('should return true if position is available', () => {
-      expect(board.isAvailable(0)).toBe(true);
+    it('should return true if position is empty', () => {
+      expect(board.isEmpty(0)).toBe(true);
     });
 
-    it('should return false if position is not available', () => {
+    it('should return false if position is not empty', () => {
       board.place(0, piece);
-      expect(board.isAvailable(0)).toBe(false);
+      expect(board.isEmpty(0)).toBe(false);
     });
 
     it('should throw an error if index is out of bounds', () => {
-      expect(() => board.isAvailable(-1)).toThrowError('Index out of bounds');
-      expect(() => board.isAvailable(board.map.positions.length)).toThrowError(
+      expect(() => board.isEmpty(-1)).toThrowError('Index out of bounds');
+      expect(() => board.isEmpty(board.map.positions.length)).toThrowError(
         'Index out of bounds',
       );
     });
