@@ -89,9 +89,7 @@ class Renderer {
     this.container = container;
     this.container.style.position = 'relative';
     this.canvas = document.createElement('canvas');
-    this.context = this.canvas.getContext('2d', {
-      willReadFrequently: true,
-    });
+    this.context = this.canvas.getContext('2d');
 
     this.width = null;
     this.height = null;
