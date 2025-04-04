@@ -479,7 +479,7 @@ Sets the value of multiple triangles within the grid. Each position in the `posi
 
 **Parameters:**
 
-- `positions` (Array<Array<number>>): An array of positions. Each position is a three-element array: `[col, row, triangle]`.
+- `positions` (Array\<Array\<number>>): An array of positions. Each position is a three-element array: `[col, row, triangle]`.
   - `col` (number): The column index (0-based).
   - `row` (number): The row index (0-based).
   - `triangle` (number): The index of the triangle within the hexagon (1-based, from 1 to 6).
@@ -514,7 +514,7 @@ Removes the values from multiple triangles within the grid, effectively setting 
 
 **Parameters:**
 
-- `positions` (Array<Array<number>>): An array of positions, where each position is a three-element array: `[col, row, triangle]`.
+- `positions` (Array\<Array\<number>>): An array of positions, where each position is a three-element array: `[col, row, triangle]`.
   - `col` (number): The column index (0-based).
   - `row` (number): The row index (0-based).
   - `triangle` (number): The index of the triangle within the hexagon (1-based, from 1 to 6).
@@ -575,7 +575,7 @@ Sets the values of all six triangles within a specified hexagon.
 
 - `col` (number): The column index (0-based).
 - `row` (number): The row index (0-based).
-- `values` (Array<\*>): An array of six values to be assigned to the triangles of the hexagon, in order from 1 to 6. If fewer than six values are provided, the remaining triangles will be set to `null`.
+- `values` (Array\<\*>): An array of six values to be assigned to the triangles of the hexagon, in order from 1 to 6. If fewer than six values are provided, the remaining triangles will be set to `null`.
 
 #### Example
 
@@ -673,7 +673,7 @@ Creates a new `Board` instance. Initializes the game board with a map configurat
   - `type` (string): The type of hexagonal grid layout ('odd-r', 'even-r', 'odd-q', 'even-q').
   - `columns` (number): The number of columns in the grid.
   - `rows` (number): The number of rows in the grid.
-  - `positions` (Array<Object>): An array defining positions on the board, each object detailing coordinate indexes and adjacency information.
+  - `positions` (Array\<Object>): An array defining positions on the board, each object detailing coordinate indexes and adjacency information.
 
 **Throws:**
 
@@ -768,7 +768,7 @@ Places a `Piece` object at the specified position index on the board. This metho
 **Returns:**
 
 - `Array<Object>`: An array of objects representing the hexagons formed. Each object contains the following properties:
-  - `coordinate` (Array<number>): The coordinates of the completed hexagon in the format `[col, row]`.
+  - `coordinate` (Array\<number>): The coordinates of the completed hexagon in the format `[col, row]`.
   - `color` (string): The color of the completed hexagon.
 
 **Throws:**
@@ -856,7 +856,7 @@ Retrieves a random position index from the board, optionally filtering for edge 
 **Parameters:**
 
 - `isEdge` (boolean, optional): If `true`, only edge positions are considered. Defaults to `false`.
-- `excludedIndexes` (Array<number>, optional): An array of position indexes to exclude from the random selection. Defaults to an empty array.
+- `excludedIndexes` (Array\<number>, optional): An array of position indexes to exclude from the random selection. Defaults to an empty array.
 
 **Returns:**
 
@@ -1102,7 +1102,7 @@ Retrieves an array of coordinates for all hexagons on the board that are current
 **Returns:**
 
 - `Array<Object>`: An array of objects, each representing a complete hexagon. Each object contains the following properties:
-  - `coordinate` (Array<number>): The coordinates of the complete hexagon in the format `[col, row]`.
+  - `coordinate` (Array\<number>): The coordinates of the complete hexagon in the format `[col, row]`.
   - `color` (string): The color of the complete hexagon.
 
 #### Example
@@ -1142,11 +1142,11 @@ Adds an event listener for a specific event on the board. This allows you to lis
     - `index` (number): The index from which the piece was removed.
     - `piece` (Piece | null): The piece that was removed (or `null` if no piece was present).
   - `'form'` event: The callback will be passed the following parameters:
-    - `hexagons` (Array<Object>): An array of objects representing the hexagons formed. Each object contains:
-      - `coordinate` (Array<number>): The coordinates of the formed hexagon in the format `[col, row]`.
+    - `hexagons` (Array\<Object>): An array of objects representing the hexagons formed. Each object contains:
+      - `coordinate` (Array\<number>): The coordinates of the formed hexagon in the format `[col, row]`.
       - `color` (string): The color of the formed hexagon.
   - `'destroy'` event: The callback will be passed the following parameters:
-    - `hexagons` (Array<Array<number>>): An array of hexagon coordinates that were destroyed.
+    - `hexagons` (Array\<Array\<number>>): An array of hexagon coordinates that were destroyed.
   - `'clear'` event: The callback will be passed no parameters.
 
 **Throws:**
@@ -1248,7 +1248,7 @@ Creates a new `Piece` instance. Represents a game piece with two colors.
 
 **Parameters:**
 
-- `colors` (Array<string>): An array of exactly two strings, representing the colors of the piece.
+- `colors` (Array\<string>): An array of exactly two strings, representing the colors of the piece.
 - `params` (Object, optional): An optional object containing additional parameters for the piece. These parameters will be directly assigned as properties of the `Piece` instance.
 
 **Throws:**
@@ -1464,7 +1464,7 @@ Highlights the specified available positions on the board by overlaying a semi-t
 
 **Parameters:**
 
-- `positions` (Array<number>, optional): An array of 0-based position indexes to highlight. Defaults to the result of `board.getAvailablePositions()`.
+- `positions` (Array\<number>, optional): An array of 0-based position indexes to highlight. Defaults to the result of `board.getAvailablePositions()`.
 - `fillColor` (string, optional): The CSS color string for the mask overlay. Defaults to `'rgba(0, 0, 0, 0.5)'`.
 
 **Throws:**
