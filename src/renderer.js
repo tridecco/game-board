@@ -126,23 +126,22 @@ class Renderer {
     this.grid = null;
     this.textures = null;
 
-    this.renderFrameRequested = false;
+    this.requestedFrames = new Set(); // Store requested frames to avoid duplicate rendering
 
     this.resizeObserverInitialized = false;
-    this.resizeFrameRequested = false;
     this.resizeObserver = new ResizeObserver(() => {
       if (!this.resizeObserverInitialized) {
         this.resizeObserverInitialized = true;
         return; // Skip the first call to avoid unnecessary rendering
       }
-      if (this.resizeFrameRequested) {
+      if (this.requestedFrames.has('resize')) {
         return; // Skip if a frame is already requested
       }
 
-      this.resizeFrameRequested = true; // Set the flag to indicate a frame is requested
+      this.requestedFrames.add('resize');
       requestAnimationFrame(() => {
         this._setUpCanvas();
-        this.resizeFrameRequested = false; // Reset the flag after rendering
+        this.requestedFrames.delete('resize');
       });
 
       this._triggerEvent('resize', {
@@ -270,19 +269,19 @@ class Renderer {
   _setUpBoard() {
     const renderPiece = function renderPiece(index, piece) {
       this._renderPiece(index, piece.colorsKey, this.map.tiles[index].flipped);
-      this._render(this.offScreenCanvases.pieces); // Render the pieces canvas to the main canvas
+      this._render();
     }.bind(this);
 
     const renderPiecesAndHexagons = function renderPiecesAndHexagons() {
       this._renderPiecesAndHexagons();
-      this._render(); // Render all canvases to the main canvas
+      this._render();
     }.bind(this);
 
     const renderHexagons = function renderHexagons(hexagons) {
       for (const hexagon of hexagons) {
         this._renderHexagon(hexagon.coordinate, hexagon.color);
       }
-      this._render(this.offScreenCanvases.pieces);
+      this._render();
     }.bind(this);
 
     const clearBoard = function clearBoard() {
@@ -645,52 +644,47 @@ class Renderer {
 
   /**
    * @method _render - Renders the main canvas.
-   * @param {OffscreenCanvas} [canvas] - The off-screen canvas to render. If not provided, it renders the background and pieces canvases.
    */
-  _render(canvas) {
-    if (!canvas) {
-      if (this.renderFrameRequested) {
-        return; // Avoid multiple render calls in the same frame
-      }
-
-      requestAnimationFrame(() => {
-        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.context.drawImage(
-          this.offScreenCanvases.background,
-          0,
-          0,
-          this.width,
-          this.height,
-        );
-        this.context.drawImage(
-          this.offScreenCanvases.pieces,
-          0,
-          0,
-          this.width,
-          this.height,
-        );
-        this.context.drawImage(
-          this.offScreenCanvases.piecesPreview,
-          0,
-          0,
-          this.width,
-          this.height,
-        );
-        this.context.drawImage(
-          this.offScreenCanvases.mask,
-          0,
-          0,
-          this.width,
-          this.height,
-        );
-
-        this.renderFrameRequested = false; // Reset the flag after rendering
-      });
-
-      this.renderFrameRequested = true;
-    } else {
-      this.context.drawImage(canvas, 0, 0, this.width, this.height);
+  _render() {
+    if (this.requestedFrames.has('render')) {
+      return; // Avoid multiple render calls in the same frame
     }
+
+    requestAnimationFrame(() => {
+      this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.context.drawImage(
+        this.offScreenCanvases.background,
+        0,
+        0,
+        this.width,
+        this.height,
+      );
+      this.context.drawImage(
+        this.offScreenCanvases.pieces,
+        0,
+        0,
+        this.width,
+        this.height,
+      );
+      this.context.drawImage(
+        this.offScreenCanvases.piecesPreview,
+        0,
+        0,
+        this.width,
+        this.height,
+      );
+      this.context.drawImage(
+        this.offScreenCanvases.mask,
+        0,
+        0,
+        this.width,
+        this.height,
+      );
+
+      this.requestedFrames.delete('render');
+    });
+
+    this.requestedFrames.add('render');
   }
 
   /**
@@ -840,11 +834,7 @@ class Renderer {
     );
 
     // Render the preview canvas to the main canvas
-    if (!this._isPreviewing) {
-      this._render(this.offScreenCanvases.piecesPreview);
-    } else {
-      this._render(); // If already previewing, must re-render the main canvas to update the preview
-    }
+    this._render();
 
     this._isPreviewing = true; // Set the preview flag to true
     this._previewingPositions.add(index); // Store the currently previewing piece
@@ -950,7 +940,7 @@ class Renderer {
     }
 
     // Render the mask canvas to the main canvas
-    this._render(this.offScreenCanvases.mask);
+    this._render();
 
     this._isShowingAvailablePositions = true; // Set the flag to indicate available positions are being shown
     this._showingAvailablePositions = positions; // Store the currently shown available positions
@@ -1189,8 +1179,8 @@ class Renderer {
     this.grid = null;
     this.textures = null;
     this.resizeObserverInitialized = false;
-    this.resizeFrameRequested = false;
-    this.renderFrameRequested = false;
+    this.requestedFrames.clear();
+    this.requestedFrames = null;
     this.eventListeners = null;
     this.eventHandlers.clear();
     this.eventHandlers = null;
