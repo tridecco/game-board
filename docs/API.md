@@ -147,11 +147,8 @@ const { Board } = Tridecco;
 // Piece
 const { Piece } = Tridecco;
 
-// Texture Pack
-const { TexturePack } = Tridecco;
-
-// Renderer
-const { Renderer } = Tridecco;
+// Texture Pack AND Renderer
+// Note: TexturePack and Renderer only work in the browser environment
 
 // Maps
 const defaultBoardMap = Tridecco.maps.board.default;
