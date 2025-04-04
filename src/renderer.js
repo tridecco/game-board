@@ -126,6 +126,8 @@ class Renderer {
     this.grid = null;
     this.textures = null;
 
+    this.renderFrameRequested = false;
+
     this.resizeObserverInitialized = false;
     this.resizeFrameRequested = false;
     this.resizeObserver = new ResizeObserver(() => {
@@ -629,39 +631,49 @@ class Renderer {
    * @param {OffscreenCanvas} [canvas] - The off-screen canvas to render. If not provided, it renders the background and pieces canvases.
    */
   _render(canvas) {
-    if (!canvas) {
-      this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-      this.context.drawImage(
-        this.offScreenCanvases.background,
-        0,
-        0,
-        this.width,
-        this.height,
-      );
-      this.context.drawImage(
-        this.offScreenCanvases.pieces,
-        0,
-        0,
-        this.width,
-        this.height,
-      );
-      this.context.drawImage(
-        this.offScreenCanvases.piecesPreview,
-        0,
-        0,
-        this.width,
-        this.height,
-      );
-      this.context.drawImage(
-        this.offScreenCanvases.mask,
-        0,
-        0,
-        this.width,
-        this.height,
-      );
-    } else {
-      this.context.drawImage(canvas, 0, 0, this.width, this.height);
+    if (this.renderFrameRequested) {
+      return; // Avoid multiple render calls in the same frame
     }
+
+    requestAnimationFrame(() => {
+      if (!canvas) {
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.context.drawImage(
+          this.offScreenCanvases.background,
+          0,
+          0,
+          this.width,
+          this.height,
+        );
+        this.context.drawImage(
+          this.offScreenCanvases.pieces,
+          0,
+          0,
+          this.width,
+          this.height,
+        );
+        this.context.drawImage(
+          this.offScreenCanvases.piecesPreview,
+          0,
+          0,
+          this.width,
+          this.height,
+        );
+        this.context.drawImage(
+          this.offScreenCanvases.mask,
+          0,
+          0,
+          this.width,
+          this.height,
+        );
+      } else {
+        this.context.drawImage(canvas, 0, 0, this.width, this.height);
+      }
+
+      this.renderFrameRequested = false; // Reset the flag after rendering
+    });
+
+    this.renderFrameRequested = true;
   }
 
   /**
