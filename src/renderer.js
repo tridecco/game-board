@@ -174,6 +174,7 @@ class Renderer {
 
     this._isPreviewing = false; // Flag to check if a piece is being previewed
     this._isShowingAvailablePositions = false; // Flag to check if available positions are being shown
+    this._showingAvailablePositions = new Array(); // Store currently shown available positions
 
     this._setUpBoard();
     this._loadAssets(texturesUrl, backgroundUrl, gridUrl).then(() => {
@@ -390,6 +391,11 @@ class Renderer {
     // Render pieces and hexagons (if any)
     if (this.board.indexes.length) {
       this._renderPiecesAndHexagons();
+    }
+
+    // Render the available positions mask if they are being shown
+    if (this._isShowingAvailablePositions) {
+      this.showAvailablePositions(this._showingAvailablePositions);
     }
 
     // Render the hitmap for detecting pieces
@@ -934,6 +940,7 @@ class Renderer {
     this._render(this.offScreenCanvases.mask);
 
     this._isShowingAvailablePositions = true; // Set the flag to indicate available positions are being shown
+    this._showingAvailablePositions = positions; // Store the currently shown available positions
   }
 
   /**
@@ -951,6 +958,7 @@ class Renderer {
     this._render();
 
     this._isShowingAvailablePositions = false; // Reset the flag
+    this._showingAvailablePositions = []; // Clear the stored available positions
   }
 
   /**
@@ -1169,11 +1177,13 @@ class Renderer {
     this.textures = null;
     this.resizeObserverInitialized = false;
     this.resizeFrameRequested = false;
+    this.renderFrameRequested = false;
     this.eventListeners = null;
     this.eventHandlers.clear();
     this.eventHandlers = null;
     this._isPreviewing = false;
     this._isShowingAvailablePositions = false;
+    this._showingAvailablePositions = null;
   }
 }
 
