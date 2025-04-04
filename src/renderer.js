@@ -856,8 +856,12 @@ class Renderer {
   /**
    * @method showAvailablePositions - Highlights available positions on the board.
    * @param {Array<number>} [positions=this.board.getAvailablePositions()] - The array of available positions to highlight.
+   * @param {string} [fillColor='rgba(0, 0, 0, 0.5)'] - The fill color for the available positions highlight.
    */
-  showAvailablePositions(positions = this.board.getAvailablePositions()) {
+  showAvailablePositions(
+    positions = this.board.getAvailablePositions(),
+    fillColor = 'rgba(0, 0, 0, 0.5)',
+  ) {
     if (!Array.isArray(positions) || positions.length === 0) {
       return; // No positions to highlight
     }
@@ -869,7 +873,7 @@ class Renderer {
     const maskContext = this.offScreenContexts.mask;
 
     // Fill the entire canvas with a semi-transparent black overlay
-    maskContext.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    maskContext.fillStyle = fillColor;
     maskContext.fillRect(
       0,
       0,
