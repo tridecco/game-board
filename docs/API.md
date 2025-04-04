@@ -855,7 +855,7 @@ Retrieves a random position index from the board, optionally filtering for edge 
 
 **Parameters:**
 
-- `isEdge` (boolean, optional): If `true`, only edge positions are considered. Defaults to `false`.
+- `isEdge` (boolean, optional): If `true`, all positions (including edge positions) are considered. If `false`, only non-edge positions are considered. Defaults to `false`.
 - `excludedIndexes` (Array\<number>, optional): An array of position indexes to exclude from the random selection. Defaults to an empty array.
 
 **Returns:**
@@ -865,9 +865,9 @@ Retrieves a random position index from the board, optionally filtering for edge 
 #### Example
 
 ```javascript
-const randomPosition = board.getRandomPosition(); // Get any random position
-const randomEdgePosition = board.getRandomPosition(true); // Get a random edge position
-const randomPositionExcluding = board.getRandomPosition(false, [0, 1, 2]); // Get a random position excluding indexes 0, 1, and 2
+const randomNonEdgePosition = board.getRandomPosition(); // Get a random non-edge position
+const randomPosition = board.getRandomPosition(true); // Get a random position including edge positions
+const randomPositionExcluding = board.getRandomPosition(false, [0, 1, 2]); // Get a random position excluding indexes 0, 1, 2, and edge positions
 ```
 
 ### `getEmptyPositions()`
