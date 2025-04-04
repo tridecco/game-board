@@ -94,6 +94,11 @@ This document provides a comprehensive guide to the API of the Tridecco Game Boa
       - [Example](#example-37)
     - [`equals(other)`](#equalsother)
       - [Example](#example-38)
+  - [Texture Pack](#texture-pack)
+    - [Constructor](#constructor-4)
+      - [Example](#example-39)
+    - [`get(type, key)`](#gettype-key)
+      - [Example](#example-40)
 
 ## Import the Library
 
@@ -115,8 +120,12 @@ const { Board } = Tridecco;
 // Piece
 const { Piece } = Tridecco;
 
-// Default Map
-const defaultMap = Tridecco.maps.board.default;
+// Texture Pack
+const { TexturePack } = Tridecco;
+
+// Maps
+const defaultBoardMap = Tridecco.maps.board.default;
+const defaultRendererMap = Tridecco.maps.renderer.default;
 ```
 
 ### Browser
@@ -139,8 +148,12 @@ const { Board } = Tridecco;
 // Piece
 const { Piece } = Tridecco;
 
-// Default Map
-const defaultMap = Tridecco.maps.board.default;
+// Texture Pack
+const { TexturePack } = Tridecco;
+
+// Maps
+const defaultBoardMap = Tridecco.maps.board.default;
+const defaultRendererMap = Tridecco.maps.renderer.default;
 ```
 
 ## Hexagonal Grid
@@ -618,7 +631,7 @@ clone();
 
 **Description:**
 
-Creates a deep copy of TriHexGrid object.
+Creates a deep copy of `TriHexGrid` object.
 
 **Returns:**
 
@@ -642,11 +655,11 @@ constructor(map = defaultMap);
 
 **Description:**
 
-Creates a new `Board` instance. Initializes the game board with a map configuration, which defines the board's layout, dimensions, and position properties. If no map is provided, it defaults to `defaultMap`.
+Creates a new `Board` instance. Initializes the game board with a map configuration, which defines the board's layout, dimensions, and position properties. If no map is provided, it defaults to `defaultBoardMap`.
 
 **Parameters:**
 
-- `map` (Object, optional): An object containing the board configuration. If not provided, `defaultMap` is used. The map object should have the following properties:
+- `map` (Object, optional): An object containing the board configuration. If not provided, `defaultBoardMap` is used. The map object should have the following properties:
   - `type` (string): The type of hexagonal grid layout ('odd-r', 'even-r', 'odd-q', 'even-q').
   - `columns` (number): The number of columns in the grid.
   - `rows` (number): The number of rows in the grid.
@@ -654,7 +667,7 @@ Creates a new `Board` instance. Initializes the game board with a map configurat
 
 **Throws:**
 
-- `Error`: If `map` is not provided and `defaultMap` is not available, or if the provided `map` is invalid (missing `type`, `columns`, `rows`, or `positions`).
+- `Error`: If `map` is not provided and `defaultBoardMap` is not available, or if the provided `map` is invalid (missing `type`, `columns`, `rows`, or `positions`).
 
 #### Example
 
@@ -1275,4 +1288,73 @@ const piece4 = new Piece(['green', 'yellow']);
 console.log(piece1.equals(piece2)); // Output: true (same colors)
 console.log(piece1.equals(piece3)); // Output: false (different color order, current implementation considers order)
 console.log(piece1.equals(piece4)); // Output: false (different colors)
+```
+
+## Texture Pack
+
+### Constructor
+
+```javascript
+constructor(texturesUrl, callback = () => {});
+```
+
+**Description:**
+
+Creates a new `TexturePack` instance and immediately starts loading textures from the provided URL.
+
+**Parameters:**
+
+- `texturesUrl` (string): The base URL where the texture pack's `index.json` and image files are located.
+- `callback` (Function, optional): A callback function executed after all textures are loaded. It receives the `TexturePack` instance as the first argument, or `null` and an error object as the second argument if loading fails.
+
+**Throws:**
+
+- `Error`: If `texturesUrl` is not a string, if `callback` is not a function, or if used outside a browser environment.
+
+#### Example
+
+```javascript
+const texturePack = new TexturePack(
+  '/assets/textures/classic/normal',
+  (pack, error) => {
+    if (error) {
+      console.error('Failed to load textures:', error);
+      return;
+    }
+    console.log('Texture pack loaded:', pack);
+  },
+);
+```
+
+### `get(type, key)`
+
+```javascript
+get(type, key);
+```
+
+**Description:**
+
+Retrieves a texture image element by its type ('tiles' or 'hexagons') and key.
+
+**Parameters:**
+
+- `type` (string): The type of texture to retrieve, either `'tiles'` or `'hexagons'`.
+- `key` (string): The key of the texture as defined in the texture pack's `index.json`.
+
+**Returns:**
+
+- `HTMLImageElement | null`: The loaded texture image element if found, or `null` if the type or key is invalid or the texture wasn't loaded.
+
+#### Example
+
+```javascript
+const tileTexture = texturePack.get('tiles', 'red-blue');
+if (tileTexture) {
+  // Use the texture...
+}
+
+const hexagonTexture = texturePack.get('hexagons', 'red');
+if (hexagonTexture) {
+  // Use the texture...
+}
 ```
