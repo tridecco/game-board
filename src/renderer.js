@@ -1091,7 +1091,7 @@ class Renderer {
    * @throws {Error} - If eventType is not a valid event type.
    */
   addEventListener(eventType, listener, options = {}) {
-    if (!this.eventListeners[eventType]) {
+    if (!this.eventListeners[eventType] || eventType.endsWith('Available')) {
       throw new Error('Invalid event type');
     }
 
