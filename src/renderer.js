@@ -1085,7 +1085,7 @@ class Renderer {
 
   /**
    * @method addEventListener - Adds a listener for specific renderer events, enabling custom actions on events like piece placement.
-   * @param {string} eventType - The event type to listen for (dragover, dragoverAvailable, drop, dropAvailable, mousemove, mousemoveAvailable, click, clickAvailable, resize).
+   * @param {string} eventType - The event type to listen for (dragover, drop, mousemove, click, resize).
    * @param {Function} listener - The function to execute when the event is triggered; receives event-specific arguments.
    * @param {Object} [options] - Optional parameters, including `onlyAvailable: true` to filter events to available positions only.
    * @throws {Error} - If eventType is not a valid event type.
