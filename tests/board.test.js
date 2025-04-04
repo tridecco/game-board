@@ -731,7 +731,7 @@ describe('Board', () => {
         board.place(0, piece1);
         board.place(8, piece2);
         board.remove(8);
-        expect(listener).toHaveBeenCalledWith([1, 1]);
+        expect(listener).toHaveBeenCalledWith([[1, 1]]);
       });
 
       it('should trigger "clear" event when the board is cleared', () => {
