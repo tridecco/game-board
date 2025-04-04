@@ -196,14 +196,6 @@ class Renderer {
         'dragover',
         this._getPieceFromCoordinate(coords.x, coords.y),
       );
-    });
-
-    this.canvas.addEventListener('dragoverAvailable', (event) => {
-      const coords = {
-        x: event.offsetX,
-        y: event.offsetY,
-      };
-      event.preventDefault(); // Prevent default behavior to allow dropping
       this._triggerEvent(
         'dragoverAvailable',
         this._getPieceFromCoordinate(coords.x, coords.y, true), // Only consider available pieces
@@ -220,14 +212,6 @@ class Renderer {
         'drop',
         this._getPieceFromCoordinate(coords.x, coords.y),
       );
-    });
-
-    this.canvas.addEventListener('dropAvailable', (event) => {
-      const coords = {
-        x: event.offsetX,
-        y: event.offsetY,
-      };
-      event.preventDefault(); // Prevent default behavior to allow dropping
       this._triggerEvent(
         'dropAvailable',
         this._getPieceFromCoordinate(coords.x, coords.y, true), // Only consider available pieces
@@ -243,13 +227,6 @@ class Renderer {
         'click',
         this._getPieceFromCoordinate(coords.x, coords.y),
       );
-    });
-
-    this.canvas.addEventListener('clickAvailable', (event) => {
-      const coords = {
-        x: event.offsetX,
-        y: event.offsetY,
-      };
       this._triggerEvent(
         'clickAvailable',
         this._getPieceFromCoordinate(coords.x, coords.y, true), // Only consider available pieces
@@ -264,6 +241,10 @@ class Renderer {
       this._triggerEvent(
         'mousemove',
         this._getPieceFromCoordinate(coords.x, coords.y),
+      );
+      this._triggerEvent(
+        'mousemoveAvailable',
+        this._getPieceFromCoordinate(coords.x, coords.y, true), // Only consider available pieces
       );
     });
   }
