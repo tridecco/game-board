@@ -206,7 +206,14 @@ class Board {
 
     const position = this.map.positions[index];
 
-    const removedHexagons = this.getRelatedHexagons(index); // All related hexagons will be removed
+    const relatedHexagons = this.getRelatedHexagons(index);
+
+    const removedHexagons = relatedHexagons.filter((hexagon) => {
+      if (this.hexagons.has(hexagon)) {
+        return true;
+      }
+      return false;
+    });
 
     this.grid.remove([
       position[Board.POSITION_INDEXES.A],
@@ -220,13 +227,15 @@ class Board {
     ]);
 
     removedHexagons.forEach((hexagon) => {
-      const destroyedHexagon = hexagon.split('-').map(Number);
-
-      this.hexagons.delete(destroyedHexagon);
+      this.hexagons.delete(hexagon); // Remove the hexagon from the set
       this.hexagonsColor.delete(hexagon); // Remove the color of the hexagon
-
-      this._triggerEvent('destroy', destroyedHexagon); // Trigger destroy event for each hexagon removed
     });
+
+    // Trigger destroy event for all removed hexagons
+    this._triggerEvent(
+      'destroy',
+      removedHexagons.map((hexagon) => hexagon.split('-').map(Number)),
+    );
 
     const removedValue = this.indexes[index];
 
