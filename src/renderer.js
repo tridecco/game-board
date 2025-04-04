@@ -252,8 +252,8 @@ class Renderer {
 
   /**
    * @method _triggerEvent - Trigger an event for a specific action.
-   * @param {string} eventType - The type of event to trigger (set, remove, form, destroy, clear).
-   * @param {...any} args - The arguments to pass to the event listeners.
+   * @param {string} eventType - The type of event to trigger (dragover, dragoverAvailable, drop, dropAvailable, mousemove, mousemoveAvailable, click, clickAvailable, resize).
+   * @param {...*} args - The arguments to pass to the event listeners.
    */
   _triggerEvent(eventType, ...args) {
     if (this.eventListeners[eventType]) {
@@ -295,7 +295,6 @@ class Renderer {
     this.board.addEventListener('destroy', renderPiecesAndHexagons);
     this.board.addEventListener('clear', clearBoard);
 
-    // Store references to the bound functions for potential cleanup
     this.eventHandlers.set('set', renderPiece);
     this.eventHandlers.set('remove', renderPiecesAndHexagons);
     this.eventHandlers.set('form', renderHexagons);
@@ -308,27 +307,22 @@ class Renderer {
    * @param {string} texturesUrl - The URL of the texture pack.
    * @param {string} backgroundUrl - The URL of the background image.
    * @param {string} gridUrl - The URL of the grid image.
+   * @returns {Promise<void[]>} - A promise that resolves when all assets are loaded.
    */
   async _loadAssets(texturesUrl, backgroundUrl, gridUrl) {
     const loadingAssetsPromises = [
       new Promise((resolve) => {
-        this.textures = new TexturePack(texturesUrl, () => {
-          resolve();
-        });
+        this.textures = new TexturePack(texturesUrl, resolve);
       }),
       new Promise((resolve) => {
         this.background = new Image();
         this.background.src = backgroundUrl;
-        this.background.onload = () => {
-          resolve();
-        };
+        this.background.onload = resolve;
       }),
       new Promise((resolve) => {
         this.grid = new Image();
         this.grid.src = gridUrl;
-        this.grid.onload = () => {
-          resolve();
-        };
+        this.grid.onload = resolve;
       }),
     ];
 
@@ -336,7 +330,7 @@ class Renderer {
   }
 
   /**
-   * @method _setUpCanvas - Sets up the canvas dimensions.
+   * @method _setUpCanvas - Sets up the canvas dimensions and renders initial elements.
    */
   _setUpCanvas() {
     const containerWidth = this.container.clientWidth;
@@ -345,60 +339,44 @@ class Renderer {
     let canvasWidth, canvasHeight;
 
     if (containerWidth / containerHeight > mapRatio) {
-      // Container is wider than map ratio: fill height and adjust width
       canvasHeight = containerHeight;
       canvasWidth = canvasHeight * mapRatio;
     } else {
-      // Container is taller than map ratio: fill width and adjust height
       canvasWidth = containerWidth;
       canvasHeight = canvasWidth / mapRatio;
     }
 
-    // Set main canvas size
     this.canvas.width = canvasWidth;
     this.canvas.height = canvasHeight;
 
-    // Center the canvas within the container
     const leftOffset = (containerWidth - canvasWidth) / HALF;
     const topOffset = (containerHeight - canvasHeight) / HALF;
     this.canvas.style.position = 'absolute';
     this.canvas.style.left = `${leftOffset}px`;
     this.canvas.style.top = `${topOffset}px`;
 
-    // Append canvas to container if it's not added yet
     if (!this.canvas.parentNode) {
       this.container.appendChild(this.canvas);
     }
 
-    // Initialize all off-screen canvases to the same dimensions
     for (const key in this.offScreenCanvases) {
       this.offScreenCanvases[key].width = canvasWidth;
       this.offScreenCanvases[key].height = canvasHeight;
     }
 
-    // Save dimensions and ratios for future rendering calculations
     this.width = canvasWidth;
     this.height = canvasHeight;
     this.widthRatio = canvasWidth / this.map.width;
     this.heightRatio = canvasHeight / this.map.height;
 
-    // Clear the canvas
     this._clearAllCanvases();
-
-    // Render the background and grid images
     this._renderBackgroundAndGrid();
-
-    // Render pieces and hexagons (if any)
     if (this.board.indexes.length) {
       this._renderPiecesAndHexagons();
     }
-
-    // Render the available positions mask if they are being shown
     if (this._isShowingAvailablePositions) {
       this.showAvailablePositions(this._showingAvailablePositions);
     }
-
-    // If pieces are being previewed, render the preview
     if (this._isPreviewing) {
       this._previewingPositions.forEach((index) => {
         const piece = this.board.get(index);
@@ -407,16 +385,57 @@ class Renderer {
         }
       });
     }
-
-    // Render the hitmap for detecting pieces
     this._setUpHitmap();
-
-    // Render the main canvas
     this._render();
   }
 
   /**
-   * @method _renderBackgroundAndGrid - Renders the background and grid images.
+   * @method _render - Renders the main canvas by drawing layers from off-screen canvases.
+   */
+  _render() {
+    if (this.requestedFrames.has('render')) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.context.drawImage(
+        this.offScreenCanvases.background,
+        0,
+        0,
+        this.width,
+        this.height,
+      );
+      this.context.drawImage(
+        this.offScreenCanvases.pieces,
+        0,
+        0,
+        this.width,
+        this.height,
+      );
+      this.context.drawImage(
+        this.offScreenCanvases.piecesPreview,
+        0,
+        0,
+        this.width,
+        this.height,
+      );
+      this.context.drawImage(
+        this.offScreenCanvases.mask,
+        0,
+        0,
+        this.width,
+        this.height,
+      );
+
+      this.requestedFrames.delete('render');
+    });
+
+    this.requestedFrames.add('render');
+  }
+
+  /**
+   * @method _renderBackgroundAndGrid - Renders the background and grid images onto the background off-screen canvas.
    */
   _renderBackgroundAndGrid() {
     // Clear the background canvas
@@ -488,17 +507,16 @@ class Renderer {
   }
 
   /**
-   * @method _renderPiecesAndHexagons - Renders all pieces and hexagons on the board.
+   * @method _renderPiecesAndHexagons - Clears and re-renders all pieces and hexagons on the pieces off-screen canvas.
    */
   _renderPiecesAndHexagons() {
     this._clearBoard();
-
     this._renderPieces();
     this._renderHexagons();
   }
 
   /**
-   * @method _renderPieces - Renders all pieces on the board.
+   * @method _renderPieces - Renders all pieces from the board's indexes onto the pieces off-screen canvas.
    */
   _renderPieces() {
     const pieces = this.board.indexes;
@@ -512,12 +530,12 @@ class Renderer {
   }
 
   /**
-   * @method _renderPiece - Renders a piece on the canvas.
-   * @param {number} index - The index of the piece.
-   * @param {string} colorsKey - The colors key of the piece.
-   * @param {boolean} flipped - Whether the piece is flipped or not.
-   * @param {CanvasRenderingContext2D} targetContext - The context to render the piece on.
-   * @param {string} [fillColor] - The fill color for the piece (used for hitmap). If provided, texture colors are ignored.
+   * @method _renderPiece - Renders a single game piece onto a specified canvas context.
+   * @param {number} index - The index of the piece to render, corresponding to its position in the board's index array.
+   * @param {string} colorsKey - The color key of the piece, used to retrieve the correct texture.
+   * @param {boolean} flipped - A boolean indicating if the piece should be rendered flipped.
+   * @param {CanvasRenderingContext2D} targetContext - The 2D rendering context of the canvas to draw onto.
+   * @param {string} [fillColor] - Optional fill color to override texture colors, used for hitmap rendering.
    */
   _renderPiece(
     index,
@@ -557,13 +575,12 @@ class Renderer {
       height = imageHeight * (this.heightRatio || 1);
     }
 
-    // Ensure width and height are valid numbers > 0
     if (!(width > 0 && height > 0)) {
       return;
     }
 
     const rotation = tile.rotation || 0;
-    const angle = (rotation * Math.PI) / HALF_PI_DEGREES; // Convert degrees to radians
+    const angle = (rotation * Math.PI) / HALF_PI_DEGREES;
 
     targetContext.save();
     targetContext.translate(x + width / HALF, y + height / HALF);
@@ -605,22 +622,22 @@ class Renderer {
   }
 
   /**
-   * @method _renderHexagons - Renders all hexagons on the board.
+   * @method _renderHexagons - Renders complete hexagons on the pieces off-screen canvas.
    */
   _renderHexagons() {
     const hexagons = this.board.getCompleteHexagons();
     for (const hexagon of hexagons) {
-      this._renderHexagon(hexagon.coordinate, hexagon.color);
+      this._renderHexagon(hexagon, 'hexagon'); // Assuming 'hexagon' is the color key for hexagons
     }
   }
 
   /**
-   * @method _renderHexagon - Renders a hexagon on the canvas.
-   * @param {Object} coordinate - The coordinate of the hexagon.
-   * @param {string} color - The color of the hexagon.
+   * @method _renderHexagon - Renders a single hexagon onto the pieces off-screen canvas.
+   * @param {Array<number>} coordinate - The column and row coordinate of the hexagon to render.
+   * @param {string} color - The color key of the hexagon texture to use for rendering.
    */
   _renderHexagon(coordinate, color) {
-    const hexagon = this.map.hexagons[`${coordinate[0]}-${coordinate[1]}`]; // col-row
+    const hexagon = this.map.hexagons[`${coordinate[0]}-${coordinate[1]}`];
     const texture = this.textures.get('hexagons', color);
     const x = hexagon.x * this.widthRatio;
     const y = hexagon.y * this.heightRatio;
@@ -638,64 +655,7 @@ class Renderer {
   }
 
   /**
-   * @method _render - Renders the main canvas.
-   */
-  _render() {
-    if (this.requestedFrames.has('render')) {
-      return; // Avoid multiple render calls in the same frame
-    }
-
-    requestAnimationFrame(() => {
-      this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-      this.context.drawImage(
-        this.offScreenCanvases.background,
-        0,
-        0,
-        this.width,
-        this.height,
-      );
-      this.context.drawImage(
-        this.offScreenCanvases.pieces,
-        0,
-        0,
-        this.width,
-        this.height,
-      );
-      this.context.drawImage(
-        this.offScreenCanvases.piecesPreview,
-        0,
-        0,
-        this.width,
-        this.height,
-      );
-      this.context.drawImage(
-        this.offScreenCanvases.mask,
-        0,
-        0,
-        this.width,
-        this.height,
-      );
-
-      this.requestedFrames.delete('render');
-    });
-
-    this.requestedFrames.add('render');
-  }
-
-  /**
-   * @method _clearBoard - Clears the board.
-   */
-  _clearBoard() {
-    this.offScreenContexts.pieces.clearRect(
-      0,
-      0,
-      this.offScreenCanvases.pieces.width,
-      this.offScreenCanvases.pieces.height,
-    );
-  }
-
-  /**
-   * @method _clearAllCanvases - Clears all canvases. (off-screen and main)
+   * @method _clearAllCanvases - Clears all off-screen canvases and the main display canvas.
    */
   _clearAllCanvases() {
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -710,7 +670,19 @@ class Renderer {
   }
 
   /**
-   * @method _setUpHitmap - Sets up the hitmap for the canvas using gapped colors.
+   * @method _clearBoard - Clears the pieces off-screen canvas, effectively removing all pieces and hexagons rendering.
+   */
+  _clearBoard() {
+    this.offScreenContexts.pieces.clearRect(
+      0,
+      0,
+      this.offScreenCanvases.pieces.width,
+      this.offScreenCanvases.pieces.height,
+    );
+  }
+
+  /**
+   * @method _setUpHitmap - Sets up the hitmap by rendering each piece with a unique color ID onto the hitmap off-screen canvas.
    */
   _setUpHitmap() {
     this.offScreenContexts.hitmap.clearRect(
@@ -748,11 +720,11 @@ class Renderer {
   }
 
   /**
-   * @method _getPieceFromCoordinate - Gets the piece index from a coordinate using the gapped hitmap.
-   * @param {number} x - The x coordinate.
-   * @param {number} y - The y coordinate.
-   * @param {boolean} [onlyAvailable=false] - Whether to only consider available pieces.
-   * @returns {number} - The index of the piece at the specified coordinate. (-1 if not found)
+   * @method _getPieceFromCoordinate - Retrieves the index of a piece at a given canvas coordinate using the hitmap.
+   * @param {number} x - The x coordinate on the canvas.
+   * @param {number} y - The y coordinate on the canvas.
+   * @param {boolean} [onlyAvailable=false] - Optional flag to only consider available positions.
+   * @returns {number} - The index of the piece at the coordinate, or -1 if no piece is found.
    */
   _getPieceFromCoordinate(x, y, onlyAvailable = false) {
     const imageData = this.offScreenContexts.hitmap.getImageData(x, y, 1, 1);
@@ -762,46 +734,41 @@ class Renderer {
     const b = pixelData[TWO];
     const alpha = pixelData[ALPHA_CHANNEL_INDEX];
 
-    // Fully transparent pixel, no piece found
     if (alpha === 0) {
       return NOT_FOUND;
     }
 
-    // Decode the read color back to a potential Gapped ID
     const decodedGappedId =
       r | (g << BITS_PER_BYTE) | (b << BITS_PER_TWO_BYTES);
 
-    // Check if it's the background ID (should be caught by alpha check, but double-check)
     if (decodedGappedId === 0) {
       return NOT_FOUND;
     }
 
-    // Validate the Decoded ID against the Gap Rule
     if ((decodedGappedId - 1) % COLOR_GAP_FACTOR !== 0) {
       return NOT_FOUND;
     }
 
-    // Calculate the original index
     const pieceIndex = (decodedGappedId - 1) / COLOR_GAP_FACTOR;
     if (!(pieceIndex >= 0 && pieceIndex < this.board.map.positions.length)) {
       return NOT_FOUND;
     }
 
     if (onlyAvailable) {
-      const availablePositions = new Set(this.board.getAvailablePositions()); // Ensure this returns 0-based indices
+      const availablePositions = new Set(this.board.getAvailablePositions());
       if (!availablePositions.has(pieceIndex)) {
-        return NOT_FOUND; // Piece is not available
+        return NOT_FOUND;
       }
     }
 
-    return pieceIndex; // Return the calculated 0-based index
+    return pieceIndex;
   }
 
   /**
-   * @method previewPiece - Previews a lightly transparent version of a piece on the canvas.
-   * @param {number} index - The index of the piece to preview.
-   * @param {Piece} piece - The piece object to preview.
-   * @param {string} [fillColor='rgba(255, 255, 255, 0.5)'] - The fill color for the preview.
+   * @method previewPiece - Renders a preview of a piece at a given index with a semi-transparent overlay.
+   * @param {number} index - The index of the board position where the piece preview is to be rendered.
+   * @param {Piece} piece - The Piece object to be previewed.
+   * @param {string} [fillColor='rgba(255, 255, 255, 0.5)'] - Optional fill color for the preview overlay, default is semi-transparent white.
    */
   previewPiece(index, piece, fillColor = 'rgba(255, 255, 255, 0.5)') {
     if (!piece || !piece.colorsKey) {
@@ -826,18 +793,16 @@ class Renderer {
       piece.colorsKey,
       tile.flipped,
       this.offScreenContexts.piecesPreview,
-      fillColor, // Lightly transparent white
+      fillColor,
     );
 
-    // Render the preview canvas to the main canvas
     this._render();
-
-    this._isPreviewing = true; // Set the preview flag to true
-    this._previewingPositions.add(index); // Store the currently previewing piece
+    this._isPreviewing = true;
+    this._previewingPositions.add(index);
   }
 
   /**
-   * @method clearPreview - Clears the preview of pieces on the canvas.
+   * @method clearPreview - Clears any piece previews currently rendered on the piecesPreview off-screen canvas.
    */
   clearPreview() {
     this.offScreenContexts.piecesPreview.clearRect(
@@ -846,18 +811,15 @@ class Renderer {
       this.offScreenCanvases.piecesPreview.width,
       this.offScreenCanvases.piecesPreview.height,
     );
-
-    // Re-render the main canvas to remove the preview
     this._render();
-
-    this._isPreviewing = false; // Reset the preview flag
+    this._isPreviewing = false;
     this._previewingPositions.clear();
   }
 
   /**
-   * @method showAvailablePositions - Highlights available positions on the board.
-   * @param {Array<number>} [positions=this.board.getAvailablePositions()] - The array of available positions to highlight.
-   * @param {string} [fillColor='rgba(0, 0, 0, 0.5)'] - The fill color for the available positions highlight.
+   * @method showAvailablePositions - Highlights available positions on the board using a mask on the mask off-screen canvas.
+   * @param {Array<number>} [positions=this.board.getAvailablePositions()] - An array of position indexes to highlight as available.
+   * @param {string} [fillColor='rgba(0, 0, 0, 0.5)'] - Optional fill color for the highlight mask, default is semi-transparent black.
    */
   showAvailablePositions(
     positions = this.board.getAvailablePositions(),
@@ -947,7 +909,7 @@ class Renderer {
   }
 
   /**
-   * @method clearAvailablePositions - Clears the highlights of available positions on the board.
+   * @method clearAvailablePositions - Clears the highlight mask from the mask off-screen canvas, removing highlights of available positions.
    */
   clearAvailablePositions() {
     this.offScreenContexts.mask.clearRect(
@@ -956,8 +918,6 @@ class Renderer {
       this.offScreenCanvases.mask.width,
       this.offScreenCanvases.mask.height,
     );
-
-    // Re-render the main canvas to remove the highlights
     this._render();
 
     this._isShowingAvailablePositions = false; // Reset the flag
@@ -965,11 +925,11 @@ class Renderer {
   }
 
   /**
-   * @method getTexture - Gets a texture from the texture pack.
-   * @param {string} type - The type of texture (e.g., 'tiles', 'hexagons').
-   * @param {string} key - The key of the texture to retrieve.
-   * @returns {HTMLImageElement} - The texture image.
-   * @throws {Error} - If textures are not loaded yet.
+   * @method getTexture - Retrieves a texture from the loaded texture pack by type and key.
+   * @param {string} type - The texture type (e.g., 'tiles', 'hexagons').
+   * @param {string} key - The key of the texture image within the texture type.
+   * @returns {HTMLImageElement} - The requested texture image element.
+   * @throws {Error} - If textures have not been loaded yet, indicating assets are not ready.
    */
   getTexture(type, key) {
     if (!this.textures) {
@@ -979,9 +939,9 @@ class Renderer {
   }
 
   /**
-   * @method updateMap - Updates the map of the renderer.
-   * @param {Object} newMap - The new map object to be set.
-   * @throws {Error} - If newMap is not a valid map object.
+   * @method updateMap - Updates the game board map, re-initializes the canvas, and re-renders the board.
+   * @param {Object} newMap - The new map configuration object to replace the current map.
+   * @throws {Error} - If newMap is not a valid map object, validation checks for required map properties.
    */
   updateMap(newMap) {
     if (
@@ -1017,10 +977,10 @@ class Renderer {
   }
 
   /**
-   * @method updateTextures - Updates the texture pack of the renderer.
-   * @param {string} texturesUrl - The URL of the new texture pack.
-   * @returns {Promise} - A promise that resolves when the new textures are loaded and rendered.
-   * @throws {Error} - If texturesUrl is not a string or if the texture pack fails to load.
+   * @method updateTextures - Updates the texture pack used by the renderer, loading new textures from a given URL.
+   * @param {string} texturesUrl - The URL from which to load the new texture pack.
+   * @returns {Promise<void>} - A promise that resolves when the new texture pack is loaded, pieces and hitmap are re-rendered.
+   * @throws {Error} - If texturesUrl is not a string or if loading the texture pack fails.
    */
   async updateTextures(texturesUrl) {
     if (typeof texturesUrl !== 'string') {
@@ -1047,10 +1007,10 @@ class Renderer {
   }
 
   /**
-   * @method updateBackground - Changes the background image of the renderer.
-   * @param {string} backgroundUrl - The URL of the new background image.
-   * @returns {Promise} - A promise that resolves when the new background is loaded and rendered.
-   * @throws {Error} - If backgroundUrl is not a string or if the image fails to load.
+   * @method updateBackground - Updates the background image of the renderer with a new image from the provided URL.
+   * @param {string} backgroundUrl - The URL of the new background image to load.
+   * @returns {Promise<void>} - A promise that resolves when the new background image is loaded and the canvas is re-rendered.
+   * @throws {Error} - If backgroundUrl is not a string or if loading the background image fails.
    */
   async updateBackground(backgroundUrl) {
     if (typeof backgroundUrl !== 'string') {
@@ -1074,10 +1034,10 @@ class Renderer {
   }
 
   /**
-   * @method updateGrid - Changes the grid image of the renderer.
-   * @param {string} gridUrl - The URL of the new grid image.
-   * @returns {Promise} - A promise that resolves when the new grid is loaded and rendered.
-   * @throws {Error} - If gridUrl is not a string or if the image fails to load.
+   * @method updateGrid - Updates the grid image of the renderer with a new image from the provided URL.
+   * @param {string} gridUrl - The URL of the new grid image to load.
+   * @returns {Promise<void>} - A promise that resolves when the new grid image is loaded and the canvas is re-rendered.
+   * @throws {Error} - If gridUrl is not a string or if loading the grid image fails.
    */
   async updateGrid(gridUrl) {
     if (typeof gridUrl !== 'string') {
@@ -1101,11 +1061,11 @@ class Renderer {
   }
 
   /**
-   * @method addEventListener - Add an event listener for a specific event type.
-   * @param {string} eventType - The type of event to listen for (set, remove, form, destroy).
-   * @param {Function} listener - The listener function to be called when the event is triggered.
-   * @param {Object} [options] - Optional parameters for the event listener.
-   * @throws {Error} - Throws an error if the event type is invalid.
+   * @method addEventListener - Adds a listener for specific renderer events, enabling custom actions on events like piece placement.
+   * @param {string} eventType - The event type to listen for (dragover, dragoverAvailable, drop, dropAvailable, mousemove, mousemoveAvailable, click, clickAvailable, resize).
+   * @param {Function} listener - The function to execute when the event is triggered; receives event-specific arguments.
+   * @param {Object} [options] - Optional parameters, including `onlyAvailable: true` to filter events to available positions only.
+   * @throws {Error} - If eventType is not a valid event type.
    */
   addEventListener(eventType, listener, options = {}) {
     if (!this.eventListeners[eventType]) {
@@ -1120,10 +1080,10 @@ class Renderer {
   }
 
   /**
-   * @method removeEventListener - Remove an event listener for a specific event type.
-   * @param {string} eventType - The type of event to stop listening for (set, remove, form, destroy).
-   * @param {Function} listener - The listener function to remove.
-   * @throws {Error} - Throws an error if the event type is invalid.
+   * @method removeEventListener - Removes a previously added event listener for a given event type, preventing further execution on that event.
+   * @param {string} eventType - The event type from which to remove the listener.
+   * @param {Function} listener - The listener function to be removed.
+   * @throws {Error} - If eventType is not a valid event type, indicating an attempt to remove listener from a non-existent event.
    */
   removeEventListener(eventType, listener) {
     if (!this.eventListeners[eventType]) {
@@ -1134,7 +1094,7 @@ class Renderer {
   }
 
   /**
-   * @method destroy - Cleans up the renderer by removing event listeners and clearing canvases.
+   * @method destroy - Tears down the renderer, releasing resources, removing listeners, and detaching the canvas from the DOM.
    */
   destroy() {
     // Remove event listeners from the board
