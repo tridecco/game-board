@@ -1147,6 +1147,9 @@ class Renderer {
     );
     this.board.removeEventListener('clear', this.eventHandlers.get('clear'));
 
+    // Clear event handlers map
+    this.eventHandlers.clear();
+
     // Remove all event listeners from the renderer
     for (const eventType in this.eventListeners) {
       this.eventListeners[eventType].clear();
@@ -1172,21 +1175,26 @@ class Renderer {
       this.offScreenCanvases[key] = null;
       this.offScreenContexts[key] = null;
     }
+    this.offScreenCanvases = null;
+    this.offScreenContexts = null;
+
     this.board = null;
     this.map = null;
     this.container = null;
     this.background = null;
     this.grid = null;
     this.textures = null;
+
     this.resizeObserverInitialized = false;
     this.requestedFrames.clear();
     this.requestedFrames = null;
+
     this.eventListeners = null;
-    this.eventHandlers.clear();
-    this.eventHandlers = null;
+
     this._isPreviewing = false;
     this._isShowingAvailablePositions = false;
     this._showingAvailablePositions = null;
+
     this._previewingPositions.clear();
     this._previewingPositions = null;
   }
