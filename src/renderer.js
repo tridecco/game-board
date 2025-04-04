@@ -491,12 +491,7 @@ class Renderer {
    * @method _renderPiecesAndHexagons - Renders all pieces and hexagons on the board.
    */
   _renderPiecesAndHexagons() {
-    this.offScreenContexts.pieces.clearRect(
-      0,
-      0,
-      this.canvas.width,
-      this.canvas.height,
-    );
+    this._clearBoard();
 
     this._renderPieces();
     this._renderHexagons();
