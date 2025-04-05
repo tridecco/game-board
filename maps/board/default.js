@@ -1,5 +1,5 @@
 /**
- * @fileOverview This file contains the default map for the Tridecco game board.
+ * @fileoverview Default Map
  * @description The default map is the classic Tridecco map with 63 positions (11 columns and 10 rows with even-q type grid).
  */
 

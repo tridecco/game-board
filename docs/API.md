@@ -75,7 +75,7 @@ This document provides a comprehensive guide to the API of the Tridecco Game Boa
       - [Example](#example-28)
     - [`countHexagonsFormed(index, piece)`](#counthexagonsformedindex-piece)
       - [Example](#example-29)
-    - [`isAvailable(index)`](#isavailableindex)
+    - [`isEmpty(index)`](#isemptyindex)
       - [Example](#example-30)
     - [`isCompleteHexagon(col, row)`](#iscompletehexagoncol-row)
       - [Example](#example-31)
@@ -94,6 +94,38 @@ This document provides a comprehensive guide to the API of the Tridecco Game Boa
       - [Example](#example-37)
     - [`equals(other)`](#equalsother)
       - [Example](#example-38)
+  - [Texture Pack](#texture-pack)
+    - [Constructor](#constructor-4)
+      - [Example](#example-39)
+    - [`get(type, key)`](#gettype-key)
+      - [Example](#example-40)
+  - [Renderer](#renderer)
+    - [Constructor](#constructor-5)
+      - [Example](#example-41)
+    - [`previewPiece(index, piece, fillColor)`](#previewpieceindex-piece-fillcolor)
+      - [Example](#example-42)
+    - [`clearPreview()`](#clearpreview)
+      - [Example](#example-43)
+    - [`showAvailablePositions(positions, fillColor)`](#showavailablepositionspositions-fillcolor)
+      - [Example](#example-44)
+    - [`clearAvailablePositions()`](#clearavailablepositions)
+      - [Example](#example-45)
+    - [`getTexture(type, key)`](#gettexturetype-key)
+      - [Example](#example-46)
+    - [`updateMap(newMap)`](#updatemapnewmap)
+      - [Example](#example-47)
+    - [`updateTextures(texturesUrl)`](#updatetexturestexturesurl)
+      - [Example](#example-48)
+    - [`updateBackground(backgroundUrl)`](#updatebackgroundbackgroundurl)
+      - [Example](#example-49)
+    - [`updateGrid(gridUrl)`](#updategridgridurl)
+      - [Example](#example-50)
+    - [`addEventListener(eventType, listener, options)`](#addeventlistenereventtype-listener-options)
+      - [Example](#example-51)
+    - [`removeEventListener(eventType, listener)`](#removeeventlistenereventtype-listener)
+      - [Example](#example-52)
+    - [`destroy()`](#destroy)
+      - [Example](#example-53)
 
 ## Import the Library
 
@@ -115,8 +147,12 @@ const { Board } = Tridecco;
 // Piece
 const { Piece } = Tridecco;
 
-// Default Map
-const defaultMap = Tridecco.maps.default;
+// Texture Pack AND Renderer
+// Note: TexturePack and Renderer only work in the browser environment
+
+// Maps
+const defaultBoardMap = Tridecco.maps.board.default;
+const defaultRendererMap = Tridecco.maps.renderer.default;
 ```
 
 ### Browser
@@ -139,8 +175,15 @@ const { Board } = Tridecco;
 // Piece
 const { Piece } = Tridecco;
 
-// Default Map
-const defaultMap = Tridecco.maps.default;
+// Texture Pack
+const { TexturePack } = Tridecco;
+
+// Renderer
+const { Renderer } = Tridecco;
+
+// Maps
+const defaultBoardMap = Tridecco.maps.board.default;
+const defaultRendererMap = Tridecco.maps.renderer.default;
 ```
 
 ## Hexagonal Grid
@@ -218,10 +261,6 @@ Sets a value at the specified column and row in the grid.
 - `col` (number): The column index (0-based).
 - `row` (number): The row index (0-based).
 - `value` (\*): The value to be stored at the specified position.
-
-**Returns:**
-
-- `void`: This method does not return a value.
 
 #### Example
 
@@ -315,10 +354,6 @@ Iterates over each cell in the grid and executes a provided callback function fo
 
 - `callback` (function): A function to execute for each cell in the grid. The function should accept three parameters: `value`, `col`, and `row`.
 
-**Returns:**
-
-- `void`: This method does not return a value.
-
 #### Example
 
 ```javascript
@@ -368,10 +403,6 @@ clear();
 **Description:**
 
 Clears the entire grid by setting all cell values to `null`. This effectively empties the grid while preserving its dimensions and type.
-
-**Returns:**
-
-- `void`: This method does not return a value.
 
 #### Example
 
@@ -448,15 +479,11 @@ Sets the value of multiple triangles within the grid. Each position in the `posi
 
 **Parameters:**
 
-- `positions` (Array<Array<number>>): An array of positions. Each position is a three-element array: `[col, row, triangle]`.
+- `positions` (Array\<Array\<number>>): An array of positions. Each position is a three-element array: `[col, row, triangle]`.
   - `col` (number): The column index (0-based).
   - `row` (number): The row index (0-based).
   - `triangle` (number): The index of the triangle within the hexagon (1-based, from 1 to 6).
 - `value` (\*): The value to be set for all specified triangles.
-
-**Returns:**
-
-- `void`
 
 **Throws:**
 
@@ -487,7 +514,7 @@ Removes the values from multiple triangles within the grid, effectively setting 
 
 **Parameters:**
 
-- `positions` (Array<Array<number>>): An array of positions, where each position is a three-element array: `[col, row, triangle]`.
+- `positions` (Array\<Array\<number>>): An array of positions, where each position is a three-element array: `[col, row, triangle]`.
   - `col` (number): The column index (0-based).
   - `row` (number): The row index (0-based).
   - `triangle` (number): The index of the triangle within the hexagon (1-based, from 1 to 6).
@@ -548,11 +575,7 @@ Sets the values of all six triangles within a specified hexagon.
 
 - `col` (number): The column index (0-based).
 - `row` (number): The row index (0-based).
-- `values` (Array<\*>): An array of six values to be assigned to the triangles of the hexagon, in order from 1 to 6. If fewer than six values are provided, the remaining triangles will be set to `null`.
-
-**Returns:**
-
-- `void`
+- `values` (Array\<\*>): An array of six values to be assigned to the triangles of the hexagon, in order from 1 to 6. If fewer than six values are provided, the remaining triangles will be set to `null`.
 
 #### Example
 
@@ -618,7 +641,7 @@ clone();
 
 **Description:**
 
-Creates a deep copy of TriHexGrid object.
+Creates a deep copy of `TriHexGrid` object.
 
 **Returns:**
 
@@ -642,19 +665,19 @@ constructor(map = defaultMap);
 
 **Description:**
 
-Creates a new `Board` instance. Initializes the game board with a map configuration, which defines the board's layout, dimensions, and position properties. If no map is provided, it defaults to `defaultMap`.
+Creates a new `Board` instance. Initializes the game board with a map configuration, which defines the board's layout, dimensions, and position properties. If no map is provided, it defaults to `defaultBoardMap`.
 
 **Parameters:**
 
-- `map` (Object, optional): An object containing the board configuration. If not provided, `defaultMap` is used. The map object should have the following properties:
+- `map` (Object, optional): An object containing the board configuration. If not provided, `defaultBoardMap` is used. The map object should have the following properties:
   - `type` (string): The type of hexagonal grid layout ('odd-r', 'even-r', 'odd-q', 'even-q').
   - `columns` (number): The number of columns in the grid.
   - `rows` (number): The number of rows in the grid.
-  - `positions` (Array<Object>): An array defining positions on the board, each object detailing coordinate indexes and adjacency information.
+  - `positions` (Array\<Object>): An array defining positions on the board, each object detailing coordinate indexes and adjacency information.
 
 **Throws:**
 
-- `Error`: If `map` is not provided and `defaultMap` is not available, or if the provided `map` is invalid (missing `type`, `columns`, `rows`, or `positions`).
+- `Error`: If `map` is not provided and `defaultBoardMap` is not available, or if the provided `map` is invalid (missing `type`, `columns`, `rows`, or `positions`).
 
 #### Example
 
@@ -744,7 +767,9 @@ Places a `Piece` object at the specified position index on the board. This metho
 
 **Returns:**
 
-- `Array<Array<number>>`: An array of hexagon coordinates `[col, row]` that were completed as a result of placing the piece. Returns an empty array if no hexagons were formed.
+- `Array<Object>`: An array of objects representing the hexagons formed. Each object contains the following properties:
+  - `coordinate` (Array\<number>): The coordinates of the completed hexagon in the format `[col, row]`.
+  - `color` (string): The color of the completed hexagon.
 
 **Throws:**
 
@@ -830,8 +855,8 @@ Retrieves a random position index from the board, optionally filtering for edge 
 
 **Parameters:**
 
-- `isEdge` (boolean, optional): If `true`, only edge positions are considered. Defaults to `false`.
-- `excludedIndexes` (Array<number>, optional): An array of position indexes to exclude from the random selection. Defaults to an empty array.
+- `isEdge` (boolean, optional): If `true`, all positions (including edge positions) are considered. If `false`, only non-edge positions are considered. Defaults to `false`.
+- `excludedIndexes` (Array\<number>, optional): An array of position indexes to exclude from the random selection. Defaults to an empty array.
 
 **Returns:**
 
@@ -840,9 +865,9 @@ Retrieves a random position index from the board, optionally filtering for edge 
 #### Example
 
 ```javascript
-const randomPosition = board.getRandomPosition(); // Get any random position
-const randomEdgePosition = board.getRandomPosition(true); // Get a random edge position
-const randomPositionExcluding = board.getRandomPosition(false, [0, 1, 2]); // Get a random position excluding indexes 0, 1, and 2
+const randomNonEdgePosition = board.getRandomPosition(); // Get a random non-edge position
+const randomPosition = board.getRandomPosition(true); // Get a random position including edge positions
+const randomPositionExcluding = board.getRandomPosition(false, [0, 1, 2]); // Get a random position excluding indexes 0, 1, 2, and edge positions
 ```
 
 ### `getEmptyPositions()`
@@ -997,15 +1022,15 @@ console.log(
 );
 ```
 
-### `isAvailable(index)`
+### `isEmpty(index)`
 
 ```javascript
-isAvailable(index);
+isEmpty(index);
 ```
 
 **Description:**
 
-Checks if a position at the specified index is currently empty (available for placing a piece).
+Checks if a position at the specified index is currently empty.
 
 **Parameters:**
 
@@ -1022,9 +1047,9 @@ Checks if a position at the specified index is currently empty (available for pl
 #### Example
 
 ```javascript
-const isPositionAvailable = board.isAvailable(4);
+const isPositionAvailable = board.isEmpty(4);
 if (isPositionAvailable) {
-  console.log('Position 4 is available.');
+  console.log('Position 4 is empty.');
 } else {
   console.log('Position 4 is occupied.');
 }
@@ -1076,7 +1101,9 @@ Retrieves an array of coordinates for all hexagons on the board that are current
 
 **Returns:**
 
-- `Array<Array<number>>`: An array of hexagon coordinates, where each coordinate is an array `[col, row]`.
+- `Array<Object>`: An array of objects, each representing a complete hexagon. Each object contains the following properties:
+  - `coordinate` (Array\<number>): The coordinates of the complete hexagon in the format `[col, row]`.
+  - `color` (string): The color of the complete hexagon.
 
 #### Example
 
@@ -1106,6 +1133,7 @@ Adds an event listener for a specific event on the board. This allows you to lis
   - `'remove'`: Triggered when a piece is removed from the board.
   - `'form'`: Triggered when a hexagon is formed after placing a piece.
   - `'destroy'`: Triggered when a hexagon is destroyed (removed) from the board.
+  - `'clear'`: Triggered when the board is cleared.
 - `callback` (Function): The callback function to execute when the event occurs.
   - `'set'` event: The callback will be passed the following parameters:
     - `index` (number): The index where the piece was set.
@@ -1114,9 +1142,12 @@ Adds an event listener for a specific event on the board. This allows you to lis
     - `index` (number): The index from which the piece was removed.
     - `piece` (Piece | null): The piece that was removed (or `null` if no piece was present).
   - `'form'` event: The callback will be passed the following parameters:
-    - `hexagons` (Array<Array<number>>): An array of hexagon coordinates that were formed as a result of placing the piece.
+    - `hexagons` (Array\<Object>): An array of objects representing the hexagons formed. Each object contains:
+      - `coordinate` (Array\<number>): The coordinates of the formed hexagon in the format `[col, row]`.
+      - `color` (string): The color of the formed hexagon.
   - `'destroy'` event: The callback will be passed the following parameters:
-    - `hexagons` (Array<Array<number>>): An array of hexagon coordinates that were destroyed.
+    - `hexagons` (Array\<Array\<number>>): An array of hexagon coordinates that were destroyed.
+  - `'clear'` event: The callback will be passed no parameters.
 
 **Throws:**
 
@@ -1195,10 +1226,6 @@ clear();
 
 Clears the entire game board, removing all pieces, resetting the history, and clearing the record of completed hexagons. This effectively resets the board to its initial state.
 
-**Returns:**
-
-- `void`: This method does not return a value.
-
 #### Example
 
 ```javascript
@@ -1221,7 +1248,7 @@ Creates a new `Piece` instance. Represents a game piece with two colors.
 
 **Parameters:**
 
-- `colors` (Array<string>): An array of exactly two strings, representing the colors of the piece.
+- `colors` (Array\<string>): An array of exactly two strings, representing the colors of the piece.
 - `params` (Object, optional): An optional object containing additional parameters for the piece. These parameters will be directly assigned as properties of the `Piece` instance.
 
 **Throws:**
@@ -1267,4 +1294,451 @@ const piece4 = new Piece(['green', 'yellow']);
 console.log(piece1.equals(piece2)); // Output: true (same colors)
 console.log(piece1.equals(piece3)); // Output: false (different color order, current implementation considers order)
 console.log(piece1.equals(piece4)); // Output: false (different colors)
+```
+
+## Texture Pack
+
+### Constructor
+
+```javascript
+constructor(texturesUrl, callback = () => {});
+```
+
+**Description:**
+
+Creates a new `TexturePack` instance and immediately starts loading textures from the provided URL.
+
+**Parameters:**
+
+- `texturesUrl` (string): The base URL where the texture pack's `index.json` and image files are located.
+- `callback` (Function, optional): A callback function executed after all textures are loaded. It receives the `TexturePack` instance as the first argument, or `null` and an error object as the second argument if loading fails.
+
+**Throws:**
+
+- `Error`: If `texturesUrl` is not a string, if `callback` is not a function, or if used outside a browser environment.
+
+#### Example
+
+```javascript
+const texturePack = new TexturePack(
+  '/assets/textures/classic/normal',
+  (pack, error) => {
+    if (error) {
+      console.error('Failed to load textures:', error);
+      return;
+    }
+    console.log('Texture pack loaded:', pack);
+  },
+);
+```
+
+### `get(type, key)`
+
+```javascript
+get(type, key);
+```
+
+**Description:**
+
+Retrieves a texture image element by its type ('tiles' or 'hexagons') and key.
+
+**Parameters:**
+
+- `type` (string): The type of texture to retrieve, either `'tiles'` or `'hexagons'`.
+- `key` (string): The key of the texture as defined in the texture pack's `index.json`.
+
+**Returns:**
+
+- `HTMLImageElement | null`: The loaded texture image element if found, or `null` if the type or key is invalid or the texture wasn't loaded.
+
+#### Example
+
+```javascript
+const tileTexture = texturePack.get('tiles', 'red-blue');
+if (tileTexture) {
+  // Use the texture...
+}
+
+const hexagonTexture = texturePack.get('hexagons', 'red');
+if (hexagonTexture) {
+  // Use the texture...
+}
+```
+
+## Renderer
+
+![Renderer](./img/renderer.png)
+
+### Constructor
+
+```javascript
+constructor(options, callback = () => {});
+```
+
+**Description:**
+
+Creates a new `Renderer` instance to visualize a `Board` object on an HTML canvas within a specified container element. It initializes rendering contexts, loads necessary assets (textures, background, grid), and sets up event listeners.
+
+**Parameters:**
+
+- `options` (Object): An object containing the configuration options for the renderer.
+  - `board` (Board): The `Board` instance to be rendered.
+  - `container` (HTMLElement): The DOM element that will contain the rendering canvas.
+  - `map` (Object, optional): The map configuration object defining rendering coordinates and dimensions. Defaults to `defaultRendererMap`.
+  - `texturesUrl` (string, optional): The base URL for the texture pack to use. Defaults to a predefined path.
+  - `backgroundUrl` (string, optional): The URL for the background image. Defaults to a predefined path.
+  - `gridUrl` (string, optional): The URL for the grid overlay image. Defaults to a predefined path.
+- `callback` (Function, optional): A callback function executed after the renderer is initialized and initial assets are loaded. Receives the `Renderer` instance as an argument.
+
+**Throws:**
+
+- `Error`: If `board` is not a `Board` instance, `container` is not an `HTMLElement`, `map` is invalid, asset URLs are not strings, `callback` is not a function, or if used outside a browser environment.
+
+#### Example
+
+```javascript
+const myBoard = new Board();
+const containerElement = document.getElementById('game-container');
+
+const renderer = new Renderer(
+  {
+    board: myBoard,
+    container: containerElement,
+    // Optional: map: maps.renderer.default,
+    // Optional: texturesUrl: '/path/to/my/textures',
+  },
+  (rendererInstance) => {
+    console.log('Renderer initialized!', rendererInstance);
+  },
+);
+```
+
+### `previewPiece(index, piece, fillColor)`
+
+```javascript
+previewPiece(index, piece, fillColor = 'rgba(255, 255, 255, 0.5)');
+```
+
+**Description:**
+
+Renders a semi-transparent preview of a given `Piece` at a specified board position index. Useful for showing potential placements during drag-and-drop or hover actions.
+
+**Parameters:**
+
+- `index` (number): The 0-based index of the board position where the preview should be rendered.
+- `piece` (Piece): The `Piece` object to preview.
+- `fillColor` (string, optional): The CSS color string for the semi-transparent overlay applied to the preview. Defaults to `'rgba(255, 255, 255, 0.5)'`.
+
+#### Example
+
+```javascript
+const pieceToPreview = new Piece(['blue', 'yellow']);
+renderer.previewPiece(10, pieceToPreview); // Show preview at index 10
+```
+
+### `clearPreview()`
+
+```javascript
+clearPreview();
+```
+
+**Description:**
+
+Clears any currently displayed piece previews from the renderer.
+
+#### Example
+
+```javascript
+renderer.clearPreview(); // Remove any active previews
+```
+
+### `showAvailablePositions(positions, fillColor)`
+
+```javascript
+showAvailablePositions(positions = this.board.getAvailablePositions(), fillColor = 'rgba(0, 0, 0, 0.5)');
+```
+
+**Description:**
+
+Highlights the specified available positions on the board by overlaying a semi-transparent mask, making non-available positions appear dimmer.
+
+**Parameters:**
+
+- `positions` (Array\<number>, optional): An array of 0-based position indexes to highlight. Defaults to the result of `board.getAvailablePositions()`.
+- `fillColor` (string, optional): The CSS color string for the mask overlay. Defaults to `'rgba(0, 0, 0, 0.5)'`.
+
+**Throws:**
+
+- `Error`: If `positions` is provided but is not an array.
+
+#### Example
+
+```javascript
+renderer.showAvailablePositions(); // Highlight default available positions
+// Or highlight specific positions:
+renderer.showAvailablePositions([5, 8, 12], 'rgba(0, 100, 0, 0.4)');
+```
+
+### `clearAvailablePositions()`
+
+```javascript
+clearAvailablePositions();
+```
+
+**Description:**
+
+Removes the highlight mask, clearing any highlighted available positions from the board.
+
+#### Example
+
+```javascript
+renderer.clearAvailablePositions(); // Remove highlights
+```
+
+### `getTexture(type, key)`
+
+```javascript
+getTexture(type, key);
+```
+
+**Description:**
+
+Retrieves a loaded texture image element from the `TexturePack` used by the renderer.
+
+**Parameters:**
+
+- `type` (string): The type of texture ('tiles' or 'hexagons').
+- `key` (string): The key identifying the specific texture.
+
+**Returns:**
+
+- `HTMLImageElement`: The requested texture image element.
+
+**Throws:**
+
+- `Error`: If textures are not loaded yet.
+
+#### Example
+
+```javascript
+const pieceTexture = renderer.getTexture('tiles', 'red-blue');
+const hexagonTexture = renderer.getTexture('hexagons', 'blue');
+```
+
+### `updateMap(newMap)`
+
+```javascript
+updateMap(newMap);
+```
+
+**Description:**
+
+Updates the renderer to use a new map configuration. This involves recalculating ratios, re-rendering the background/grid/pieces based on the new map's coordinates and dimensions, and potentially re-attaching board event listeners if necessary.
+
+**Parameters:**
+
+- `newMap` (Object): The new map configuration object (must conform to the expected map structure).
+
+**Throws:**
+
+- `Error`: If `newMap` is not a valid map object.
+
+#### Example
+
+```javascript
+const newRendererMap = {
+  /* ... new map definition ... */
+};
+renderer.updateMap(newRendererMap);
+```
+
+### `updateTextures(texturesUrl)`
+
+```javascript
+updateTextures(texturesUrl);
+```
+
+**Description:**
+
+Loads and applies a new texture pack from the specified URL. Re-renders pieces, hexagons, and the hitmap using the new textures.
+
+**Parameters:**
+
+- `texturesUrl` (string): The base URL for the new texture pack.
+
+**Returns:**
+
+- `Promise<void>`: A promise that resolves when the new textures are loaded and applied.
+
+**Throws:**
+
+- `Error`: If `texturesUrl` is not a string or if loading fails.
+
+#### Example
+
+```javascript
+renderer
+  .updateTextures('/assets/textures/futuristic/highres')
+  .then(() => console.log('Textures updated!'))
+  .catch((err) => console.error('Texture update failed:', err));
+```
+
+### `updateBackground(backgroundUrl)`
+
+```javascript
+updateBackground(backgroundUrl);
+```
+
+**Description:**
+
+Loads and applies a new background image from the specified URL.
+
+**Parameters:**
+
+- `backgroundUrl` (string): The URL of the new background image.
+
+**Returns:**
+
+- `Promise<void>`: A promise that resolves when the new background is loaded and applied.
+
+**Throws:**
+
+- `Error`: If `backgroundUrl` is not a string or if loading fails.
+
+#### Example
+
+```javascript
+renderer
+  .updateBackground('/assets/backgrounds/space-nebula.png')
+  .then(() => console.log('Background updated!'))
+  .catch((err) => console.error('Background update failed:', err));
+```
+
+### `updateGrid(gridUrl)`
+
+```javascript
+updateGrid(gridUrl);
+```
+
+**Description:**
+
+Loads and applies a new grid overlay image from the specified URL.
+
+**Parameters:**
+
+- `gridUrl` (string): The URL of the new grid image.
+
+**Returns:**
+
+- `Promise<void>`: A promise that resolves when the new grid is loaded and applied.
+
+**Throws:**
+
+- `Error`: If `gridUrl` is not a string or if loading fails.
+
+#### Example
+
+```javascript
+renderer
+  .updateGrid('/assets/grids/golden.png')
+  .then(() => console.log('Grid updated!'))
+  .catch((err) => console.error('Grid update failed:', err));
+```
+
+### `addEventListener(eventType, listener, options)`
+
+```javascript
+addEventListener(eventType, listener, options = {});
+```
+
+**Description:**
+
+Adds an event listener for specific renderer interaction events (drag/drop, mouse move, click) or resize events.
+
+**Parameters:**
+
+- `eventType` (string): The type of event to listen for:
+  - `'dragover'`, `'drop'`, `'mousemove'`, `'click'`: Triggered for interactions anywhere on the canvas. The listener receives the index of the piece at the event coordinates (-1 if none).
+  - `'resize'`: Triggered when the container element is resized. The listener receives an object with canvas and container dimensions.
+- `listener` (Function): The function to execute when the event occurs. Receives event-specific arguments (usually the piece index or dimension info).
+- `options` (Object, optional): Optional parameters.
+  - `onlyAvailable` (boolean): If `true`, the listener will only be triggered for drop events on available positions. Defaults to `false`. This is useful for distinguishing between general drop events and those specifically on available positions. (`resize` events do not use this option.)
+
+**Throws:**
+
+- `Error`: If `eventType` is not a valid event type.
+
+#### Example
+
+```javascript
+// Listen for drops on available positions
+renderer.addEventListener(
+  'drop',
+  (pieceIndex) => {
+    console.log(`Dropped on available position index: ${pieceIndex}`);
+    // Add logic to place the piece
+  },
+  { onlyAvailable: true },
+);
+
+// Listen for clicks anywhere
+renderer.addEventListener('click', (pieceIndex) => {
+  if (pieceIndex !== -1) {
+    console.log(`Clicked on piece index: ${pieceIndex}`);
+  } else {
+    console.log('Clicked on empty space.');
+  }
+});
+
+// Listen for resize events
+renderer.addEventListener('resize', ({ canvas, container }) => {
+  console.log('Renderer resized. Canvas:', canvas, 'Container:', container);
+});
+```
+
+### `removeEventListener(eventType, listener)`
+
+```javascript
+removeEventListener(eventType, listener);
+```
+
+**Description:**
+
+Removes a previously added event listener for a specific renderer event type.
+
+**Parameters:**
+
+- `eventType` (string): The event type from which to remove the listener.
+- `listener` (Function): The listener function that was originally added.
+
+**Throws:**
+
+- `Error`: If `eventType` is not a valid event type.
+
+#### Example
+
+```javascript
+function handleClick(pieceIndex) {
+  console.log(`Clicked index: ${pieceIndex}`);
+}
+renderer.addEventListener('click', handleClick);
+// Later...
+renderer.removeEventListener('click', handleClick);
+```
+
+### `destroy()`
+
+```javascript
+destroy();
+```
+
+**Description:**
+
+Cleans up the renderer instance, removes event listeners, disconnects the `ResizeObserver`, removes the canvas from the DOM, and nullifies internal references to potentially free up memory and prevent memory leaks. Should be called when the renderer is no longer needed.
+
+#### Example
+
+```javascript
+// When the game component is unmounted or the renderer is no longer needed
+renderer.destroy();
 ```

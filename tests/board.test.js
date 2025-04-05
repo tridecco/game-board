@@ -6,7 +6,7 @@
 const Board = require('../').Board;
 const Piece = require('../').Piece;
 
-const defaultMap = require('../maps/default');
+const defaultMap = require('../maps/board/default');
 
 describe('Board', () => {
   describe('constructor', () => {
@@ -175,8 +175,9 @@ describe('Board', () => {
       expect(hexagons.length).toEqual(1);
       if (hexagons.length > 0) {
         hexagons.forEach((hexagon) => {
-          expect(hexagon).toBeInstanceOf(Array);
-          expect(hexagon.length).toBe(2);
+          expect(hexagon).toBeInstanceOf(Object);
+          expect(hexagon.coordinate.length).toBe(2);
+          expect(hexagon.color).toBe('green');
         });
       }
     });
@@ -303,10 +304,10 @@ describe('Board', () => {
       expect(randomIndex).toBe(-1);
     });
 
-    it('should return a random edge position index if isEdge is true', () => {
-      const randomIndex = board.getRandomPosition(true);
+    it('should not return a random edge position index if isEdge is false', () => {
+      const randomIndex = board.getRandomPosition(false);
       const position = board.map.positions[randomIndex];
-      expect(position.isEdge).toBe(true);
+      expect(position.isEdge).toBe(false);
     });
 
     it('should respect excludedIndexes', () => {
@@ -487,7 +488,7 @@ describe('Board', () => {
     });
   });
 
-  describe('isAvailable', () => {
+  describe('isEmpty', () => {
     let board;
     let piece;
 
@@ -496,18 +497,18 @@ describe('Board', () => {
       piece = new Piece(['red', 'blue']);
     });
 
-    it('should return true if position is available', () => {
-      expect(board.isAvailable(0)).toBe(true);
+    it('should return true if position is empty', () => {
+      expect(board.isEmpty(0)).toBe(true);
     });
 
-    it('should return false if position is not available', () => {
+    it('should return false if position is not empty', () => {
       board.place(0, piece);
-      expect(board.isAvailable(0)).toBe(false);
+      expect(board.isEmpty(0)).toBe(false);
     });
 
     it('should throw an error if index is out of bounds', () => {
-      expect(() => board.isAvailable(-1)).toThrowError('Index out of bounds');
-      expect(() => board.isAvailable(board.map.positions.length)).toThrowError(
+      expect(() => board.isEmpty(-1)).toThrowError('Index out of bounds');
+      expect(() => board.isEmpty(board.map.positions.length)).toThrowError(
         'Index out of bounds',
       );
     });
@@ -526,8 +527,7 @@ describe('Board', () => {
     });
 
     it('should return true if hexagon is complete (all triangles same color)', () => {
-      const testBoard = new Board();
-      expect(testBoard.isCompleteHexagon(1, 1)).toBe(true);
+      expect(board.isCompleteHexagon(1, 1)).toBe(true);
     });
 
     it('should return false if hexagon is not complete (triangles different colors)', () => {
@@ -574,7 +574,12 @@ describe('Board', () => {
       testBoard.place(8, piece2);
       const completeHexagons = testBoard.getCompleteHexagons();
       expect(completeHexagons).toBeInstanceOf(Array);
-      expect(completeHexagons).toEqual([[1, 1]]);
+      expect(completeHexagons).toEqual([
+        {
+          coordinate: [1, 1],
+          color: 'blue',
+        },
+      ]);
     });
 
     it('should return an empty array if no complete hexagons', () => {
@@ -713,7 +718,9 @@ describe('Board', () => {
         const piece2 = new Piece(['green', 'blue']);
         board.place(0, piece1);
         board.place(8, piece2);
-        expect(listener).toHaveBeenCalledWith([[1, 1]]);
+        expect(listener).toHaveBeenCalledWith([
+          { coordinate: [1, 1], color: 'green' },
+        ]);
       });
 
       it('should trigger "destroy" event when a hexagon is destroyed', () => {
@@ -724,7 +731,14 @@ describe('Board', () => {
         board.place(0, piece1);
         board.place(8, piece2);
         board.remove(8);
-        expect(listener).toHaveBeenCalledWith([1, 1]);
+        expect(listener).toHaveBeenCalledWith([[1, 1]]);
+      });
+
+      it('should trigger "clear" event when the board is cleared', () => {
+        const listener = jest.fn();
+        board.addEventListener('clear', listener);
+        board.clear();
+        expect(listener).toHaveBeenCalled();
       });
 
       it('should not trigger any events if is counting hexagons', () => {
@@ -736,6 +750,7 @@ describe('Board', () => {
         board.addEventListener('remove', listener);
         board.addEventListener('form', listener);
         board.addEventListener('destroy', listener);
+        board.addEventListener('clear', listener);
         const piece2 = new Piece(['green', 'blue']);
         board.countHexagonsFormed(8, piece2); // This should not trigger any events
         expect(listener).not.toHaveBeenCalled();

@@ -6,7 +6,7 @@
 const TriHexGrid = require('./triHexGrid');
 const Piece = require('./piece');
 
-const defaultMap = require('../maps/default');
+const defaultMap = require('../maps/board/default');
 
 /**
  * @class Board - A class representing the game board.
@@ -31,12 +31,14 @@ class Board {
     this.indexes = new Array(map.positions.length).fill(null); // Initialize indexes to null
 
     this.hexagons = new Set();
+    this.hexagonColors = new Map(); // Map to store hexagon colors
 
     this.eventListeners = {
       set: new Set(), // Listeners for set events
       remove: new Set(), // Listeners for remove events
       form: new Set(), // Listeners for form events (when a hexagon is formed)
       destroy: new Set(), // Listeners for destroy events (when a hexagon is destroyed)
+      clear: new Set(), // Listeners for clear events (when the board is cleared)
     };
     this._isCountingHexagons = false; // Flag to prevent event triggering during hexagon counting
 
@@ -59,7 +61,7 @@ class Board {
 
   /**
    * @method _triggerEvent - Trigger an event for a specific action.
-   * @param {string} eventType - The type of event to trigger (set, remove, form, destroy).
+   * @param {string} eventType - The type of event to trigger (set, remove, form, destroy, clear).
    * @param {...any} args - The arguments to pass to the event listeners.
    */
   _triggerEvent(eventType, ...args) {
@@ -133,6 +135,10 @@ class Board {
       const [col, row] = hexagon.split('-').map(Number);
       if (this.isCompleteHexagon(col, row)) {
         this.hexagons.add(`${col}-${row}`);
+        this.hexagonColors.set(
+          `${col}-${row}`,
+          this.grid.getHexagon(col, row)[0],
+        );
       }
     });
 
@@ -148,8 +154,8 @@ class Board {
    * @method place - Place a piece at the specified position in the map.
    * @param {number} index - The index of the position in the map. (0-based index)
    * @param {Piece} value - The piece to place at the specified position.
-   * @returns {Array<Array<number>>} - An array of hexagons that can be formed with the piece at the specified position [col, row].
-   * @throws {Error} - Throws an error if the index is out of bounds or if the position is occupied or if the value is not an instance of Piece.
+   * @returns {Array<Object>} - An array of objects representing the hexagons formed, each with coordinate and color.
+   * @throws {Error} - Throws an error if the index is out of bounds, the position is occupied, or the value is not an instance of Piece.
    */
   place(index, value) {
     if (index < 0 || index >= this.map.positions.length) {
@@ -172,9 +178,12 @@ class Board {
       (hexagon) => !hexagonsBefore.has(hexagon),
     );
 
-    const hexagonsFormed = newHexagons.map((hexagon) =>
-      hexagon.split('-').map(Number),
-    );
+    const hexagonsFormed = newHexagons.map((hexagon) => {
+      return {
+        coordinate: hexagon.split('-').map(Number),
+        color: this.hexagonColors.get(hexagon), // Get the color of the hexagon
+      };
+    });
 
     if (newHexagons.length > 0) {
       // If new hexagons are formed, trigger the form event
@@ -197,7 +206,14 @@ class Board {
 
     const position = this.map.positions[index];
 
-    const removedHexagons = this.getRelatedHexagons(index); // All related hexagons will be removed
+    const relatedHexagons = this.getRelatedHexagons(index);
+
+    const removedHexagons = relatedHexagons.filter((hexagon) => {
+      if (this.hexagons.has(hexagon)) {
+        return true;
+      }
+      return false;
+    });
 
     this.grid.remove([
       position[Board.POSITION_INDEXES.A],
@@ -211,12 +227,15 @@ class Board {
     ]);
 
     removedHexagons.forEach((hexagon) => {
-      const destroyedHexagon = hexagon.split('-').map(Number);
-
-      this.hexagons.delete(destroyedHexagon);
-
-      this._triggerEvent('destroy', destroyedHexagon); // Trigger destroy event for each hexagon removed
+      this.hexagons.delete(hexagon); // Remove the hexagon from the set
+      this.hexagonColors.delete(hexagon); // Remove the color of the hexagon
     });
+
+    // Trigger destroy event for all removed hexagons
+    this._triggerEvent(
+      'destroy',
+      removedHexagons.map((hexagon) => hexagon.split('-').map(Number)),
+    );
 
     const removedValue = this.indexes[index];
 
@@ -269,7 +288,7 @@ class Board {
     const validIndexes = [];
 
     this.map.positions.forEach((position, index) => {
-      if (!excludedSet.has(index) && (!isEdge || position.isEdge)) {
+      if (!excludedSet.has(index) && (isEdge || !position.isEdge)) {
         validIndexes.push(index);
       }
     });
@@ -397,12 +416,12 @@ class Board {
   }
 
   /**
-   * @method isAvailable - Check if the specified position is available.
+   * @method isEmpty - Check if the specified position is empty.
    * @param {number} index - The index of the position in the map. (0-based index)
-   * @returns {boolean} - True if the position is available, false otherwise.
+   * @returns {boolean} - True if the position is empty, false otherwise.
    * @throws {Error} - Throws an error if the index is out of bounds.
    */
-  isAvailable(index) {
+  isEmpty(index) {
     if (index < 0 || index >= this.map.positions.length) {
       throw new Error('Index out of bounds');
     }
@@ -425,7 +444,11 @@ class Board {
     const hexagonColors = this.grid.getHexagon(col, row);
 
     for (let i = 1; i < hexagonColors.length; i++) {
-      if (hexagonColors[i] !== hexagonColors[i - 1]) {
+      if (
+        hexagonColors[i] === null ||
+        hexagonColors[i - 1] === null ||
+        hexagonColors[i] !== hexagonColors[i - 1]
+      ) {
         return false;
       }
     }
@@ -435,11 +458,14 @@ class Board {
 
   /**
    * @method getCompleteHexagons - Get all complete hexagons on the board.
-   * @returns {Array<Array<number>>} - An array of complete hexagons, each represented as a array of [col, row].
+   * @returns {Array<Object>} - An array of objects representing complete hexagons, each with coordinate and color.
    */
   getCompleteHexagons() {
     return Array.from(this.hexagons).map((hexagon) => {
-      return hexagon.split('-').map(Number);
+      return {
+        coordinate: hexagon.split('-').map(Number),
+        color: this.hexagonColors.get(hexagon), // Get the color of the hexagon
+      };
     });
   }
 
@@ -506,7 +532,10 @@ class Board {
     this.grid.clear();
     this.indexes.fill(null);
     this.hexagons.clear();
+    this.hexagonColors.clear(); // Clear the hexagon colors
     this.history = [];
+
+    this._triggerEvent('clear'); // Trigger clear event
   }
 }
 
