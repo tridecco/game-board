@@ -68,7 +68,7 @@ All texture packs are located in the `assets/textures/` directory, organized by 
 
 For convenience, the available assets are also hosted on jsDelivr CDN:
 
-- **Base URL**: `https://cdn.jsdelivr.net/gh/tridecco/game-board@0.2.0/assets/`
+- **Base URL**: `https://cdn.jsdelivr.net/gh/tridecco/game-board@0.2.2/assets/`
 
 ## Customization
 
