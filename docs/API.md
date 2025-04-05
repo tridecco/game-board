@@ -1314,6 +1314,7 @@ Creates a new `TexturePack` instance and immediately starts loading textures fro
 - `callback` (Function, optional): A callback function executed after all textures are loaded. It receives the `TexturePack` instance as the first argument, or `null` and an error object as the second argument if loading fails.
 
 > **Note**: Please refer to the [Available Assets documentation](ASSETS.md) for detailed information on the available texture packs.
+> **Note**: If the textures is not from the same origin, CORS headers must be set on the server to allow loading of the textures. Otherwise, there will be CORS issues and the textures will not load properly in the browser.
 
 **Throws:**
 
@@ -1393,6 +1394,7 @@ Creates a new `Renderer` instance to visualize a `Board` object on an HTML canva
 - `callback` (Function, optional): A callback function executed after the renderer is initialized and initial assets are loaded. Receives the `Renderer` instance as an argument.
 
 > **Note**: Please refer to the [Available Assets documentation](ASSETS.md) for detailed information on the available texture packs, background images, and grid overlays.
+> **Note**: If the textures is not from the same origin, CORS headers must be set on the server to allow loading of the textures. Otherwise, there will be CORS issues and the textures will not load properly in the browser.
 
 **Throws:**
 
