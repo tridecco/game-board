@@ -1313,6 +1313,8 @@ Creates a new `TexturePack` instance and immediately starts loading textures fro
 - `texturesUrl` (string): The base URL where the texture pack's `index.json` and image files are located.
 - `callback` (Function, optional): A callback function executed after all textures are loaded. It receives the `TexturePack` instance as the first argument, or `null` and an error object as the second argument if loading fails.
 
+> **Note**: Please refer to the [Available Assets documentation](ASSETS.md) for detailed information on the available texture packs.
+
 **Throws:**
 
 - `Error`: If `texturesUrl` is not a string, if `callback` is not a function, or if used outside a browser environment.
@@ -1389,6 +1391,8 @@ Creates a new `Renderer` instance to visualize a `Board` object on an HTML canva
   - `backgroundUrl` (string, optional): The URL for the background image. Defaults to a predefined path.
   - `gridUrl` (string, optional): The URL for the grid overlay image. Defaults to a predefined path.
 - `callback` (Function, optional): A callback function executed after the renderer is initialized and initial assets are loaded. Receives the `Renderer` instance as an argument.
+
+> **Note**: Please refer to the [Available Assets documentation](ASSETS.md) for detailed information on the available texture packs, background images, and grid overlays.
 
 **Throws:**
 
@@ -1566,6 +1570,8 @@ Loads and applies a new texture pack from the specified URL. Re-renders pieces, 
 
 - `texturesUrl` (string): The base URL for the new texture pack.
 
+> **Note**: Please refer to the [Available Assets documentation](ASSETS.md) for detailed information on the available texture packs.
+
 **Returns:**
 
 - `Promise<void>`: A promise that resolves when the new textures are loaded and applied.
@@ -1597,6 +1603,8 @@ Loads and applies a new background image from the specified URL.
 
 - `backgroundUrl` (string): The URL of the new background image.
 
+> **Note**: Please refer to the [Available Assets documentation](ASSETS.md) for detailed information on the available background images.
+
 **Returns:**
 
 - `Promise<void>`: A promise that resolves when the new background is loaded and applied.
@@ -1627,6 +1635,8 @@ Loads and applies a new grid overlay image from the specified URL.
 **Parameters:**
 
 - `gridUrl` (string): The URL of the new grid image.
+
+> **Note**: Please refer to the [Available Assets documentation](ASSETS.md) for detailed information on the available grid overlays.
 
 **Returns:**
 

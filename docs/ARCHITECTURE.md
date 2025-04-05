@@ -139,10 +139,10 @@ The project includes default assets and maps to facilitate quick setup and testi
 
 ### Default Assets (Backgrounds, Grids, Textures)
 
-- **Purpose:** Provides a set of default visual assets for the game board, including background images, grid designs, and basic piece textures.
+- **Purpose:** Provides a set of default visual assets for the game board, including background images, grid designs, and basic piece textures. Please refer to the [Available Assets documentation](ASSETS.md) for detailed information on the available assets.
 - **Responsibilities:**
   - Offers a range of visually distinct background images for board customization.
-  - Includes default grid designs for clear hexagonal grid visualization.
+  - Includes default grid designs for the default game board map.
   - Provides a basic texture pack for game pieces, ensuring a functional visual representation out-of-the-box.
   - Assets are designed to be customizable and replaceable, allowing for easy visual theme changes.
 - **Data:** Consists of image files for backgrounds, grids, and textures, organized in the `assets/` directory.
