@@ -43,6 +43,10 @@ Include the following script tag in your HTML file:
 
 Please refer to the [API documentation](docs/API.md) for detailed usage instructions and examples.
 
+## Architecture
+
+Please refer to the [Architecture documentation](docs/ARCHITECTURE.md) for an overview of the project's architecture, including layers, and structure.
+
 ## License
 
 This project is licensed under the AGPL-3.0 License - see the [LICENSE](LICENSE) file for details.
