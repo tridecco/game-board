@@ -54,6 +54,7 @@ class TexturePack {
         const loadTilePromises = Object.entries(tiles).map(([key, path]) => {
           return new Promise((resolve, reject) => {
             const img = new Image();
+            img.crossOrigin = 'anonymous'; // Set crossorigin attribute
             img.src = `${texturesUrl}/${path}`;
             img.onload = () => {
               this.textures.tiles.set(key, img); // Store tile texture
@@ -68,6 +69,7 @@ class TexturePack {
         const loadHexPromises = Object.entries(hexagons).map(([key, path]) => {
           return new Promise((resolve, reject) => {
             const img = new Image();
+            img.crossOrigin = 'anonymous'; // Set crossorigin attribute
             img.src = `${texturesUrl}/${path}`;
             img.onload = () => {
               this.textures.hexagons.set(key, img); // Store hexagon texture
