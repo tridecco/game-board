@@ -556,6 +556,7 @@ class Renderer {
    * @param {boolean} flipped - A boolean indicating if the piece should be rendered flipped.
    * @param {CanvasRenderingContext2D} targetContext - The 2D rendering context of the canvas to draw onto.
    * @param {string} [fillColor] - Optional fill color to override texture colors, used for hitmap rendering.
+   * @throws {Error} - If the index is out of bounds or if the texture for the piece is not found.
    */
   _renderPiece(
     index,
@@ -566,13 +567,13 @@ class Renderer {
   ) {
     const tile = this.map.tiles[index];
     if (!tile) {
-      return;
+      throw new Error(`Tile index ${index} out of bounds`);
     }
 
     const textureKey = flipped ? `${colorsKey}-flipped` : colorsKey;
     const texture = this.textures.get('tiles', textureKey);
     if (!texture) {
-      return;
+      throw new Error(`Texture key "${textureKey}" not found in textures`);
     }
 
     const x = tile.x * this.widthRatio;
@@ -789,17 +790,16 @@ class Renderer {
    * @param {number} index - The index of the board position where the piece preview is to be rendered.
    * @param {Piece} piece - The Piece object to be previewed.
    * @param {string} [fillColor='rgba(255, 255, 255, 0.5)'] - Optional fill color for the preview overlay, default is semi-transparent white.
+   * @throws {Error} - If the piece is invalid or if the index is out of bounds.
    */
   previewPiece(index, piece, fillColor = 'rgba(255, 255, 255, 0.5)') {
     if (!piece || !piece.colorsKey) {
-      console.error('Invalid piece object for preview.');
-      return;
+      throw new Error('Invalid piece object for preview');
     }
 
     const tile = this.map.tiles[index];
     if (!tile) {
-      console.error('Tile not found for index:', index);
-      return;
+      throw new Error('Tile index out of bounds for preview');
     }
 
     this._renderPiece(
