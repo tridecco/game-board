@@ -171,7 +171,6 @@ class Renderer {
     this._initEventListeners(); // Initialize event listeners
     this.eventHandlers = new Map();
 
-    this.isDestroyed = false; // Flag to check if the renderer is destroyed
     this.mutationObserver = new MutationObserver((mutationsList, observer) => {
       for (const mutation of mutationsList) {
         if (mutation.removedNodes) {
@@ -198,6 +197,8 @@ class Renderer {
       this._setUpCanvas();
       callback(this); // Call the callback function after loading assets and setting up the canvas
     });
+
+    this.isDestroyed = false; // Flag to check if the renderer is destroyed
   }
 
   /**
@@ -1137,6 +1138,10 @@ class Renderer {
    * @method destroy - Tears down the renderer, releasing resources, removing listeners, and detaching the canvas from the DOM.
    */
   destroy() {
+    if (this.isDestroyed) {
+      return; // Prevent double destruction
+    }
+
     // Remove event listeners from the board
     this.board.removeEventListener('set', this.eventHandlers.get('set'));
     this.board.removeEventListener('remove', this.eventHandlers.get('remove'));
@@ -1202,6 +1207,8 @@ class Renderer {
 
     this._previewingPositions.clear();
     this._previewingPositions = null;
+
+    this.isDestroyed = true; // Mark the renderer as destroyed
   }
 }
 
