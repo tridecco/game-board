@@ -171,6 +171,22 @@ class Renderer {
     this._initEventListeners(); // Initialize event listeners
     this.eventHandlers = new Map();
 
+    this.mutationObserver = new MutationObserver((mutationsList, observer) => {
+      for (const mutation of mutationsList) {
+        if (mutation.removedNodes) {
+          mutation.removedNodes.forEach((removedNode) => {
+            if (removedNode === this.canvas || removedNode === this.container) {
+              this.destroy();
+            }
+          });
+        }
+      }
+    });
+    this.mutationObserver.observe(this.container.parentNode || this.container, {
+      childList: true,
+      subtree: true,
+    });
+
     this._isPreviewing = false; // Flag to check if a piece is being previewed
     this._isShowingAvailablePositions = false; // Flag to check if available positions are being shown
     this._showingAvailablePositions = new Array(); // Store currently shown available positions
@@ -181,6 +197,8 @@ class Renderer {
       this._setUpCanvas();
       callback(this); // Call the callback function after loading assets and setting up the canvas
     });
+
+    this.isDestroyed = false; // Flag to check if the renderer is destroyed
   }
 
   /**
@@ -1120,6 +1138,10 @@ class Renderer {
    * @method destroy - Tears down the renderer, releasing resources, removing listeners, and detaching the canvas from the DOM.
    */
   destroy() {
+    if (this.isDestroyed) {
+      return; // Prevent double destruction
+    }
+
     // Remove event listeners from the board
     this.board.removeEventListener('set', this.eventHandlers.get('set'));
     this.board.removeEventListener('remove', this.eventHandlers.get('remove'));
@@ -1144,6 +1166,11 @@ class Renderer {
     // Stop observing the container resize
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
+    }
+
+    // Stop observing mutation events
+    if (this.mutationObserver) {
+      this.mutationObserver.disconnect();
     }
 
     // Remove the canvas from the container
@@ -1180,6 +1207,8 @@ class Renderer {
 
     this._previewingPositions.clear();
     this._previewingPositions = null;
+
+    this.isDestroyed = true; // Mark the renderer as destroyed
   }
 }
 
