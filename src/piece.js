@@ -11,7 +11,7 @@ class Piece {
    * @constructor
    * @param {Array<string>} colors - The colors of the piece.
    * @param {Object} [params={}] - Optional parameters for the piece.
-   * @throws {Error} If colors is not an array of 2 strings or if params is not an object.
+   * @throws {Error} - If colors is not an array of 2 strings or if params is not an object.
    */
   constructor(colors, params = {}) {
     const PIECE_COLOR_COUNT = 2;

@@ -648,7 +648,7 @@ class Renderer {
   _renderHexagons() {
     const hexagons = this.board.getCompleteHexagons();
     for (const hexagon of hexagons) {
-      this._renderHexagon(hexagon, 'hexagon'); // Assuming 'hexagon' is the color key for hexagons
+      this._renderHexagon(hexagon.coordinate, hexagon.color);
     }
   }
 
