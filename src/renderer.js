@@ -171,6 +171,24 @@ class Renderer {
     this._initEventListeners(); // Initialize event listeners
     this.eventHandlers = new Map();
 
+    this.isDestroyed = false; // Flag to check if the renderer is destroyed
+    this.mutationObserver = new MutationObserver((mutationsList, observer) => {
+      for (const mutation of mutationsList) {
+        if (mutation.removedNodes) {
+          mutation.removedNodes.forEach((removedNode) => {
+            if (removedNode === this.canvas || removedNode === this.container) {
+              this.destroy();
+              observer.disconnect();
+            }
+          });
+        }
+      }
+    });
+    this.mutationObserver.observe(this.container.parentNode || this.container, {
+      childList: true,
+      subtree: true,
+    });
+
     this._isPreviewing = false; // Flag to check if a piece is being previewed
     this._isShowingAvailablePositions = false; // Flag to check if available positions are being shown
     this._showingAvailablePositions = new Array(); // Store currently shown available positions
