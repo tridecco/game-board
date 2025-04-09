@@ -178,7 +178,6 @@ class Renderer {
           mutation.removedNodes.forEach((removedNode) => {
             if (removedNode === this.canvas || removedNode === this.container) {
               this.destroy();
-              observer.disconnect();
             }
           });
         }
@@ -1162,6 +1161,11 @@ class Renderer {
     // Stop observing the container resize
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
+    }
+
+    // Stop observing mutation events
+    if (this.mutationObserver) {
+      this.mutationObserver.disconnect();
     }
 
     // Remove the canvas from the container
