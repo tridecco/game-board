@@ -1127,11 +1127,14 @@ class Renderer {
    * @throws {Error} - If eventType is not a valid event type, indicating an attempt to remove listener from a non-existent event.
    */
   removeEventListener(eventType, listener) {
-    if (!this.eventListeners[eventType]) {
+    if (!this.eventListeners[eventType] || eventType.endsWith('Available')) {
       throw new Error('Invalid event type');
     }
 
     this.eventListeners[eventType].delete(listener);
+    if (eventType !== 'resize') {
+      this.eventListeners[`${eventType}Available`].delete(listener);
+    }
   }
 
   /**
