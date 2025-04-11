@@ -18,6 +18,7 @@
   "author": "Tony Kan",
   "type": "commonjs",
   "main": "./src/index.js",
+  "browser": "./dist/tridecco-board.min.js",
   "scripts": {
     "lint": "eslint",
     "lint:fix": "eslint --fix",
