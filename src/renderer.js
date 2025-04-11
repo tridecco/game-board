@@ -1132,6 +1132,9 @@ class Renderer {
     }
 
     this.eventListeners[eventType].delete(listener);
+    if (eventType !== 'resize') {
+      this.eventListeners[`${eventType}Available`].delete(listener);
+    }
   }
 
   /**
