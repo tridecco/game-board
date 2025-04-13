@@ -112,4 +112,31 @@ describe('Piece', () => {
       expect(piece1.equals(undefined)).toBe(false);
     });
   });
+
+  describe('clone', () => {
+    it('should create a deep copy of the piece', () => {
+      const params = { name: 'Original Piece', value: 20 };
+      const piece = new Piece(['red', 'blue'], params);
+      const clonedPiece = piece.clone();
+
+      expect(clonedPiece).toBeInstanceOf(Piece);
+      expect(clonedPiece).not.toBe(piece);
+      expect(clonedPiece.colors).toEqual(piece.colors);
+      expect(clonedPiece.colorsKey).toBe(piece.colorsKey);
+      expect(clonedPiece.name).toBe(piece.name);
+      expect(clonedPiece.value).toBe(piece.value);
+    });
+
+    it('should not affect the original piece when modifying the clone', () => {
+      const params = { name: 'Original Piece', value: 20 };
+      const piece = new Piece(['red', 'blue'], params);
+      const clonedPiece = piece.clone();
+
+      clonedPiece.name = 'Modified Piece';
+      clonedPiece.colors[0] = 'green';
+
+      expect(piece.name).toBe('Original Piece');
+      expect(piece.colors).toEqual(['red', 'blue']);
+    });
+  });
 });
