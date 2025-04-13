@@ -65,7 +65,8 @@ class Piece {
    * @returns {Object} - The JSON representation of the piece.
    */
   toJSON() {
-    const { colors, colorsKey, ...customProperties } = this;
+    const newPiece = this.clone();
+    const { colors, colorsKey, ...customProperties } = newPiece;
     return { colors, customProperties };
   }
 
