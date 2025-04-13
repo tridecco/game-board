@@ -87,51 +87,53 @@ This document provides a comprehensive guide to the API of the Tridecco Game Boa
       - [Example](#example-34)
     - [`back(steps)`](#backsteps)
       - [Example](#example-35)
-    - [`clear()`](#clear-1)
+    - [`clone(options)`](#cloneoptions)
       - [Example](#example-36)
+    - [`clear()`](#clear-1)
+      - [Example](#example-37)
   - [Game Piece](#game-piece)
     - [Constructor](#constructor-3)
-      - [Example](#example-37)
-    - [`equals(other)`](#equalsother)
       - [Example](#example-38)
-    - [`clone()`](#clone-2)
+    - [`equals(other)`](#equalsother)
       - [Example](#example-39)
-    - [`toJSON()`](#tojson)
+    - [`clone()`](#clone-2)
       - [Example](#example-40)
-    - [`fromJSON(json)` (static)](#fromjsonjson-static)
+    - [`toJSON()`](#tojson)
       - [Example](#example-41)
+    - [`fromJSON(json)` (static)](#fromjsonjson-static)
+      - [Example](#example-42)
   - [Texture Pack](#texture-pack)
     - [Constructor](#constructor-4)
-      - [Example](#example-42)
-    - [`get(type, key)`](#gettype-key)
       - [Example](#example-43)
+    - [`get(type, key)`](#gettype-key)
+      - [Example](#example-44)
   - [Renderer](#renderer)
     - [Constructor](#constructor-5)
-      - [Example](#example-44)
-    - [`previewPiece(index, piece, fillColor)`](#previewpieceindex-piece-fillcolor)
       - [Example](#example-45)
-    - [`clearPreview()`](#clearpreview)
+    - [`previewPiece(index, piece, fillColor)`](#previewpieceindex-piece-fillcolor)
       - [Example](#example-46)
-    - [`showAvailablePositions(positions, fillColor)`](#showavailablepositionspositions-fillcolor)
+    - [`clearPreview()`](#clearpreview)
       - [Example](#example-47)
-    - [`clearAvailablePositions()`](#clearavailablepositions)
+    - [`showAvailablePositions(positions, fillColor)`](#showavailablepositionspositions-fillcolor)
       - [Example](#example-48)
-    - [`getTexture(type, key)`](#gettexturetype-key)
+    - [`clearAvailablePositions()`](#clearavailablepositions)
       - [Example](#example-49)
-    - [`updateMap(newMap)`](#updatemapnewmap)
+    - [`getTexture(type, key)`](#gettexturetype-key)
       - [Example](#example-50)
-    - [`updateTextures(texturesUrl)`](#updatetexturestexturesurl)
+    - [`updateMap(newMap)`](#updatemapnewmap)
       - [Example](#example-51)
-    - [`updateBackground(backgroundUrl)`](#updatebackgroundbackgroundurl)
+    - [`updateTextures(texturesUrl)`](#updatetexturestexturesurl)
       - [Example](#example-52)
-    - [`updateGrid(gridUrl)`](#updategridgridurl)
+    - [`updateBackground(backgroundUrl)`](#updatebackgroundbackgroundurl)
       - [Example](#example-53)
-    - [`addEventListener(eventType, listener, options)`](#addeventlistenereventtype-listener-options)
+    - [`updateGrid(gridUrl)`](#updategridgridurl)
       - [Example](#example-54)
-    - [`removeEventListener(eventType, listener)`](#removeeventlistenereventtype-listener)
+    - [`addEventListener(eventType, listener, options)`](#addeventlistenereventtype-listener-options)
       - [Example](#example-55)
-    - [`destroy()`](#destroy)
+    - [`removeEventListener(eventType, listener)`](#removeeventlistenereventtype-listener)
       - [Example](#example-56)
+    - [`destroy()`](#destroy)
+      - [Example](#example-57)
 
 ## Import the Library
 
@@ -1220,6 +1222,35 @@ Undoes the last move(s) made on the board, reverting the board state to a previo
 ```javascript
 board.back(); // Undo the last move
 board.back(3); // Undo the last 3 moves
+```
+
+### `clone(options)`
+
+```javascript
+clone(options = {});
+```
+
+**Description:**
+
+Creates a deep copy of the `Board` instance. This means that a new `Board` object is created with the same map, grid, indexes, hexagons, history (if wanted), and event listeners (if wanted) as the original board.
+
+**Parameters:**
+
+- `options` (Object, optional): An object containing options for cloning. The following properties are available:
+  - `withListeners` (boolean): If `true`, the cloned board will include the event listeners from the original board. Defaults to `false`.
+  - `withHistory` (boolean): If `true`, the cloned board will include the history of moves from the original board. Defaults to `false`.
+
+**Returns:**
+
+- `Board`: A new `Board` instance that is a deep copy of the original board.
+
+#### Example
+
+```javascript
+const clonedBoard = board.clone(); // Creates a deep copy of the board without listeners or history
+const clonedBoardWithHistory = board.clone({
+  withHistory: true,
+}); // Creates a deep copy of the board with history
 ```
 
 ### `clear()`
