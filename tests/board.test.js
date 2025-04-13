@@ -810,4 +810,70 @@ describe('Board', () => {
       });
     });
   });
+
+  describe('Board Serialization', () => {
+    let board;
+    let piece;
+
+    beforeEach(() => {
+      board = new Board();
+      piece = new Piece(['red', 'blue']);
+      board.place(0, piece);
+    });
+
+    describe('toJSON', () => {
+      it('should serialize the board to JSON without history by default', () => {
+        const json = board.toJSON();
+        expect(json).toBeInstanceOf(Object);
+        expect(json.map).toEqual(board.map);
+        expect(json.grid).toEqual(board.grid);
+        expect(json.indexes).toEqual(
+          board.indexes.map((piece) => (piece ? piece.toJSON() : null)),
+        );
+        expect(json.hexagons).toEqual(Array.from(board.hexagons));
+        expect(json.hexagonColors).toEqual(
+          Array.from(board.hexagonColors.entries()),
+        );
+        expect(json.history).toEqual([]);
+      });
+
+      it('should serialize the board to JSON with history if specified', () => {
+        const json = board.toJSON({ withHistory: true });
+        expect(json.history).toEqual(
+          board.history.map((action) => {
+            if (action.op === 'remove') {
+              return {
+                ...action,
+                value: action.value.toJSON(),
+              };
+            }
+            return action;
+          }),
+        );
+      });
+    });
+
+    describe('fromJSON', () => {
+      it('should deserialize a board from JSON', () => {
+        const json = board.toJSON({ withHistory: true });
+        const deserializedBoard = Board.fromJSON(json);
+
+        expect(deserializedBoard).toBeInstanceOf(Board);
+        expect(deserializedBoard.map).toEqual(board.map);
+        expect(deserializedBoard.grid).toEqual(board.grid);
+        expect(deserializedBoard.indexes).toEqual(board.indexes);
+        expect(deserializedBoard.hexagons).toEqual(board.hexagons);
+        expect(deserializedBoard.hexagonColors).toEqual(board.hexagonColors);
+        expect(deserializedBoard.history).toEqual(board.history);
+      });
+
+      it('should correctly deserialize pieces in the board', () => {
+        const json = board.toJSON();
+        const deserializedBoard = Board.fromJSON(json);
+
+        expect(deserializedBoard.indexes[0]).toBeInstanceOf(Piece);
+        expect(deserializedBoard.indexes[0].colors).toEqual(piece.colors);
+      });
+    });
+  });
 });
