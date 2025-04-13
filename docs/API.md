@@ -91,49 +91,51 @@ This document provides a comprehensive guide to the API of the Tridecco Game Boa
       - [Example](#example-36)
     - [`clear()`](#clear-1)
       - [Example](#example-37)
+    - [`toJSON(options)`](#tojsonoptions)
+      - [Example](#example-38)
   - [Game Piece](#game-piece)
     - [Constructor](#constructor-3)
-      - [Example](#example-38)
-    - [`equals(other)`](#equalsother)
       - [Example](#example-39)
-    - [`clone()`](#clone-2)
+    - [`equals(other)`](#equalsother)
       - [Example](#example-40)
-    - [`toJSON()`](#tojson)
+    - [`clone()`](#clone-2)
       - [Example](#example-41)
-    - [`fromJSON(json)` (static)](#fromjsonjson-static)
+    - [`toJSON()`](#tojson)
       - [Example](#example-42)
+    - [`fromJSON(json)` (static)](#fromjsonjson-static)
+      - [Example](#example-43)
   - [Texture Pack](#texture-pack)
     - [Constructor](#constructor-4)
-      - [Example](#example-43)
-    - [`get(type, key)`](#gettype-key)
       - [Example](#example-44)
+    - [`get(type, key)`](#gettype-key)
+      - [Example](#example-45)
   - [Renderer](#renderer)
     - [Constructor](#constructor-5)
-      - [Example](#example-45)
-    - [`previewPiece(index, piece, fillColor)`](#previewpieceindex-piece-fillcolor)
       - [Example](#example-46)
-    - [`clearPreview()`](#clearpreview)
+    - [`previewPiece(index, piece, fillColor)`](#previewpieceindex-piece-fillcolor)
       - [Example](#example-47)
-    - [`showAvailablePositions(positions, fillColor)`](#showavailablepositionspositions-fillcolor)
+    - [`clearPreview()`](#clearpreview)
       - [Example](#example-48)
-    - [`clearAvailablePositions()`](#clearavailablepositions)
+    - [`showAvailablePositions(positions, fillColor)`](#showavailablepositionspositions-fillcolor)
       - [Example](#example-49)
-    - [`getTexture(type, key)`](#gettexturetype-key)
+    - [`clearAvailablePositions()`](#clearavailablepositions)
       - [Example](#example-50)
-    - [`updateMap(newMap)`](#updatemapnewmap)
+    - [`getTexture(type, key)`](#gettexturetype-key)
       - [Example](#example-51)
-    - [`updateTextures(texturesUrl)`](#updatetexturestexturesurl)
+    - [`updateMap(newMap)`](#updatemapnewmap)
       - [Example](#example-52)
-    - [`updateBackground(backgroundUrl)`](#updatebackgroundbackgroundurl)
+    - [`updateTextures(texturesUrl)`](#updatetexturestexturesurl)
       - [Example](#example-53)
-    - [`updateGrid(gridUrl)`](#updategridgridurl)
+    - [`updateBackground(backgroundUrl)`](#updatebackgroundbackgroundurl)
       - [Example](#example-54)
-    - [`addEventListener(eventType, listener, options)`](#addeventlistenereventtype-listener-options)
+    - [`updateGrid(gridUrl)`](#updategridgridurl)
       - [Example](#example-55)
-    - [`removeEventListener(eventType, listener)`](#removeeventlistenereventtype-listener)
+    - [`addEventListener(eventType, listener, options)`](#addeventlistenereventtype-listener-options)
       - [Example](#example-56)
-    - [`destroy()`](#destroy)
+    - [`removeEventListener(eventType, listener)`](#removeeventlistenereventtype-listener)
       - [Example](#example-57)
+    - [`destroy()`](#destroy)
+      - [Example](#example-58)
 
 ## Import the Library
 
@@ -1267,6 +1269,35 @@ Clears the entire game board, removing all pieces, resetting the history, and cl
 
 ```javascript
 board.clear(); // Clears the entire game board
+```
+
+### `toJSON(options)`
+
+```javascript
+toJSON(options = {});
+```
+
+**Description:**
+
+Converts the `Board` instance to a JSON representation. This is useful for serialization or storage. The JSON object includes the board's map, grid, indexes, hexagons, and history (if included).
+
+**Parameters:**
+
+- `options` (Object, optional): An object containing options for JSON conversion. The following properties are available:
+  - `withHistory` (boolean): If `true`, the JSON will include the history of moves from the original board. Defaults to `false`.
+
+**Returns:**
+
+- `Object`: A JSON object representing the `Board`, including its map, grid, indexes, hexagons, and history (if included).
+
+#### Example
+
+```javascript
+const boardJSON = board.toJSON(); // Converts the board to JSON without history
+const boardJSONWithHistory = board.toJSON({
+  withHistory: true,
+}); // Converts the board to JSON with history
+console.log(JSON.stringify(boardJSON)); // Output: JSON string representation of the board
 ```
 
 ## Game Piece
