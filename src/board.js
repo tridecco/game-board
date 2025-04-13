@@ -559,7 +559,7 @@ class Board {
   }
 
   /**
-   * @method clear - Clear the board and reset the history.
+   * @method clear - Clear the board and reset the history. (can't be undone)
    */
   clear() {
     this.grid.clear();
@@ -569,6 +569,51 @@ class Board {
     this.history = [];
 
     this._triggerEvent('clear'); // Trigger clear event
+  }
+
+  /**
+   * @method toJSON - Convert the board to a JSON representation.
+   * @param {Object} [options={}] - Options for converting the board to JSON.
+   * @param {boolean} [options.withHistory=false] - Whether to include history in the JSON representation.
+   * @returns {Object} - The JSON representation of the board.
+   */
+  toJSON(options = {}) {
+    const { withHistory = false } = options;
+
+    const newBoard = this.clone({
+      withListeners: false,
+      withHistory: withHistory,
+    });
+    const { map, grid, hexagons, hexagonColors } = newBoard;
+
+    const indexes = newBoard.indexes.map((piece) => {
+      if (piece) {
+        return piece.toJSON();
+      }
+      return null;
+    });
+
+    return {
+      map,
+      grid,
+      indexes,
+      hexagons: Array.from(hexagons),
+      hexagonColors: Array.from(hexagonColors.entries()),
+      history: withHistory
+        ? newBoard.history.map((action) => {
+            if (action.op === 'set') {
+              return action;
+            } else if (action.op === 'remove') {
+              return {
+                op: action.op,
+                index: action.index,
+                value: action.value.toJSON(),
+              };
+            }
+            return action; // Keep the action as is if it's not set or remove (no other actions defined yet)
+          })
+        : [],
+    };
   }
 }
 
