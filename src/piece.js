@@ -59,6 +59,15 @@ class Piece {
   clone() {
     return deepClone(this);
   }
+
+  /**
+   * @method toJSON - Convert the piece to a JSON representation.
+   * @returns {Object} - The JSON representation of the piece.
+   */
+  toJSON() {
+    const { colors, colorsKey, ...customProperties } = this;
+    return { colors, customProperties };
+  }
 }
 
 module.exports = Piece;
