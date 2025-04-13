@@ -124,20 +124,22 @@ This document provides a comprehensive guide to the API of the Tridecco Game Boa
       - [Example](#example-51)
     - [`getTexture(type, key)`](#gettexturetype-key)
       - [Example](#example-52)
-    - [`updateMap(newMap)`](#updatemapnewmap)
+    - [`updateBoard(newBoard)`](#updateboardnewboard)
       - [Example](#example-53)
-    - [`updateTextures(texturesUrl)`](#updatetexturestexturesurl)
+    - [`updateMap(newMap)`](#updatemapnewmap)
       - [Example](#example-54)
-    - [`updateBackground(backgroundUrl)`](#updatebackgroundbackgroundurl)
+    - [`updateTextures(texturesUrl)`](#updatetexturestexturesurl)
       - [Example](#example-55)
-    - [`updateGrid(gridUrl)`](#updategridgridurl)
+    - [`updateBackground(backgroundUrl)`](#updatebackgroundbackgroundurl)
       - [Example](#example-56)
-    - [`addEventListener(eventType, listener, options)`](#addeventlistenereventtype-listener-options)
+    - [`updateGrid(gridUrl)`](#updategridgridurl)
       - [Example](#example-57)
-    - [`removeEventListener(eventType, listener)`](#removeeventlistenereventtype-listener)
+    - [`addEventListener(eventType, listener, options)`](#addeventlistenereventtype-listener-options)
       - [Example](#example-58)
-    - [`destroy()`](#destroy)
+    - [`removeEventListener(eventType, listener)`](#removeeventlistenereventtype-listener)
       - [Example](#example-59)
+    - [`destroy()`](#destroy)
+      - [Example](#example-60)
 
 ## Import the Library
 
@@ -1719,6 +1721,31 @@ Retrieves a loaded texture image element from the `TexturePack` used by the rend
 ```javascript
 const pieceTexture = renderer.getTexture('tiles', 'red-blue');
 const hexagonTexture = renderer.getTexture('hexagons', 'blue');
+```
+
+### `updateBoard(newBoard)`
+
+```javascript
+updateBoard(newBoard);
+```
+
+**Description:**
+
+Updates the renderer to use a new `Board` instance. This involves recalculating ratios, re-rendering the background/grid/pieces based on the new board's state, and potentially re-attaching event listeners if necessary.
+
+**Parameters:**
+
+- `newBoard` (Board): The new `Board` instance to render.
+
+**Throws:**
+
+- `Error`: If `newBoard` is not a `Board` instance.
+
+#### Example
+
+```javascript
+const newBoard = new Board();
+renderer.updateBoard(newBoard);
 ```
 
 ### `updateMap(newMap)`
