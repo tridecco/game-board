@@ -529,11 +529,14 @@ class Board {
 
   /**
    * @method clone - Create a deep copy of the board.
-   * @param {boolean} [withListeners=false] - Whether to include event listeners in the cloned board.
-   * @param {boolean} [withHistory=false] - Whether to include history in the cloned board.
+   * @param {Object} [options={}] - Options for cloning the board.
+   * @param {boolean} [options.withListeners=false] - Whether to include event listeners in the cloned board.
+   * @param {boolean} [options.withHistory=false] - Whether to include history in the cloned board.
    * @returns {Board} - A new instance of Board with the same properties.
    */
-  clone(withListeners = false, withHistory = false) {
+  clone(options = {}) {
+    const { withListeners = false, withHistory = false } = options;
+
     const newBoard = deepClone(this);
 
     if (!withListeners) {
