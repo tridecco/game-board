@@ -627,6 +627,59 @@ describe('Board', () => {
     });
   });
 
+  describe('clone', () => {
+    let board;
+    let piece;
+
+    beforeEach(() => {
+      board = new Board();
+      piece = new Piece(['red', 'blue']);
+      board.place(0, piece);
+    });
+
+    it('should create a deep copy of the board', () => {
+      const clonedBoard = board.clone();
+      expect(clonedBoard).toBeInstanceOf(Board);
+      expect(clonedBoard).not.toBe(board);
+      expect(clonedBoard.map).toEqual(board.map);
+      expect(clonedBoard.indexes).toEqual(board.indexes);
+      expect(clonedBoard.grid).not.toBe(board.grid);
+      expect(clonedBoard.grid).toEqual(board.grid);
+    });
+
+    it('should not include event listeners in the cloned board by default', () => {
+      const listener = jest.fn();
+      board.addEventListener('set', listener);
+      const clonedBoard = board.clone();
+      clonedBoard.set(1, new Piece(['green', 'yellow']));
+      expect(listener).not.toHaveBeenCalled();
+    });
+
+    it('should include event listeners in the cloned board if specified', () => {
+      const listener = jest.fn();
+      board.addEventListener('set', listener);
+      const clonedBoard = board.clone({ withListeners: true });
+      clonedBoard.set(1, new Piece(['green', 'yellow']));
+      expect(listener).toHaveBeenCalledWith(1, expect.any(Piece));
+    });
+
+    it('should not include history in the cloned board by default', () => {
+      const clonedBoard = board.clone();
+      expect(clonedBoard.history).toEqual([]);
+    });
+
+    it('should include history in the cloned board if specified', () => {
+      const clonedBoard = board.clone({ withHistory: true });
+      expect(clonedBoard.history).toEqual(board.history);
+    });
+
+    it('should reset the _isCountingHexagons flag in the cloned board', () => {
+      board._isCountingHexagons = true;
+      const clonedBoard = board.clone();
+      expect(clonedBoard._isCountingHexagons).toBe(false);
+    });
+  });
+
   describe('clear', () => {
     let board;
     let piece;
