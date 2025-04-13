@@ -139,4 +139,66 @@ describe('Piece', () => {
       expect(piece.colors).toEqual(['red', 'blue']);
     });
   });
+
+  describe('toJSON', () => {
+    it('should return a JSON representation of the piece', () => {
+      const params = { name: 'Test Piece', value: 15 };
+      const piece = new Piece(['red', 'blue'], params);
+      const json = piece.toJSON();
+
+      expect(json).toEqual({
+        colors: ['red', 'blue'],
+        customProperties: { name: 'Test Piece', value: 15 },
+      });
+    });
+
+    it('should not include colorsKey in the JSON representation', () => {
+      const piece = new Piece(['green', 'yellow']);
+      const json = piece.toJSON();
+
+      expect(json).not.toHaveProperty('colorsKey');
+    });
+  });
+
+  describe('fromJSON', () => {
+    it('should create a Piece instance from a valid JSON representation', () => {
+      const json = {
+        colors: ['red', 'blue'],
+        customProperties: { name: 'Test Piece', value: 15 },
+      };
+      const piece = Piece.fromJSON(json);
+
+      expect(piece).toBeInstanceOf(Piece);
+      expect(piece.colors).toEqual(['red', 'blue']);
+      expect(piece.colorsKey).toBe('red-blue');
+      expect(piece.name).toBe('Test Piece');
+      expect(piece.value).toBe(15);
+    });
+
+    it('should throw an error if colors is missing in the JSON representation', () => {
+      const json = { customProperties: { name: 'Test Piece', value: 15 } };
+      expect(() => Piece.fromJSON(json)).toThrowError(
+        'colors must be an array of strings',
+      );
+    });
+
+    it('should throw an error if colors in the JSON representation is invalid', () => {
+      const json = {
+        colors: ['red'],
+        customProperties: { name: 'Test Piece', value: 15 },
+      };
+      expect(() => Piece.fromJSON(json)).toThrowError(
+        'colors must be an array of 2 strings representing the colors of the piece',
+      );
+    });
+
+    it('should handle an empty customProperties object in the JSON representation', () => {
+      const json = { colors: ['red', 'blue'], customProperties: {} };
+      const piece = Piece.fromJSON(json);
+
+      expect(piece).toBeInstanceOf(Piece);
+      expect(piece.colors).toEqual(['red', 'blue']);
+      expect(piece.colorsKey).toBe('red-blue');
+    });
+  });
 });
