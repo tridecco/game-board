@@ -3,6 +3,8 @@
  * @description This file contains the implementation of the Tridecco game board.
  */
 
+const deepClone = require('./utils/deepClone');
+
 const TriHexGrid = require('./triHexGrid');
 const Piece = require('./piece');
 
@@ -523,6 +525,32 @@ class Board {
       }
     }
     return steps;
+  }
+
+  /**
+   * @method clone - Create a deep copy of the board.
+   * @param {boolean} [withListeners=false] - Whether to include event listeners in the cloned board.
+   * @param {boolean} [withHistory=false] - Whether to include history in the cloned board.
+   * @returns {Board} - A new instance of Board with the same properties.
+   */
+  clone(withListeners = false, withHistory = false) {
+    const newBoard = deepClone(this);
+
+    if (!withListeners) {
+      newBoard.eventListeners = {
+        set: new Set(),
+        remove: new Set(),
+        form: new Set(),
+        destroy: new Set(),
+        clear: new Set(),
+      };
+    }
+
+    if (!withHistory) {
+      newBoard.history = [];
+    }
+
+    return newBoard;
   }
 
   /**
