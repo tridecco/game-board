@@ -5,9 +5,9 @@
 
 /**
  * @function deepClone - Deep clone an object.
- * @param {Object} obj - The object to clone.
- * @param {WeakMap} [memo=new WeakMap()] - A WeakMap to keep track of already cloned objects.
- * @returns {Object} - The deep cloned object.
+ * @param {*} obj - The value to clone.
+ * @param {WeakMap<object, object>} [memo=new WeakMap()] - Internal parameter to handle circular references.
+ * @returns {*} - A deep copy of the input value.
  */
 function deepClone(obj, memo = new WeakMap()) {
   if (obj === null) {
@@ -52,23 +52,25 @@ function deepClone(obj, memo = new WeakMap()) {
       return newArray;
     case Object:
       const proto = Object.getPrototypeOf(obj);
-      const newObj = proto === null ? Object.create(null) : {};
+      const newObj = Object.create(proto);
       memo.set(obj, newObj);
       for (const key of Reflect.ownKeys(obj)) {
         const descriptor = Object.getOwnPropertyDescriptor(obj, key);
         if (descriptor) {
-          Object.defineProperty(newObj, key, {
-            value: deepClone(descriptor.value, memo),
-            writable: descriptor.writable,
-            enumerable: descriptor.enumerable,
-            configurable: descriptor.configurable,
-            get: descriptor.get
-              ? () => deepClone(descriptor.get.call(obj), memo)
-              : undefined,
-            set: descriptor.set
-              ? (v) => descriptor.set.call(newObj, deepClone(v, memo))
-              : undefined,
-          });
+          if (descriptor.get || descriptor.set) {
+            Object.defineProperty(newObj, key, {
+              get: descriptor.get
+                ? () => deepClone(descriptor.get.call(obj), memo)
+                : undefined,
+              set: descriptor.set
+                ? (v) => descriptor.set.call(newObj, deepClone(v, memo))
+                : undefined,
+              enumerable: descriptor.enumerable,
+              configurable: descriptor.configurable,
+            });
+          } else {
+            newObj[key] = deepClone(descriptor.value, memo);
+          }
         }
       }
       return newObj;
@@ -77,9 +79,9 @@ function deepClone(obj, memo = new WeakMap()) {
     case Symbol:
       return obj;
     case WeakMap:
-      return new Constructor(obj);
+      return new Constructor(); // Cannot deep clone WeakMap contents
     case WeakSet:
-      return new Constructor(obj);
+      return new Constructor(); // Cannot deep clone WeakSet contents
     case Promise:
       return new Constructor((resolve, reject) => {
         obj.then(
@@ -107,18 +109,20 @@ function deepClone(obj, memo = new WeakMap()) {
       for (const key of Reflect.ownKeys(obj)) {
         const descriptor = Object.getOwnPropertyDescriptor(obj, key);
         if (descriptor) {
-          Object.defineProperty(customObj, key, {
-            value: deepClone(descriptor.value, memo),
-            writable: descriptor.writable,
-            enumerable: descriptor.enumerable,
-            configurable: descriptor.configurable,
-            get: descriptor.get
-              ? () => deepClone(descriptor.get.call(obj), memo)
-              : undefined,
-            set: descriptor.set
-              ? (v) => descriptor.set.call(customObj, deepClone(v, memo))
-              : undefined,
-          });
+          if (descriptor.get || descriptor.set) {
+            Object.defineProperty(customObj, key, {
+              get: descriptor.get
+                ? () => deepClone(descriptor.get.call(obj), memo)
+                : undefined,
+              set: descriptor.set
+                ? (v) => descriptor.set.call(customObj, deepClone(v, memo))
+                : undefined,
+              enumerable: descriptor.enumerable,
+              configurable: descriptor.configurable,
+            });
+          } else {
+            customObj[key] = deepClone(descriptor.value, memo);
+          }
         }
       }
       return customObj;
