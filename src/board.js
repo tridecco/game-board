@@ -550,6 +550,8 @@ class Board {
       newBoard.history = [];
     }
 
+    newBoard._isCountingHexagons = false; // Reset the flag in the cloned board
+
     return newBoard;
   }
 
