@@ -1343,7 +1343,7 @@ Converts the `Piece` instance to a JSON representation. This is useful for seria
 ```javascript
 const piece = new Piece(['red', 'blue'], { name: 'My Piece' });
 const jsonRepresentation = piece.toJSON();
-console.log(jsonRepresentation); // Output: { colors: ['red', 'blue'], name: 'My Piece' }
+console.log(jsonRepresentation); // Output: { colors: ['red', 'blue'], customProperties: { name: 'My Piece' } }
 ```
 
 ### `fromJSON(json)` (static)
