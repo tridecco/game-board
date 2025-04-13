@@ -980,6 +980,38 @@ class Renderer {
   }
 
   /**
+   * @method updateBoard - Updates the board instance used by the renderer, re-initializing the canvas and re-rendering the board.
+   * @param {Board} newBoard - The new board instance to replace the current board.
+   * @throws {Error} - If newBoard is not a valid board instance.
+   */
+  updateBoard(newBoard) {
+    if (!(newBoard instanceof Board)) {
+      throw new Error('newBoard must be a valid board instance');
+    }
+
+    // Remove event listeners from the board
+    this.board.removeEventListener('set', this.eventHandlers.get('set'));
+    this.board.removeEventListener('remove', this.eventHandlers.get('remove'));
+    this.board.removeEventListener('form', this.eventHandlers.get('form'));
+    this.board.removeEventListener(
+      'destroy',
+      this.eventHandlers.get('destroy'),
+    );
+    this.board.removeEventListener('clear', this.eventHandlers.get('clear'));
+
+    this.board = newBoard;
+
+    // Re-setup the board listeners to ensure they are using the new board
+    this.board.addEventListener('set', this.eventHandlers.get('set'));
+    this.board.addEventListener('remove', this.eventHandlers.get('remove'));
+    this.board.addEventListener('form', this.eventHandlers.get('form'));
+    this.board.addEventListener('destroy', this.eventHandlers.get('destroy'));
+    this.board.addEventListener('clear', this.eventHandlers.get('clear'));
+
+    this._setUpCanvas(); // Re-setup canvas to apply new board
+  }
+
+  /**
    * @method updateMap - Updates the game board map, re-initializes the canvas, and re-renders the board.
    * @param {Object} newMap - The new map configuration object to replace the current map.
    * @throws {Error} - If newMap is not a valid map object, validation checks for required map properties.
