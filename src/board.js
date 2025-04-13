@@ -3,6 +3,8 @@
  * @description This file contains the implementation of the Tridecco game board.
  */
 
+const deepClone = require('./utils/deepClone');
+
 const TriHexGrid = require('./triHexGrid');
 const Piece = require('./piece');
 
@@ -526,7 +528,38 @@ class Board {
   }
 
   /**
-   * @method clear - Clear the board and reset the history.
+   * @method clone - Create a deep copy of the board.
+   * @param {Object} [options={}] - Options for cloning the board.
+   * @param {boolean} [options.withListeners=false] - Whether to include event listeners in the cloned board.
+   * @param {boolean} [options.withHistory=false] - Whether to include history in the cloned board.
+   * @returns {Board} - A new instance of Board with the same properties.
+   */
+  clone(options = {}) {
+    const { withListeners = false, withHistory = false } = options;
+
+    const newBoard = deepClone(this);
+
+    if (!withListeners) {
+      newBoard.eventListeners = {
+        set: new Set(),
+        remove: new Set(),
+        form: new Set(),
+        destroy: new Set(),
+        clear: new Set(),
+      };
+    }
+
+    if (!withHistory) {
+      newBoard.history = [];
+    }
+
+    newBoard._isCountingHexagons = false; // Reset the flag in the cloned board
+
+    return newBoard;
+  }
+
+  /**
+   * @method clear - Clear the board and reset the history. (can't be undone)
    */
   clear() {
     this.grid.clear();
@@ -536,6 +569,87 @@ class Board {
     this.history = [];
 
     this._triggerEvent('clear'); // Trigger clear event
+  }
+
+  /**
+   * @method toJSON - Convert the board to a JSON representation.
+   * @param {Object} [options={}] - Options for converting the board to JSON.
+   * @param {boolean} [options.withHistory=false] - Whether to include history in the JSON representation.
+   * @returns {Object} - The JSON representation of the board.
+   */
+  toJSON(options = {}) {
+    const { withHistory = false } = options;
+
+    const newBoard = this.clone({
+      withListeners: false,
+      withHistory: withHistory,
+    });
+    const { map, grid, hexagons, hexagonColors } = newBoard;
+
+    const indexes = newBoard.indexes.map((piece) => {
+      if (piece) {
+        return piece.toJSON();
+      }
+      return null;
+    });
+
+    return {
+      map,
+      grid,
+      indexes,
+      hexagons: Array.from(hexagons),
+      hexagonColors: Array.from(hexagonColors.entries()),
+      history: withHistory
+        ? newBoard.history.map((action) => {
+            if (action.op === 'set') {
+              return action;
+            } else if (action.op === 'remove') {
+              return {
+                op: action.op,
+                index: action.index,
+                value: action.value.toJSON(),
+              };
+            }
+            return action; // Keep the action as is if it's not set or remove (no other actions defined yet)
+          })
+        : [],
+    };
+  }
+
+  /**
+   * @method fromJSON - Create a board from a JSON representation.
+   * @param {Object} json - The JSON representation of the board.
+   * @returns {Board} - A new instance of Board.
+   */
+  static fromJSON(json) {
+    const { map, grid, indexes, hexagons, hexagonColors, history } = json;
+
+    const newBoard = new Board(map);
+    newBoard.grid = grid;
+    newBoard.hexagons = new Set(hexagons);
+    newBoard.hexagonColors = new Map(hexagonColors);
+
+    newBoard.indexes = indexes.map((piece) => {
+      if (piece) {
+        return Piece.fromJSON(piece);
+      }
+      return null;
+    });
+
+    newBoard.history = history.map((action) => {
+      if (action.op === 'set') {
+        return action;
+      } else if (action.op === 'remove') {
+        return {
+          op: action.op,
+          index: action.index,
+          value: Piece.fromJSON(action.value),
+        };
+      }
+      return action; // Keep the action as is if it's not set or remove (no other actions defined yet)
+    });
+
+    return newBoard;
   }
 }
 

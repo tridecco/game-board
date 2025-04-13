@@ -627,6 +627,59 @@ describe('Board', () => {
     });
   });
 
+  describe('clone', () => {
+    let board;
+    let piece;
+
+    beforeEach(() => {
+      board = new Board();
+      piece = new Piece(['red', 'blue']);
+      board.place(0, piece);
+    });
+
+    it('should create a deep copy of the board', () => {
+      const clonedBoard = board.clone();
+      expect(clonedBoard).toBeInstanceOf(Board);
+      expect(clonedBoard).not.toBe(board);
+      expect(clonedBoard.map).toEqual(board.map);
+      expect(clonedBoard.indexes).toEqual(board.indexes);
+      expect(clonedBoard.grid).not.toBe(board.grid);
+      expect(clonedBoard.grid).toEqual(board.grid);
+    });
+
+    it('should not include event listeners in the cloned board by default', () => {
+      const listener = jest.fn();
+      board.addEventListener('set', listener);
+      const clonedBoard = board.clone();
+      clonedBoard.set(1, new Piece(['green', 'yellow']));
+      expect(listener).not.toHaveBeenCalled();
+    });
+
+    it('should include event listeners in the cloned board if specified', () => {
+      const listener = jest.fn();
+      board.addEventListener('set', listener);
+      const clonedBoard = board.clone({ withListeners: true });
+      clonedBoard.set(1, new Piece(['green', 'yellow']));
+      expect(listener).toHaveBeenCalledWith(1, expect.any(Piece));
+    });
+
+    it('should not include history in the cloned board by default', () => {
+      const clonedBoard = board.clone();
+      expect(clonedBoard.history).toEqual([]);
+    });
+
+    it('should include history in the cloned board if specified', () => {
+      const clonedBoard = board.clone({ withHistory: true });
+      expect(clonedBoard.history).toEqual(board.history);
+    });
+
+    it('should reset the _isCountingHexagons flag in the cloned board', () => {
+      board._isCountingHexagons = true;
+      const clonedBoard = board.clone();
+      expect(clonedBoard._isCountingHexagons).toBe(false);
+    });
+  });
+
   describe('clear', () => {
     let board;
     let piece;
@@ -754,6 +807,72 @@ describe('Board', () => {
         const piece2 = new Piece(['green', 'blue']);
         board.countHexagonsFormed(8, piece2); // This should not trigger any events
         expect(listener).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('Board Serialization', () => {
+    let board;
+    let piece;
+
+    beforeEach(() => {
+      board = new Board();
+      piece = new Piece(['red', 'blue']);
+      board.place(0, piece);
+    });
+
+    describe('toJSON', () => {
+      it('should serialize the board to JSON without history by default', () => {
+        const json = board.toJSON();
+        expect(json).toBeInstanceOf(Object);
+        expect(json.map).toEqual(board.map);
+        expect(json.grid).toEqual(board.grid);
+        expect(json.indexes).toEqual(
+          board.indexes.map((piece) => (piece ? piece.toJSON() : null)),
+        );
+        expect(json.hexagons).toEqual(Array.from(board.hexagons));
+        expect(json.hexagonColors).toEqual(
+          Array.from(board.hexagonColors.entries()),
+        );
+        expect(json.history).toEqual([]);
+      });
+
+      it('should serialize the board to JSON with history if specified', () => {
+        const json = board.toJSON({ withHistory: true });
+        expect(json.history).toEqual(
+          board.history.map((action) => {
+            if (action.op === 'remove') {
+              return {
+                ...action,
+                value: action.value.toJSON(),
+              };
+            }
+            return action;
+          }),
+        );
+      });
+    });
+
+    describe('fromJSON', () => {
+      it('should deserialize a board from JSON', () => {
+        const json = board.toJSON({ withHistory: true });
+        const deserializedBoard = Board.fromJSON(json);
+
+        expect(deserializedBoard).toBeInstanceOf(Board);
+        expect(deserializedBoard.map).toEqual(board.map);
+        expect(deserializedBoard.grid).toEqual(board.grid);
+        expect(deserializedBoard.indexes).toEqual(board.indexes);
+        expect(deserializedBoard.hexagons).toEqual(board.hexagons);
+        expect(deserializedBoard.hexagonColors).toEqual(board.hexagonColors);
+        expect(deserializedBoard.history).toEqual(board.history);
+      });
+
+      it('should correctly deserialize pieces in the board', () => {
+        const json = board.toJSON();
+        const deserializedBoard = Board.fromJSON(json);
+
+        expect(deserializedBoard.indexes[0]).toBeInstanceOf(Piece);
+        expect(deserializedBoard.indexes[0].colors).toEqual(piece.colors);
       });
     });
   });

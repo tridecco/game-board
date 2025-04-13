@@ -87,51 +87,57 @@ This document provides a comprehensive guide to the API of the Tridecco Game Boa
       - [Example](#example-34)
     - [`back(steps)`](#backsteps)
       - [Example](#example-35)
-    - [`clear()`](#clear-1)
+    - [`clone(options)`](#cloneoptions)
       - [Example](#example-36)
+    - [`clear()`](#clear-1)
+      - [Example](#example-37)
+    - [`toJSON(options)`](#tojsonoptions)
+      - [Example](#example-38)
+    - [`fromJSON(json)` (static)](#fromjsonjson-static)
+      - [Example](#example-39)
   - [Game Piece](#game-piece)
     - [Constructor](#constructor-3)
-      - [Example](#example-37)
-    - [`equals(other)`](#equalsother)
-      - [Example](#example-38)
-    - [`clone()`](#clone-2)
-      - [Example](#example-39)
-    - [`toJSON()`](#tojson)
       - [Example](#example-40)
-    - [`fromJSON(json)` (static)](#fromjsonjson-static)
+    - [`equals(other)`](#equalsother)
       - [Example](#example-41)
+    - [`clone()`](#clone-2)
+      - [Example](#example-42)
+    - [`toJSON()`](#tojson)
+      - [Example](#example-43)
+    - [`fromJSON(json)` (static)](#fromjsonjson-static-1)
+      - [Example](#example-44)
   - [Texture Pack](#texture-pack)
     - [Constructor](#constructor-4)
-      - [Example](#example-42)
+      - [Example](#example-45)
     - [`get(type, key)`](#gettype-key)
-      - [Example](#example-43)
+      - [Example](#example-46)
   - [Renderer](#renderer)
     - [Constructor](#constructor-5)
-      - [Example](#example-44)
-    - [`previewPiece(index, piece, fillColor)`](#previewpieceindex-piece-fillcolor)
-      - [Example](#example-45)
-    - [`clearPreview()`](#clearpreview)
-      - [Example](#example-46)
-    - [`showAvailablePositions(positions, fillColor)`](#showavailablepositionspositions-fillcolor)
       - [Example](#example-47)
-    - [`clearAvailablePositions()`](#clearavailablepositions)
+    - [`previewPiece(index, piece, fillColor)`](#previewpieceindex-piece-fillcolor)
       - [Example](#example-48)
-    - [`getTexture(type, key)`](#gettexturetype-key)
+    - [`clearPreview()`](#clearpreview)
       - [Example](#example-49)
-    - [`updateMap(newMap)`](#updatemapnewmap)
+    - [`showAvailablePositions(positions, fillColor)`](#showavailablepositionspositions-fillcolor)
       - [Example](#example-50)
-    - [`updateTextures(texturesUrl)`](#updatetexturestexturesurl)
+    - [`clearAvailablePositions()`](#clearavailablepositions)
       - [Example](#example-51)
-    - [`updateBackground(backgroundUrl)`](#updatebackgroundbackgroundurl)
+    - [`getTexture(type, key)`](#gettexturetype-key)
       - [Example](#example-52)
-    - [`updateGrid(gridUrl)`](#updategridgridurl)
+    - [`updateMap(newMap)`](#updatemapnewmap)
       - [Example](#example-53)
-    - [`addEventListener(eventType, listener, options)`](#addeventlistenereventtype-listener-options)
+    - [`updateTextures(texturesUrl)`](#updatetexturestexturesurl)
       - [Example](#example-54)
-    - [`removeEventListener(eventType, listener)`](#removeeventlistenereventtype-listener)
+    - [`updateBackground(backgroundUrl)`](#updatebackgroundbackgroundurl)
       - [Example](#example-55)
-    - [`destroy()`](#destroy)
+    - [`updateGrid(gridUrl)`](#updategridgridurl)
       - [Example](#example-56)
+    - [`addEventListener(eventType, listener, options)`](#addeventlistenereventtype-listener-options)
+      - [Example](#example-57)
+    - [`removeEventListener(eventType, listener)`](#removeeventlistenereventtype-listener)
+      - [Example](#example-58)
+    - [`destroy()`](#destroy)
+      - [Example](#example-59)
 
 ## Import the Library
 
@@ -1222,6 +1228,35 @@ board.back(); // Undo the last move
 board.back(3); // Undo the last 3 moves
 ```
 
+### `clone(options)`
+
+```javascript
+clone(options = {});
+```
+
+**Description:**
+
+Creates a deep copy of the `Board` instance. This means that a new `Board` object is created with the same map, grid, indexes, hexagons, history (if specified), and event listeners (if specified) as the original board.
+
+**Parameters:**
+
+- `options` (Object, optional): An object containing options for cloning. The following properties are available:
+  - `withListeners` (boolean): If `true`, the cloned board will include the event listeners from the original board. Defaults to `false`.
+  - `withHistory` (boolean): If `true`, the cloned board will include the history of moves from the original board. Defaults to `false`.
+
+**Returns:**
+
+- `Board`: A new `Board` instance that is a deep copy of the original board.
+
+#### Example
+
+```javascript
+const clonedBoard = board.clone(); // Creates a deep copy of the board without listeners or history
+const clonedBoardWithHistory = board.clone({
+  withHistory: true,
+}); // Creates a deep copy of the board with history
+```
+
 ### `clear()`
 
 ```javascript
@@ -1236,6 +1271,82 @@ Clears the entire game board, removing all pieces, resetting the history, and cl
 
 ```javascript
 board.clear(); // Clears the entire game board
+```
+
+### `toJSON(options)`
+
+```javascript
+toJSON(options = {});
+```
+
+**Description:**
+
+Converts the `Board` instance to a JSON representation. This is useful for serialization or storage. The JSON object includes the board's map, grid, indexes, hexagons, and history (if specified).
+
+**Parameters:**
+
+- `options` (Object, optional): An object containing options for JSON conversion. The following properties are available:
+  - `withHistory` (boolean): If `true`, the JSON will include the history of moves from the original board. Defaults to `false`.
+
+**Returns:**
+
+- `Object`: A JSON object representing the `Board`, including its map, grid, indexes, hexagons, and history (if specified).
+
+#### Example
+
+```javascript
+const boardJSON = board.toJSON(); // Converts the board to JSON without history
+const boardJSONWithHistory = board.toJSON({
+  withHistory: true,
+}); // Converts the board to JSON with history
+console.log(JSON.stringify(boardJSON)); // Output: JSON string representation of the board
+```
+
+### `fromJSON(json)` (static)
+
+```javascript
+fromJSON(json);
+```
+
+**Description:**
+
+Creates a new `Board` instance from a JSON representation. This is useful for deserialization or loading boards from stored data.
+
+**Parameters:**
+
+- `json` (Object): The JSON object representing a `Board`. It should contain the properties `map`, `grid`, `indexes`, `hexagons`, and `history` (if included).
+
+**Returns:**
+
+- `Board`: A new `Board` instance created from the provided JSON representation.
+
+#### Example
+
+```javascript
+const boardJSON = {
+  map: {
+    type: 'odd-r',
+    columns: 10,
+    rows: 10,
+    positions: [
+      /* ... position definitions ... */
+    ],
+  },
+  grid: [
+    /* ... grid data ... */
+  ],
+  indexes: [
+    /* ... indexes data ... */
+  ],
+  hexagons: [
+    /* ... hexagons data ... */
+  ],
+  history: [
+    /* ... history data ... */
+  ],
+};
+const board = Board.fromJSON(boardJSON); // Creates a board instance from JSON
+console.log(board); // Output: Board instance created from JSON
 ```
 
 ## Game Piece
