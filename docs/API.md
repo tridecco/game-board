@@ -1236,7 +1236,7 @@ clone(options = {});
 
 **Description:**
 
-Creates a deep copy of the `Board` instance. This means that a new `Board` object is created with the same map, grid, indexes, hexagons, history (if wanted), and event listeners (if wanted) as the original board.
+Creates a deep copy of the `Board` instance. This means that a new `Board` object is created with the same map, grid, indexes, hexagons, history (if specified), and event listeners (if specified) as the original board.
 
 **Parameters:**
 
@@ -1281,7 +1281,7 @@ toJSON(options = {});
 
 **Description:**
 
-Converts the `Board` instance to a JSON representation. This is useful for serialization or storage. The JSON object includes the board's map, grid, indexes, hexagons, and history (if included).
+Converts the `Board` instance to a JSON representation. This is useful for serialization or storage. The JSON object includes the board's map, grid, indexes, hexagons, and history (if specified).
 
 **Parameters:**
 
@@ -1290,7 +1290,7 @@ Converts the `Board` instance to a JSON representation. This is useful for seria
 
 **Returns:**
 
-- `Object`: A JSON object representing the `Board`, including its map, grid, indexes, hexagons, and history (if included).
+- `Object`: A JSON object representing the `Board`, including its map, grid, indexes, hexagons, and history (if specified).
 
 #### Example
 
