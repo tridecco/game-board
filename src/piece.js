@@ -68,6 +68,16 @@ class Piece {
     const { colors, colorsKey, ...customProperties } = this;
     return { colors, customProperties };
   }
+
+  /**
+   * @method fromJSON - Create a piece from a JSON representation.
+   * @param {Object} json - The JSON representation of the piece.
+   * @returns {Piece} - A new instance of Piece.
+   */
+  static fromJSON(json) {
+    const { colors, customProperties } = json;
+    return new Piece(colors, customProperties);
+  }
 }
 
 module.exports = Piece;
