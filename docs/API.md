@@ -94,38 +94,44 @@ This document provides a comprehensive guide to the API of the Tridecco Game Boa
       - [Example](#example-37)
     - [`equals(other)`](#equalsother)
       - [Example](#example-38)
+    - [`clone()`](#clone-2)
+      - [Example](#example-39)
+    - [`toJSON()`](#tojson)
+      - [Example](#example-40)
+    - [`fromJSON(json)` (static)](#fromjsonjson-static)
+      - [Example](#example-41)
   - [Texture Pack](#texture-pack)
     - [Constructor](#constructor-4)
-      - [Example](#example-39)
+      - [Example](#example-42)
     - [`get(type, key)`](#gettype-key)
-      - [Example](#example-40)
+      - [Example](#example-43)
   - [Renderer](#renderer)
     - [Constructor](#constructor-5)
-      - [Example](#example-41)
-    - [`previewPiece(index, piece, fillColor)`](#previewpieceindex-piece-fillcolor)
-      - [Example](#example-42)
-    - [`clearPreview()`](#clearpreview)
-      - [Example](#example-43)
-    - [`showAvailablePositions(positions, fillColor)`](#showavailablepositionspositions-fillcolor)
       - [Example](#example-44)
-    - [`clearAvailablePositions()`](#clearavailablepositions)
+    - [`previewPiece(index, piece, fillColor)`](#previewpieceindex-piece-fillcolor)
       - [Example](#example-45)
-    - [`getTexture(type, key)`](#gettexturetype-key)
+    - [`clearPreview()`](#clearpreview)
       - [Example](#example-46)
-    - [`updateMap(newMap)`](#updatemapnewmap)
+    - [`showAvailablePositions(positions, fillColor)`](#showavailablepositionspositions-fillcolor)
       - [Example](#example-47)
-    - [`updateTextures(texturesUrl)`](#updatetexturestexturesurl)
+    - [`clearAvailablePositions()`](#clearavailablepositions)
       - [Example](#example-48)
-    - [`updateBackground(backgroundUrl)`](#updatebackgroundbackgroundurl)
+    - [`getTexture(type, key)`](#gettexturetype-key)
       - [Example](#example-49)
-    - [`updateGrid(gridUrl)`](#updategridgridurl)
+    - [`updateMap(newMap)`](#updatemapnewmap)
       - [Example](#example-50)
-    - [`addEventListener(eventType, listener, options)`](#addeventlistenereventtype-listener-options)
+    - [`updateTextures(texturesUrl)`](#updatetexturestexturesurl)
       - [Example](#example-51)
-    - [`removeEventListener(eventType, listener)`](#removeeventlistenereventtype-listener)
+    - [`updateBackground(backgroundUrl)`](#updatebackgroundbackgroundurl)
       - [Example](#example-52)
-    - [`destroy()`](#destroy)
+    - [`updateGrid(gridUrl)`](#updategridgridurl)
       - [Example](#example-53)
+    - [`addEventListener(eventType, listener, options)`](#addeventlistenereventtype-listener-options)
+      - [Example](#example-54)
+    - [`removeEventListener(eventType, listener)`](#removeeventlistenereventtype-listener)
+      - [Example](#example-55)
+    - [`destroy()`](#destroy)
+      - [Example](#example-56)
 
 ## Import the Library
 
@@ -1294,6 +1300,79 @@ const piece4 = new Piece(['green', 'yellow']);
 console.log(piece1.equals(piece2)); // Output: true (same colors)
 console.log(piece1.equals(piece3)); // Output: false (different color order, current implementation considers order)
 console.log(piece1.equals(piece4)); // Output: false (different colors)
+```
+
+### `clone()`
+
+```javascript
+clone();
+```
+
+**Description:**
+
+Creates a deep copy of the `Piece` instance. This means that a new `Piece` object is created with the same colors and properties as the original piece.
+
+**Returns:**
+
+- `Piece`: A new `Piece` instance that is a deep copy of the original piece.
+
+#### Example
+
+```javascript
+const piece1 = new Piece(['red', 'blue']);
+const piece2 = piece1.clone();
+console.log(piece1.equals(piece2)); // Output: true (same colors)
+```
+
+### `toJSON()`
+
+```javascript
+toJSON();
+```
+
+**Description:**
+
+Converts the `Piece` instance to a JSON representation. This is useful for serialization or storage.
+
+**Returns:**
+
+- `Object`: An object representing the `Piece`, including its colors and any additional properties.
+
+#### Example
+
+```javascript
+const piece = new Piece(['red', 'blue'], { name: 'My Piece' });
+const jsonRepresentation = piece.toJSON();
+console.log(jsonRepresentation); // Output: { colors: ['red', 'blue'], name: 'My Piece' }
+```
+
+### `fromJSON(json)` (static)
+
+```javascript
+fromJSON(json);
+```
+
+**Description:**
+
+Creates a new `Piece` instance from a JSON representation. This is useful for deserialization or loading pieces from stored data.
+
+**Parameters:**
+
+- `json` (Object): The JSON object representing a `Piece`. It should contain a `colors` property (array of two strings) and any additional properties.
+
+**Returns:**
+
+- `Piece`: A new `Piece` instance created from the provided JSON representation.
+
+#### Example
+
+```javascript
+const jsonRepresentation = {
+  colors: ['red', 'blue'],
+  name: 'My Piece',
+};
+const piece = Piece.fromJSON(jsonRepresentation);
+console.log(piece.equals(new Piece(['red', 'blue']))); // Output: true
 ```
 
 ## Texture Pack
