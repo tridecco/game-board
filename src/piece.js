@@ -3,6 +3,8 @@
  * @description This file contains the implementation of a Tridecco game piece.
  */
 
+const deepClone = require('./utils/deepClone');
+
 /**
  * @class Piece - A class representing the game piece.
  */
@@ -48,6 +50,14 @@ class Piece {
     }
 
     return this.colorsKey === other.colorsKey;
+  }
+
+  /**
+   * @method clone - Create a deep copy of the piece.
+   * @returns {Piece} - A new instance of Piece with the same properties.
+   */
+  clone() {
+    return deepClone(this);
   }
 }
 
