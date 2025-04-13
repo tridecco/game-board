@@ -93,49 +93,51 @@ This document provides a comprehensive guide to the API of the Tridecco Game Boa
       - [Example](#example-37)
     - [`toJSON(options)`](#tojsonoptions)
       - [Example](#example-38)
+    - [`fromJSON(json)` (static)](#fromjsonjson-static)
+      - [Example](#example-39)
   - [Game Piece](#game-piece)
     - [Constructor](#constructor-3)
-      - [Example](#example-39)
-    - [`equals(other)`](#equalsother)
       - [Example](#example-40)
-    - [`clone()`](#clone-2)
+    - [`equals(other)`](#equalsother)
       - [Example](#example-41)
-    - [`toJSON()`](#tojson)
+    - [`clone()`](#clone-2)
       - [Example](#example-42)
-    - [`fromJSON(json)` (static)](#fromjsonjson-static)
+    - [`toJSON()`](#tojson)
       - [Example](#example-43)
+    - [`fromJSON(json)` (static)](#fromjsonjson-static-1)
+      - [Example](#example-44)
   - [Texture Pack](#texture-pack)
     - [Constructor](#constructor-4)
-      - [Example](#example-44)
-    - [`get(type, key)`](#gettype-key)
       - [Example](#example-45)
+    - [`get(type, key)`](#gettype-key)
+      - [Example](#example-46)
   - [Renderer](#renderer)
     - [Constructor](#constructor-5)
-      - [Example](#example-46)
-    - [`previewPiece(index, piece, fillColor)`](#previewpieceindex-piece-fillcolor)
       - [Example](#example-47)
-    - [`clearPreview()`](#clearpreview)
+    - [`previewPiece(index, piece, fillColor)`](#previewpieceindex-piece-fillcolor)
       - [Example](#example-48)
-    - [`showAvailablePositions(positions, fillColor)`](#showavailablepositionspositions-fillcolor)
+    - [`clearPreview()`](#clearpreview)
       - [Example](#example-49)
-    - [`clearAvailablePositions()`](#clearavailablepositions)
+    - [`showAvailablePositions(positions, fillColor)`](#showavailablepositionspositions-fillcolor)
       - [Example](#example-50)
-    - [`getTexture(type, key)`](#gettexturetype-key)
+    - [`clearAvailablePositions()`](#clearavailablepositions)
       - [Example](#example-51)
-    - [`updateMap(newMap)`](#updatemapnewmap)
+    - [`getTexture(type, key)`](#gettexturetype-key)
       - [Example](#example-52)
-    - [`updateTextures(texturesUrl)`](#updatetexturestexturesurl)
+    - [`updateMap(newMap)`](#updatemapnewmap)
       - [Example](#example-53)
-    - [`updateBackground(backgroundUrl)`](#updatebackgroundbackgroundurl)
+    - [`updateTextures(texturesUrl)`](#updatetexturestexturesurl)
       - [Example](#example-54)
-    - [`updateGrid(gridUrl)`](#updategridgridurl)
+    - [`updateBackground(backgroundUrl)`](#updatebackgroundbackgroundurl)
       - [Example](#example-55)
-    - [`addEventListener(eventType, listener, options)`](#addeventlistenereventtype-listener-options)
+    - [`updateGrid(gridUrl)`](#updategridgridurl)
       - [Example](#example-56)
-    - [`removeEventListener(eventType, listener)`](#removeeventlistenereventtype-listener)
+    - [`addEventListener(eventType, listener, options)`](#addeventlistenereventtype-listener-options)
       - [Example](#example-57)
-    - [`destroy()`](#destroy)
+    - [`removeEventListener(eventType, listener)`](#removeeventlistenereventtype-listener)
       - [Example](#example-58)
+    - [`destroy()`](#destroy)
+      - [Example](#example-59)
 
 ## Import the Library
 
@@ -1298,6 +1300,53 @@ const boardJSONWithHistory = board.toJSON({
   withHistory: true,
 }); // Converts the board to JSON with history
 console.log(JSON.stringify(boardJSON)); // Output: JSON string representation of the board
+```
+
+### `fromJSON(json)` (static)
+
+```javascript
+fromJSON(json);
+```
+
+**Description:**
+
+Creates a new `Board` instance from a JSON representation. This is useful for deserialization or loading boards from stored data.
+
+**Parameters:**
+
+- `json` (Object): The JSON object representing a `Board`. It should contain the properties `map`, `grid`, `indexes`, `hexagons`, and `history` (if included).
+
+**Returns:**
+
+- `Board`: A new `Board` instance created from the provided JSON representation.
+
+#### Example
+
+```javascript
+const boardJSON = {
+  map: {
+    type: 'odd-r',
+    columns: 10,
+    rows: 10,
+    positions: [
+      /* ... position definitions ... */
+    ],
+  },
+  grid: [
+    /* ... grid data ... */
+  ],
+  indexes: [
+    /* ... indexes data ... */
+  ],
+  hexagons: [
+    /* ... hexagons data ... */
+  ],
+  history: [
+    /* ... history data ... */
+  ],
+};
+const board = Board.fromJSON(boardJSON); // Creates a board instance from JSON
+console.log(board); // Output: Board instance created from JSON
 ```
 
 ## Game Piece
