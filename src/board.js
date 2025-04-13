@@ -615,6 +615,42 @@ class Board {
         : [],
     };
   }
+
+  /**
+   * @method fromJSON - Create a board from a JSON representation.
+   * @param {Object} json - The JSON representation of the board.
+   * @returns {Board} - A new instance of Board.
+   */
+  static fromJSON(json) {
+    const { map, grid, indexes, hexagons, hexagonColors, history } = json;
+
+    const newBoard = new Board(map);
+    newBoard.grid = grid;
+    newBoard.hexagons = new Set(hexagons);
+    newBoard.hexagonColors = new Map(hexagonColors);
+
+    newBoard.indexes = indexes.map((piece) => {
+      if (piece) {
+        return Piece.fromJSON(piece);
+      }
+      return null;
+    });
+
+    newBoard.history = history.map((action) => {
+      if (action.op === 'set') {
+        return action;
+      } else if (action.op === 'remove') {
+        return {
+          op: action.op,
+          index: action.index,
+          value: Piece.fromJSON(action.value),
+        };
+      }
+      return action; // Keep the action as is if it's not set or remove (no other actions defined yet)
+    });
+
+    return newBoard;
+  }
 }
 
 module.exports = Board;
