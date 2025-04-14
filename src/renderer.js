@@ -190,7 +190,7 @@ class Renderer {
     this._isPreviewing = false; // Flag to check if a piece is being previewed
     this._isShowingAvailablePositions = false; // Flag to check if available positions are being shown
     this._showingAvailablePositions = new Array(); // Store currently shown available positions
-    this._previewingPositions = new Set(); // Store currently shown previewing positions
+    this._previewingPositions = new Map(); // Store currently shown previewing positions
 
     this._setUpBoard();
     this._loadAssets(texturesUrl, backgroundUrl, gridUrl).then(() => {
@@ -416,11 +416,8 @@ class Renderer {
       this.showAvailablePositions(this._showingAvailablePositions);
     }
     if (this._isPreviewing) {
-      this._previewingPositions.forEach((index) => {
-        const piece = this.board.get(index);
-        if (piece) {
-          this.previewPiece(index, piece);
-        }
+      this._previewingPositions.forEach((piece, index) => {
+        this.previewPiece(index, piece);
       });
     }
     this._setUpHitmap();
@@ -836,7 +833,7 @@ class Renderer {
 
     this._render();
     this._isPreviewing = true;
-    this._previewingPositions.add(index);
+    this._previewingPositions.set(index, piece);
   }
 
   /**
@@ -1067,6 +1064,15 @@ class Renderer {
           this._renderPiecesAndHexagons(); // Re-render pieces and hexagons with new textures
           this._render(); // Re-render the main canvas to show the new textures
           this._setUpHitmap(); // Re-render the hitmap with new textures
+
+          if (this._isPreviewing) {
+            const previewingPositions = [...this._previewingPositions];
+            this.clearPreview(); // Clear existing previews
+            previewingPositions.forEach(([index, piece]) => {
+              this.previewPiece(index, piece); // Re-render previews with new textures
+            });
+          }
+
           resolve();
         },
         (error) => {
