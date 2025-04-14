@@ -1064,6 +1064,17 @@ class Renderer {
           this._renderPiecesAndHexagons(); // Re-render pieces and hexagons with new textures
           this._render(); // Re-render the main canvas to show the new textures
           this._setUpHitmap(); // Re-render the hitmap with new textures
+
+          if (this._isPreviewing) {
+            const previewingPositions = this._previewingPositions;
+            previewingPositions.forEach((piece, index) => {
+              setTimeout(() => {
+                this.previewPiece(index, piece); // Re-render previews with new textures
+              }, 0);
+            });
+            this.clearPreview(); // Clear existing previews
+          }
+
           resolve();
         },
         (error) => {
