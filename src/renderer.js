@@ -96,6 +96,7 @@ class Renderer {
     this.ratio = this.map.width / this.map.height; // Ratio of the map width to the map height
     this.widthRatio = null; // Ratio of the canvas width to the map width
     this.heightRatio = null; // Ratio of the canvas height to the map height
+    this.devicePixelRatio = window.devicePixelRatio || 1; // Device pixel ratio for high-DPI displays
 
     this.offScreenCanvases = {
       background: new OffscreenCanvas(1, 1), // Background Image + Grid Image
