@@ -4,7 +4,7 @@
  */
 
 const DEFAULT_ASSETS_URL =
-  'https://cdn.jsdelivr.net/gh/tridecco/game-board@0.4.0/assets/';
+  'https://cdn.jsdelivr.net/gh/tridecco/game-board@0.4.1/assets/';
 
 const Board = require('./board');
 const TexturePack = require('./texturePack');
