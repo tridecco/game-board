@@ -96,6 +96,7 @@ class Renderer {
     this.ratio = this.map.width / this.map.height; // Ratio of the map width to the map height
     this.widthRatio = null; // Ratio of the canvas width to the map width
     this.heightRatio = null; // Ratio of the canvas height to the map height
+    this.devicePixelRatio = window.devicePixelRatio || 1; // Device pixel ratio for high-DPI displays
 
     this.offScreenCanvases = {
       background: new OffscreenCanvas(1, 1), // Background Image + Grid Image
@@ -206,9 +207,10 @@ class Renderer {
    */
   _initEventListeners() {
     this.canvas.addEventListener('dragover', (event) => {
+      const dpr = this.devicePixelRatio;
       const coords = {
-        x: event.offsetX,
-        y: event.offsetY,
+        x: event.offsetX * dpr,
+        y: event.offsetY * dpr,
       };
       event.preventDefault(); // Prevent default behavior to allow dropping
       this._triggerEvent(
@@ -227,9 +229,10 @@ class Renderer {
     });
 
     this.canvas.addEventListener('drop', (event) => {
+      const dpr = this.devicePixelRatio;
       const coords = {
-        x: event.offsetX,
-        y: event.offsetY,
+        x: event.offsetX * dpr,
+        y: event.offsetY * dpr,
       };
       event.preventDefault(); // Prevent default behavior to allow dropping
       this._triggerEvent(
@@ -248,9 +251,10 @@ class Renderer {
     });
 
     this.canvas.addEventListener('click', (event) => {
+      const dpr = this.devicePixelRatio;
       const coords = {
-        x: event.offsetX,
-        y: event.offsetY,
+        x: event.offsetX * dpr,
+        y: event.offsetY * dpr,
       };
       this._triggerEvent(
         'click',
@@ -268,9 +272,10 @@ class Renderer {
     });
 
     this.canvas.addEventListener('mousemove', (event) => {
+      const dpr = this.devicePixelRatio;
       const coords = {
-        x: event.offsetX,
-        y: event.offsetY,
+        x: event.offsetX * dpr,
+        y: event.offsetY * dpr,
       };
       this._triggerEvent(
         'mousemove',
@@ -368,7 +373,7 @@ class Renderer {
   }
 
   /**
-   * @method _setUpCanvas - Sets up the canvas dimensions and renders initial elements.
+   * @method _setUpCanvas - Sets up the canvas dimensions and renders initial elements, applying device pixel ratio (DPR) for high-DPI displays.
    */
   _setUpCanvas() {
     const containerWidth = this.container.clientWidth;
@@ -384,8 +389,11 @@ class Renderer {
       canvasHeight = canvasWidth / mapRatio;
     }
 
-    this.canvas.width = canvasWidth;
-    this.canvas.height = canvasHeight;
+    const dpr = this.devicePixelRatio;
+    this.canvas.width = canvasWidth * dpr;
+    this.canvas.height = canvasHeight * dpr;
+    this.canvas.style.width = `${canvasWidth}px`;
+    this.canvas.style.height = `${canvasHeight}px`;
 
     const leftOffset = (containerWidth - canvasWidth) / HALF;
     const topOffset = (containerHeight - canvasHeight) / HALF;
@@ -398,8 +406,13 @@ class Renderer {
     }
 
     for (const key in this.offScreenCanvases) {
-      this.offScreenCanvases[key].width = canvasWidth;
-      this.offScreenCanvases[key].height = canvasHeight;
+      this.offScreenCanvases[key].width = canvasWidth * dpr;
+      this.offScreenCanvases[key].height = canvasHeight * dpr;
+    }
+
+    this.context.scale(dpr, dpr);
+    for (const key in this.offScreenContexts) {
+      this.offScreenContexts[key].scale(dpr, dpr);
     }
 
     this.width = canvasWidth;
