@@ -207,9 +207,10 @@ class Renderer {
    */
   _initEventListeners() {
     this.canvas.addEventListener('dragover', (event) => {
+      const dpr = this.devicePixelRatio;
       const coords = {
-        x: event.offsetX,
-        y: event.offsetY,
+        x: event.offsetX * dpr,
+        y: event.offsetY * dpr,
       };
       event.preventDefault(); // Prevent default behavior to allow dropping
       this._triggerEvent(
@@ -228,9 +229,10 @@ class Renderer {
     });
 
     this.canvas.addEventListener('drop', (event) => {
+      const dpr = this.devicePixelRatio;
       const coords = {
-        x: event.offsetX,
-        y: event.offsetY,
+        x: event.offsetX * dpr,
+        y: event.offsetY * dpr,
       };
       event.preventDefault(); // Prevent default behavior to allow dropping
       this._triggerEvent(
@@ -249,9 +251,10 @@ class Renderer {
     });
 
     this.canvas.addEventListener('click', (event) => {
+      const dpr = this.devicePixelRatio;
       const coords = {
-        x: event.offsetX,
-        y: event.offsetY,
+        x: event.offsetX * dpr,
+        y: event.offsetY * dpr,
       };
       this._triggerEvent(
         'click',
@@ -269,9 +272,10 @@ class Renderer {
     });
 
     this.canvas.addEventListener('mousemove', (event) => {
+      const dpr = this.devicePixelRatio;
       const coords = {
-        x: event.offsetX,
-        y: event.offsetY,
+        x: event.offsetX * dpr,
+        y: event.offsetY * dpr,
       };
       this._triggerEvent(
         'mousemove',
