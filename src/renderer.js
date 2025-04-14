@@ -1067,10 +1067,10 @@ class Renderer {
 
           if (this._isPreviewing) {
             const previewingPositions = [...this._previewingPositions];
-            previewingPositions.forEach((piece, index) => {
+            this.clearPreview(); // Clear existing previews
+            previewingPositions.forEach(([index, piece]) => {
               this.previewPiece(index, piece); // Re-render previews with new textures
             });
-            this.clearPreview(); // Clear existing previews
           }
 
           resolve();
