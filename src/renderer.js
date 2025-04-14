@@ -833,7 +833,7 @@ class Renderer {
 
     this._render();
     this._isPreviewing = true;
-    this._previewingPositions.add(index, piece);
+    this._previewingPositions.set(index, piece);
   }
 
   /**
