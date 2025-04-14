@@ -1066,11 +1066,9 @@ class Renderer {
           this._setUpHitmap(); // Re-render the hitmap with new textures
 
           if (this._isPreviewing) {
-            const previewingPositions = this._previewingPositions;
+            const previewingPositions = [...this._previewingPositions];
             previewingPositions.forEach((piece, index) => {
-              setTimeout(() => {
-                this.previewPiece(index, piece); // Re-render previews with new textures
-              }, 0);
+              this.previewPiece(index, piece); // Re-render previews with new textures
             });
             this.clearPreview(); // Clear existing previews
           }
