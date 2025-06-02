@@ -25,6 +25,60 @@ const FPS_SAMPLE_SIZE = 60;
 const MILLISECONDS_PER_SECOND = 1000;
 
 /**
+ * @class CanvasLayer - Represents a single off-screen canvas layer.
+ */
+class CanvasLayer {
+  /**
+   * @constructor
+   * @param {string} name - The name of the canvas layer.
+   * @param {Object} options - The options for the canvas layer.
+   * @param {boolean} options.willReadFrequently - Whether the canvas will be read frequently.
+   * @param {boolean} options.imageSmoothingEnabled - Whether image smoothing is enabled.
+   */
+  constructor(name, options = {}) {
+    this.name = name;
+    this.canvas = new OffscreenCanvas(1, 1);
+    this.context = this.canvas.getContext('2d', options);
+    this.isDirty = false;
+  }
+
+  /**
+   * @method resize - Resizes the canvas layer.
+   * @param {number} width - The new width of the canvas.
+   * @param {number} height - The new height of the canvas.
+   * @param {number} devicePixelRatio - The device pixel ratio.
+   */
+  resize(width, height, devicePixelRatio) {
+    this.canvas.width = width * devicePixelRatio;
+    this.canvas.height = height * devicePixelRatio;
+    this.context.scale(devicePixelRatio, devicePixelRatio);
+    this.markDirty();
+  }
+
+  /**
+   * @method clear - Clears the canvas layer.
+   */
+  clear() {
+    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.markDirty();
+  }
+
+  /**
+   * @method markDirty - Marks the canvas layer as dirty, requiring re-rendering.
+   */
+  markDirty() {
+    this.isDirty = true;
+  }
+
+  /**
+   * @method markClean - Marks the canvas layer as clean, indicating it has been rendered.
+   */
+  markClean() {
+    this.isDirty = false;
+  }
+}
+
+/**
  * @class Renderer - A class representing the game board renderer.
  */
 class Renderer {
