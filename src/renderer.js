@@ -471,6 +471,57 @@ class EventManager {
 }
 
 /**
+ * @class FPSMonitor - Monitors and calculates frames per second.
+ */
+class FPSMonitor {
+  /**
+   * @constructor
+   */
+  constructor() {
+    this.frameTimes = [];
+    this.lastFrameTime = performance.now();
+    this.fps = 0;
+  }
+
+  /**
+   * @method update - Updates FPS calculation with current frame time.
+   */
+  update() {
+    const currentTime = performance.now();
+    const frameTime = currentTime - this.lastFrameTime;
+    this.lastFrameTime = currentTime;
+
+    this.frameTimes.push(frameTime);
+    if (this.frameTimes.length > FPS_SAMPLE_SIZE) {
+      this.frameTimes.shift();
+    }
+    if (this.frameTimes.length > 0) {
+      const averageFrameTime =
+        this.frameTimes.reduce((sum, time) => sum + time, 0) /
+        this.frameTimes.length;
+      this.fps = Math.round(MILLISECONDS_PER_SECOND / averageFrameTime);
+    }
+  }
+
+  /**
+   * @method getFPS - Gets the current FPS.
+   * @returns {number} - The current frames per second.
+   */
+  getFPS() {
+    return this.fps;
+  }
+
+  /**
+   * @method reset - Resets the FPS monitor.
+   */
+  reset() {
+    this.frameTimes = [];
+    this.lastFrameTime = performance.now();
+    this.fps = 0;
+  }
+}
+
+/**
  * @class Renderer - A class representing the game board renderer.
  */
 class Renderer {
