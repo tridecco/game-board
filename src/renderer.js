@@ -292,6 +292,185 @@ class AssetManager {
 }
 
 /**
+ * @class EventManager - Manages event listeners and event handling.
+ */
+class EventManager {
+  /**
+   * @constructor
+   * @param {HTMLCanvasElement} canvas - The main canvas element.
+   * @param {number} devicePixelRatio - The device pixel ratio.
+   * @param {Function} getPieceFromCoordinate - Function to get piece from coordinate.
+   */
+  constructor(canvas, devicePixelRatio, getPieceFromCoordinate) {
+    this.canvas = canvas;
+    this.devicePixelRatio = devicePixelRatio;
+    this.getPieceFromCoordinate = getPieceFromCoordinate;
+
+    this.eventListeners = {
+      dragover: new Set(),
+      dragoverAvailable: new Set(),
+      drop: new Set(),
+      dropAvailable: new Set(),
+      mousemove: new Set(),
+      mousemoveAvailable: new Set(),
+      click: new Set(),
+      clickAvailable: new Set(),
+      resize: new Set(),
+    };
+
+    this._initEventListeners();
+  }
+
+  /**
+   * @method _initEventListeners - Initializes event listeners for the canvas.
+   */
+  _initEventListeners() {
+    this.canvas.addEventListener('dragover', (event) => {
+      const dpr = this.devicePixelRatio;
+      const coords = {
+        x: event.offsetX * dpr,
+        y: event.offsetY * dpr,
+      };
+      event.preventDefault();
+      this._triggerEvent(
+        'dragover',
+        this.getPieceFromCoordinate(coords.x, coords.y),
+      );
+
+      const availablePiece = this.getPieceFromCoordinate(
+        coords.x,
+        coords.y,
+        true,
+      );
+      if (availablePiece !== NOT_FOUND) {
+        this._triggerEvent('dragoverAvailable', availablePiece);
+      }
+    });
+
+    this.canvas.addEventListener('drop', (event) => {
+      const dpr = this.devicePixelRatio;
+      const coords = {
+        x: event.offsetX * dpr,
+        y: event.offsetY * dpr,
+      };
+      event.preventDefault();
+      this._triggerEvent(
+        'drop',
+        this.getPieceFromCoordinate(coords.x, coords.y),
+      );
+
+      const availablePiece = this.getPieceFromCoordinate(
+        coords.x,
+        coords.y,
+        true,
+      );
+      if (availablePiece !== NOT_FOUND) {
+        this._triggerEvent('dropAvailable', availablePiece);
+      }
+    });
+
+    this.canvas.addEventListener('click', (event) => {
+      const dpr = this.devicePixelRatio;
+      const coords = {
+        x: event.offsetX * dpr,
+        y: event.offsetY * dpr,
+      };
+      this._triggerEvent(
+        'click',
+        this.getPieceFromCoordinate(coords.x, coords.y),
+      );
+
+      const availablePiece = this.getPieceFromCoordinate(
+        coords.x,
+        coords.y,
+        true,
+      );
+      if (availablePiece !== NOT_FOUND) {
+        this._triggerEvent('clickAvailable', availablePiece);
+      }
+    });
+
+    this.canvas.addEventListener('mousemove', (event) => {
+      const dpr = this.devicePixelRatio;
+      const coords = {
+        x: event.offsetX * dpr,
+        y: event.offsetY * dpr,
+      };
+      this._triggerEvent(
+        'mousemove',
+        this.getPieceFromCoordinate(coords.x, coords.y),
+      );
+
+      const availablePiece = this.getPieceFromCoordinate(
+        coords.x,
+        coords.y,
+        true,
+      );
+      if (availablePiece !== NOT_FOUND) {
+        this._triggerEvent('mousemoveAvailable', availablePiece);
+      }
+    });
+  }
+
+  /**
+   * @method _triggerEvent - Trigger an event for a specific action.
+   * @param {string} eventType - The type of event to trigger.
+   * @param {...*} args - The arguments to pass to the event listeners.
+   */
+  _triggerEvent(eventType, ...args) {
+    if (this.eventListeners[eventType]) {
+      this.eventListeners[eventType].forEach((listener) => {
+        listener(...args);
+      });
+    }
+  }
+
+  /**
+   * @method addEventListener - Adds an event listener.
+   * @param {string} eventType - The event type.
+   * @param {Function} listener - The listener function.
+   * @param {Object} options - Optional parameters.
+   */
+  addEventListener(eventType, listener, options = {}) {
+    if (!this.eventListeners[eventType] || eventType.endsWith('Available')) {
+      throw new Error('Invalid event type');
+    }
+
+    if (eventType !== 'resize' && options.onlyAvailable) {
+      this.eventListeners[`${eventType}Available`].add(listener);
+    } else {
+      this.eventListeners[eventType].add(listener);
+    }
+  }
+
+  /**
+   * @method removeEventListener - Removes an event listener.
+   * @param {string} eventType - The event type.
+   * @param {Function} listener - The listener function.
+   */
+  removeEventListener(eventType, listener) {
+    if (!this.eventListeners[eventType] || eventType.endsWith('Available')) {
+      throw new Error('Invalid event type');
+    }
+
+    this.eventListeners[eventType].delete(listener);
+    if (eventType !== 'resize') {
+      this.eventListeners[`${eventType}Available`].delete(listener);
+    }
+  }
+
+  /**
+   * @method destroy - Destroys the event manager and releases resources.
+   */
+  destroy() {
+    for (const eventType in this.eventListeners) {
+      this.eventListeners[eventType].clear();
+    }
+    this.eventListeners = null;
+  }
+}
+
+/**
  * @class Renderer - A class representing the game board renderer.
  */
 class Renderer {
