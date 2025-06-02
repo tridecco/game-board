@@ -161,6 +161,137 @@ class CanvasManager {
 }
 
 /**
+ * @class AssetManager - Manages loading and caching of game assets.
+ */
+class AssetManager {
+  /**
+   * @constructor
+   */
+  constructor() {
+    this.textures = null;
+    this.background = null;
+    this.grid = null;
+  }
+
+  /**
+   * @method loadAssets - Loads textures, background, and grid images.
+   * @param {string} texturesUrl - The URL of the texture pack.
+   * @param {string} backgroundUrl - The URL of the background image.
+   * @param {string} gridUrl - The URL of the grid image.
+   * @returns {Promise<void[]>} - A promise that resolves when all assets are loaded.
+   */
+  async loadAssets(texturesUrl, backgroundUrl, gridUrl) {
+    const loadingAssetsPromises = [
+      new Promise((resolve) => {
+        this.textures = new TexturePack(texturesUrl, resolve);
+      }),
+      new Promise((resolve) => {
+        this.background = new Image();
+        this.background.src = backgroundUrl;
+        this.background.onload = resolve;
+      }),
+      new Promise((resolve) => {
+        this.grid = new Image();
+        this.grid.src = gridUrl;
+        this.grid.onload = resolve;
+      }),
+    ];
+
+    return Promise.all(loadingAssetsPromises);
+  }
+
+  /**
+   * @method getTexture - Gets a texture by type and key.
+   * @param {string} type - The texture type.
+   * @param {string} key - The texture key.
+   * @returns {HTMLImageElement} - The texture image.
+   */
+  getTexture(type, key) {
+    if (!this.textures) {
+      throw new Error('Textures not loaded yet');
+    }
+    return this.textures.get(type, key);
+  }
+
+  /**
+   * @method updateTextures - Updates the texture pack.
+   * @param {string} texturesUrl - The URL of the new texture pack.
+   * @returns {Promise<void>} - A promise that resolves when textures are loaded.
+   */
+  async updateTextures(texturesUrl) {
+    if (typeof texturesUrl !== 'string') {
+      throw new Error(
+        'texturesUrl must be a string representing the URL of the texture pack',
+      );
+    }
+
+    return new Promise((resolve, reject) => {
+      this.textures = new TexturePack(texturesUrl, resolve, (error) => {
+        console.error('Error loading new texture pack:', error);
+        reject(new Error('Failed to load new texture pack'));
+      });
+    });
+  }
+
+  /**
+   * @method updateBackground - Updates the background image.
+   * @param {string} backgroundUrl - The URL of the new background image.
+   * @returns {Promise<void>} - A promise that resolves when background is loaded.
+   */
+  async updateBackground(backgroundUrl) {
+    if (typeof backgroundUrl !== 'string') {
+      throw new Error('backgroundUrl must be a string');
+    }
+
+    return new Promise((resolve, reject) => {
+      const newBackground = new Image();
+      newBackground.src = backgroundUrl;
+      newBackground.onload = () => {
+        this.background = newBackground;
+        resolve();
+      };
+      newBackground.onerror = (error) => {
+        console.error('Error loading new background image:', error);
+        reject(new Error('Failed to load new background image'));
+      };
+    });
+  }
+
+  /**
+   * @method updateGrid - Updates the grid image.
+   * @param {string} gridUrl - The URL of the new grid image.
+   * @returns {Promise<void>} - A promise that resolves when grid is loaded.
+   */
+  async updateGrid(gridUrl) {
+    if (typeof gridUrl !== 'string') {
+      throw new Error('gridUrl must be a string');
+    }
+
+    return new Promise((resolve, reject) => {
+      const newGrid = new Image();
+      newGrid.src = gridUrl;
+      newGrid.onload = () => {
+        this.grid = newGrid;
+        resolve();
+      };
+      newGrid.onerror = (error) => {
+        console.error('Error loading new grid image:', error);
+        reject(new Error('Failed to load new grid image'));
+      };
+    });
+  }
+
+  /**
+   * @method destroy - Destroys the asset manager and releases resources.
+   */
+  destroy() {
+    this.textures = null;
+    this.background = null;
+    this.grid = null;
+  }
+}
+
+/**
  * @class Renderer - A class representing the game board renderer.
  */
 class Renderer {
