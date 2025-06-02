@@ -522,6 +522,513 @@ class FPSMonitor {
 }
 
 /**
+ * @class RenderingEngine - Handles all rendering operations and dirty rendering logic.
+ */
+class RenderingEngine {
+  /**
+   * @constructor
+   * @param {CanvasManager} canvasManager - The canvas manager instance.
+   * @param {AssetManager} assetManager - The asset manager instance.
+   * @param {Object} map - The game map.
+   */
+  constructor(canvasManager, assetManager, map) {
+    this.canvasManager = canvasManager;
+    this.assetManager = assetManager;
+    this.map = map;
+
+    this.widthRatio = null;
+    this.heightRatio = null;
+
+    this.isRenderingRequested = false;
+    this.fpsMonitor = new FPSMonitor();
+
+    this._isPreviewing = false;
+    this._isShowingAvailablePositions = false;
+    this._showingAvailablePositions = new Array();
+    this._previewingPositions = new Map();
+  }
+
+  /**
+   * @method setDimensions - Sets the rendering dimensions and ratios.
+   * @param {number} width - The canvas width.
+   * @param {number} height - The canvas height.
+   */
+  setDimensions(width, height) {
+    this.widthRatio = width / this.map.width;
+    this.heightRatio = height / this.map.height;
+  }
+
+  /**
+   * @method requestRender - Requests a render frame using dirty rendering.
+   * @param {HTMLCanvasElement} mainCanvas - The main canvas to render to.
+   * @param {CanvasRenderingContext2D} mainContext - The main canvas context.
+   */
+  requestRender(mainCanvas, mainContext) {
+    if (this.isRenderingRequested) {
+      return;
+    }
+
+    this.isRenderingRequested = true;
+    requestAnimationFrame(() => {
+      this._performRender(mainCanvas, mainContext);
+      this.isRenderingRequested = false;
+      this.fpsMonitor.update();
+    });
+  }
+
+  /**
+   * @method _performRender - Performs the actual rendering of dirty layers.
+   * @param {HTMLCanvasElement} mainCanvas - The main canvas to render to.
+   * @param {CanvasRenderingContext2D} mainContext - The main canvas context.
+   */
+  _performRender(mainCanvas, mainContext) {
+    const width = mainCanvas.width / this.canvasManager.devicePixelRatio;
+    const height = mainCanvas.height / this.canvasManager.devicePixelRatio;
+
+    mainContext.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+
+    // Render layers in order: background, pieces, piecesPreview, mask
+    const layerOrder = ['background', 'pieces', 'piecesPreview', 'mask'];
+
+    layerOrder.forEach((layerName) => {
+      const layer = this.canvasManager.getLayer(layerName);
+      if (layer) {
+        mainContext.drawImage(layer.canvas, 0, 0, width, height);
+        layer.markClean();
+      }
+    });
+  }
+
+  /**
+   * @method renderBackgroundAndGrid - Renders background and grid to the background layer.
+   * @param {number} width - The canvas width.
+   * @param {number} height - The canvas height.
+   */
+  renderBackgroundAndGrid(width, height) {
+    const backgroundLayer = this.canvasManager.getLayer('background');
+    const backgroundContext = backgroundLayer.context;
+
+    backgroundContext.clearRect(
+      0,
+      0,
+      backgroundLayer.canvas.width,
+      backgroundLayer.canvas.height,
+    );
+
+    // Draw the background image
+    const bgWidth = this.assetManager.background.width;
+    const bgHeight = this.assetManager.background.height;
+    const bgRatio = bgWidth / bgHeight;
+
+    let bgDrawWidth, bgDrawHeight, bgOffsetX, bgOffsetY;
+
+    if (width / height > bgRatio) {
+      bgDrawWidth = width;
+      bgDrawHeight = width / bgRatio;
+      bgOffsetX = 0;
+      bgOffsetY = (height - bgDrawHeight) / HALF;
+    } else {
+      bgDrawHeight = height;
+      bgDrawWidth = height * bgRatio;
+      bgOffsetX = (width - bgDrawWidth) / HALF;
+      bgOffsetY = 0;
+    }
+
+    backgroundContext.drawImage(
+      this.assetManager.background,
+      bgOffsetX,
+      bgOffsetY,
+      bgDrawWidth,
+      bgDrawHeight,
+    );
+
+    // Draw the grid image
+    const gridWidth = this.assetManager.grid.width;
+    const gridHeight = this.assetManager.grid.height;
+    const gridRatio = gridWidth / gridHeight;
+
+    let gridDrawWidth, gridDrawHeight, gridOffsetX, gridOffsetY;
+
+    if (width / height > gridRatio) {
+      gridDrawHeight = height;
+      gridDrawWidth = height * gridRatio;
+      gridOffsetX = (width - gridDrawWidth) / HALF;
+      gridOffsetY = 0;
+    } else {
+      gridDrawWidth = width;
+      gridDrawHeight = width / gridRatio;
+      gridOffsetX = 0;
+      gridOffsetY = (height - gridDrawHeight) / HALF;
+    }
+
+    backgroundContext.drawImage(
+      this.assetManager.grid,
+      gridOffsetX,
+      gridOffsetY,
+      gridDrawWidth,
+      gridDrawHeight,
+    );
+
+    backgroundLayer.markDirty();
+  }
+
+  /**
+   * @method renderPiecesAndHexagons - Renders all pieces and hexagons.
+   * @param {Board} board - The game board.
+   */
+  renderPiecesAndHexagons(board) {
+    this.clearBoard();
+    this.renderPieces(board);
+    this.renderHexagons(board);
+  }
+
+  /**
+   * @method renderPieces - Renders all pieces from the board.
+   * @param {Board} board - The game board.
+   */
+  renderPieces(board) {
+    const pieces = board.indexes;
+    for (let i = 0; i < pieces.length; i++) {
+      const piece = pieces[i];
+      if (piece) {
+        const flipped = this.map.tiles[i].flipped;
+        this.renderPiece(i, piece.colorsKey, flipped);
+      }
+    }
+  }
+
+  /**
+   * @method renderPiece - Renders a single game piece.
+   * @param {number} index - The piece index.
+   * @param {string} colorsKey - The color key.
+   * @param {boolean} flipped - Whether the piece is flipped.
+   * @param {string} layerName - The target layer name.
+   * @param {string} fillColor - Optional fill color.
+   */
+  renderPiece(
+    index,
+    colorsKey,
+    flipped,
+    layerName = 'pieces',
+    fillColor = null,
+  ) {
+    const targetLayer = this.canvasManager.getLayer(layerName);
+    const targetContext = targetLayer.context;
+
+    const tile = this.map.tiles[index];
+    if (!tile) {
+      throw new Error(`Tile index ${index} out of bounds`);
+    }
+
+    const textureKey = flipped ? `${colorsKey}-flipped` : colorsKey;
+    const texture = this.assetManager.getTexture('tiles', textureKey);
+    if (!texture) {
+      throw new Error(`Texture key "${textureKey}" not found in textures`);
+    }
+
+    const x = tile.x * this.widthRatio;
+    const y = tile.y * this.heightRatio;
+    const imageWidth = texture.width;
+    const imageHeight = texture.height;
+
+    let width, height;
+    if (tile.width !== undefined && tile.width !== null) {
+      width = tile.width * this.widthRatio;
+      height =
+        tile.height !== undefined && tile.height !== null
+          ? tile.height * this.heightRatio
+          : (width * imageHeight) / imageWidth;
+    } else if (tile.height !== undefined && tile.height !== null) {
+      height = tile.height * this.heightRatio;
+      width = (height * imageWidth) / imageHeight;
+    } else {
+      width = imageWidth * (this.widthRatio || 1);
+      height = imageHeight * (this.heightRatio || 1);
+    }
+
+    if (!(width > 0 && height > 0)) {
+      return;
+    }
+
+    const rotation = tile.rotation || 0;
+    const angle = (rotation * Math.PI) / HALF_PI_DEGREES;
+
+    targetContext.save();
+    targetContext.translate(x + width / HALF, y + height / HALF);
+    targetContext.rotate(angle);
+
+    if (fillColor) {
+      const tempLayer = this.canvasManager.getLayer('temp');
+      const tempCanvas = tempLayer.canvas;
+      const tempCtx = tempLayer.context;
+
+      tempCanvas.width = Math.max(
+        1,
+        Math.ceil(width * this.canvasManager.devicePixelRatio),
+      );
+      tempCanvas.height = Math.max(
+        1,
+        Math.ceil(height * this.canvasManager.devicePixelRatio),
+      );
+
+      tempCtx.drawImage(texture, 0, 0, tempCanvas.width, tempCanvas.height);
+
+      tempCtx.globalCompositeOperation = 'source-in';
+      tempCtx.fillStyle = fillColor;
+      tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+      tempCtx.globalCompositeOperation = 'source-over';
+
+      targetContext.drawImage(
+        tempCanvas,
+        -width / HALF,
+        -height / HALF,
+        width,
+        height,
+      );
+    } else {
+      targetContext.drawImage(
+        texture,
+        -width / HALF,
+        -height / HALF,
+        width,
+        height,
+      );
+    }
+
+    targetContext.restore();
+    targetLayer.markDirty();
+  }
+
+  /**
+   * @method renderHexagons - Renders complete hexagons.
+   * @param {Board} board - The game board.
+   */
+  renderHexagons(board) {
+    const hexagons = board.getCompleteHexagons();
+    for (const hexagon of hexagons) {
+      this.renderHexagon(hexagon.coordinate, hexagon.color);
+    }
+  }
+
+  /**
+   * @method renderHexagon - Renders a single hexagon.
+   * @param {Array<number>} coordinate - The hexagon coordinate.
+   * @param {string} color - The hexagon color.
+   */
+  renderHexagon(coordinate, color) {
+    const piecesLayer = this.canvasManager.getLayer('pieces');
+    const piecesContext = piecesLayer.context;
+
+    const hexagon = this.map.hexagons[`${coordinate[0]}-${coordinate[1]}`];
+    const texture = this.assetManager.getTexture('hexagons', color);
+    const x = hexagon.x * this.widthRatio;
+    const y = hexagon.y * this.heightRatio;
+    const imageWidth = texture.width;
+    const imageHeight = texture.height;
+
+    const width = hexagon.width
+      ? hexagon.width * this.widthRatio
+      : (hexagon.height * this.heightRatio * imageWidth) / imageHeight;
+    const height = hexagon.height
+      ? hexagon.height * this.heightRatio
+      : (hexagon.width * this.widthRatio * imageHeight) / imageWidth;
+
+    piecesContext.drawImage(texture, x, y, width, height);
+    piecesLayer.markDirty();
+  }
+
+  /**
+   * @method clearBoard - Clears the pieces layer.
+   */
+  clearBoard() {
+    const piecesLayer = this.canvasManager.getLayer('pieces');
+    piecesLayer.clear();
+  }
+
+  /**
+   * @method previewPiece - Renders a piece preview.
+   * @param {number} index - The piece index.
+   * @param {Object} piece - The piece object.
+   * @param {string} fillColor - The preview fill color.
+   */
+  previewPiece(index, piece, fillColor = 'rgba(255, 255, 255, 0.5)') {
+    if (!piece || !piece.colorsKey) {
+      throw new Error('Invalid piece object for preview');
+    }
+
+    const tile = this.map.tiles[index];
+    if (!tile) {
+      throw new Error('Tile index out of bounds for preview');
+    }
+
+    this.renderPiece(index, piece.colorsKey, tile.flipped, 'piecesPreview');
+    this.renderPiece(
+      index,
+      piece.colorsKey,
+      tile.flipped,
+      'piecesPreview',
+      fillColor,
+    );
+
+    this._isPreviewing = true;
+    this._previewingPositions.set(index, piece);
+  }
+
+  /**
+   * @method clearPreview - Clears piece previews.
+   */
+  clearPreview() {
+    const previewLayer = this.canvasManager.getLayer('piecesPreview');
+    previewLayer.clear();
+    this._isPreviewing = false;
+    this._previewingPositions.clear();
+  }
+
+  /**
+   * @method showAvailablePositions - Shows available positions with a mask.
+   * @param {Array<number>} positions - The available positions.
+   * @param {string} fillColor - The mask fill color.
+   */
+  showAvailablePositions(positions, fillColor = 'rgba(0, 0, 0, 0.5)') {
+    if (!Array.isArray(positions)) {
+      throw new Error(
+        'positions must be an array of available position indexes',
+      );
+    }
+
+    if (this._isShowingAvailablePositions) {
+      this.clearAvailablePositions();
+    }
+
+    const maskLayer = this.canvasManager.getLayer('mask');
+    const maskContext = maskLayer.context;
+
+    maskContext.fillStyle = fillColor;
+    maskContext.fillRect(0, 0, maskLayer.canvas.width, maskLayer.canvas.height);
+
+    for (const index of positions) {
+      const tile = this.map.tiles[index];
+      if (!tile) {
+        continue;
+      }
+
+      const texture = this.assetManager.getTexture(
+        'tiles',
+        `${this.map.tiles[index].flipped ? 'empty-flipped' : 'empty'}`,
+      );
+
+      const x = tile.x * this.widthRatio;
+      const y = tile.y * this.heightRatio;
+      const imageWidth = texture.width;
+      const imageHeight = texture.height;
+
+      let width, height;
+      if (tile.width !== undefined && tile.width !== null) {
+        width = tile.width * this.widthRatio;
+        height =
+          tile.height !== undefined && tile.height !== null
+            ? tile.height * this.heightRatio
+            : (width * imageHeight) / imageWidth;
+      } else if (tile.height !== undefined && tile.height !== null) {
+        height = tile.height * this.heightRatio;
+        width = (height * imageWidth) / imageHeight;
+      } else {
+        width = imageWidth * (this.widthRatio || 1);
+        height = imageHeight * (this.heightRatio || 1);
+      }
+
+      if (!(width > 0 && height > 0)) {
+        continue;
+      }
+
+      const rotation = tile.rotation || 0;
+      const angle = (rotation * Math.PI) / HALF_PI_DEGREES;
+
+      maskContext.save();
+      maskContext.translate(x + width / HALF, y + height / HALF);
+      maskContext.rotate(angle);
+
+      maskContext.globalCompositeOperation = 'destination-out';
+      maskContext.drawImage(
+        texture,
+        -width / HALF,
+        -height / HALF,
+        width,
+        height,
+      );
+
+      maskContext.restore();
+    }
+
+    maskLayer.markDirty();
+    this._isShowingAvailablePositions = true;
+    this._showingAvailablePositions = positions;
+  }
+
+  /**
+   * @method clearAvailablePositions - Clears available position highlights.
+   */
+  clearAvailablePositions() {
+    const maskLayer = this.canvasManager.getLayer('mask');
+    maskLayer.clear();
+    this._isShowingAvailablePositions = false;
+    this._showingAvailablePositions = [];
+  }
+
+  /**
+   * @method setUpHitmap - Sets up the hitmap for piece detection.
+   * @param {Board} board - The game board.
+   */
+  setUpHitmap(board) {
+    const hitmapLayer = this.canvasManager.getLayer('hitmap');
+    hitmapLayer.clear();
+
+    const pieceIndices = board.map.positions.map((_, index) => index);
+
+    for (const index of pieceIndices) {
+      const gappedPieceId = index * COLOR_GAP_FACTOR + 1;
+
+      if (gappedPieceId > MAX_PIECE_ID_RGB) {
+        console.warn(
+          `Gapped ID ${gappedPieceId} for index ${index} exceeds limit.`,
+        );
+        continue;
+      }
+
+      const r = gappedPieceId & MAX_COLOR_COMPONENT;
+      const g = (gappedPieceId >> BITS_PER_BYTE) & MAX_COLOR_COMPONENT;
+      const b = (gappedPieceId >> BITS_PER_TWO_BYTES) & MAX_COLOR_COMPONENT;
+      const hitColor = `rgb(${r}, ${g}, ${b})`;
+
+      this.renderPiece(
+        index,
+        'empty',
+        this.map.tiles[index].flipped,
+        'hitmap',
+        hitColor,
+      );
+    }
+  }
+
+  /**
+   * @method getFPS - Gets the current FPS.
+   * @returns {number} - The current frames per second.
+   */
+  getFPS() {
+    return this.fpsMonitor.getFPS();
+  }
+
+  /**
+   * @method destroy - Destroys the rendering engine and releases resources.
+   */
+  destroy() {
+    this.fpsMonitor.reset();
+    this._previewingPositions.clear();
+  }
+}
+
+/**
  * @class Renderer - A class representing the game board renderer.
  */
 class Renderer {
