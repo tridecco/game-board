@@ -79,6 +79,88 @@ class CanvasLayer {
 }
 
 /**
+ * @class CanvasManager - Manages all off-screen canvas layers and their lifecycle.
+ */
+class CanvasManager {
+  /**
+   * @constructor
+   */
+  constructor() {
+    this.layers = new Map();
+    this.width = null;
+    this.height = null;
+    this.devicePixelRatio = window.devicePixelRatio || 1;
+  }
+
+  /**
+   * @method registerLayer - Registers a new canvas layer.
+   * @param {string} name - The name of the canvas layer.
+   * @param {Object} options - The options for the canvas layer.
+   * @returns {CanvasLayer} - The registered canvas layer.
+   */
+  registerLayer(name, options = {}) {
+    const layer = new CanvasLayer(name, options);
+    this.layers.set(name, layer);
+    if (this.width && this.height) {
+      layer.resize(this.width, this.height, this.devicePixelRatio);
+    }
+    return layer;
+  }
+
+  /**
+   * @method getLayer - Gets a canvas layer by name.
+   * @param {string} name - The name of the canvas layer.
+   * @returns {CanvasLayer} - The canvas layer.
+   */
+  getLayer(name) {
+    return this.layers.get(name);
+  }
+
+  /**
+   * @method resize - Resizes all canvas layers.
+   * @param {number} width - The new width of the canvases.
+   * @param {number} height - The new height of the canvases.
+   */
+  resize(width, height) {
+    this.width = width;
+    this.height = height;
+    this.devicePixelRatio = window.devicePixelRatio || 1;
+
+    this.layers.forEach((layer) => {
+      layer.resize(width, height, this.devicePixelRatio);
+    });
+  }
+
+  /**
+   * @method clearAll - Clears all canvas layers.
+   */
+  clearAll() {
+    this.layers.forEach((layer) => {
+      layer.clear();
+    });
+  }
+
+  /**
+   * @method getDirtyLayers - Gets all dirty canvas layers.
+   * @returns {Array<CanvasLayer>} - Array of dirty canvas layers.
+   */
+  getDirtyLayers() {
+    return Array.from(this.layers.values()).filter((layer) => layer.isDirty);
+  }
+
+  /**
+   * @method destroy - Destroys all canvas layers and releases resources.
+   */
+  destroy() {
+    this.layers.forEach((layer) => {
+      layer.canvas = null;
+      layer.context = null;
+    });
+    this.layers.clear();
+  }
+}
+
+/**
  * @class Renderer - A class representing the game board renderer.
  */
 class Renderer {
