@@ -11,6 +11,19 @@ const TexturePack = require('./texturePack');
 
 const defaultMap = require('../maps/renderer/default');
 
+const HALF = 2;
+const TWO = 2;
+const HALF_PI_DEGREES = 180;
+const ALPHA_CHANNEL_INDEX = 3;
+const NOT_FOUND = -1;
+const MAX_PIECE_ID_RGB = 0xffffff;
+const MAX_COLOR_COMPONENT = 0xff;
+const BITS_PER_BYTE = 8;
+const BITS_PER_TWO_BYTES = 16;
+const COLOR_GAP_FACTOR = 10;
+const FPS_SAMPLE_SIZE = 60;
+const MILLISECONDS_PER_SECOND = 1000;
+
 /**
  * @class Renderer - A class representing the game board renderer.
  */
