@@ -582,6 +582,11 @@ class RenderingEngine {
    * @param {CanvasRenderingContext2D} mainContext - The main canvas context.
    */
   _performRender(mainCanvas, mainContext) {
+    const dirtyLayers = this.canvasManager.getDirtyLayers();
+    if (dirtyLayers.length === 0) {
+      return;
+    }
+
     const width = mainCanvas.width / this.canvasManager.devicePixelRatio;
     const height = mainCanvas.height / this.canvasManager.devicePixelRatio;
 
