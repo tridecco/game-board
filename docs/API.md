@@ -138,8 +138,10 @@ This document provides a comprehensive guide to the API of the Tridecco Game Boa
       - [Example](#example-58)
     - [`removeEventListener(eventType, listener)`](#removeeventlistenereventtype-listener)
       - [Example](#example-59)
-    - [`destroy()`](#destroy)
+    - [`getFPS()`](#getfps)
       - [Example](#example-60)
+    - [`destroy()`](#destroy)
+      - [Example](#example-61)
 
 ## Import the Library
 
@@ -1955,6 +1957,27 @@ function handleClick(pieceIndex) {
 renderer.addEventListener('click', handleClick);
 // Later...
 renderer.removeEventListener('click', handleClick);
+```
+
+### `getFPS()`
+
+```javascript
+getFPS();
+```
+
+**Description:**
+
+Retrieves the current frames per second (FPS), which indicates how many frames are being rendered per second. This is useful for performance monitoring.
+
+**Returns:**
+
+- `number`: The current FPS value.
+
+#### Example
+
+```javascript
+const currentFPS = renderer.getFPS();
+console.log(`Current FPS: ${currentFPS}`);
 ```
 
 ### `destroy()`
