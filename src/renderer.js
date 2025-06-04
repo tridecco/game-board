@@ -1,6 +1,6 @@
 /**
  * @fileoverview Game Renderer
- * @description This file contains the implementation of a game board renderer for the Tridecco game with modular architecture and frame-based dirty rendering.
+ * @description This file contains the implementation of a game board renderer for the Tridecco game.
  */
 
 const DEFAULT_ASSETS_URL =
@@ -13,6 +13,7 @@ const defaultMap = require('../maps/renderer/default');
 
 const HALF = 2;
 const TWO = 2;
+const ONE_SECOND = 1000;
 const HALF_PI_DEGREES = 180;
 const ALPHA_CHANNEL_INDEX = 3;
 const NOT_FOUND = -1;
@@ -21,190 +22,348 @@ const MAX_COLOR_COMPONENT = 0xff;
 const BITS_PER_BYTE = 8;
 const BITS_PER_TWO_BYTES = 16;
 const COLOR_GAP_FACTOR = 10;
-const FPS_SAMPLE_SIZE = 60;
-const MILLISECONDS_PER_SECOND = 1000;
+const FPS_TEXT_STYLE = '12px Arial';
+const FPS_TEXT_COLOR = 'rgba(255, 255, 255, 0.7)';
+const FPS_PADDING = 5;
+const FPS_UPDATE_INTERVAL = 500; // Update FPS display every 500ms (not calculation)
 
 /**
- * @class CanvasLayer - Represents a single off-screen canvas layer.
+ * @class _FPSTracker - Helper class for tracking and displaying FPS.
+ * @private
  */
-class CanvasLayer {
+class _FPSTracker {
   /**
    * @constructor
-   * @param {string} name - The name of the canvas layer.
-   * @param {Object} options - The options for the canvas layer.
-   * @param {boolean} options.willReadFrequently - Whether the canvas will be read frequently.
-   * @param {boolean} options.imageSmoothingEnabled - Whether image smoothing is enabled.
+   * @param {boolean} showFPS - Whether to display the FPS counter.
+   * @param {CanvasRenderingContext2D} mainContext - The main rendering context to draw FPS on.
+   * @param {Object} canvasDimensions - An object with width and height of the main canvas.
    */
-  constructor(name, options = {}) {
-    this.name = name;
-    this.canvas = new OffscreenCanvas(1, 1);
-    this.context = this.canvas.getContext('2d', options);
-    this.isDirty = false;
-  }
+  constructor(showFPS, mainContext, canvasDimensions) {
+    this.showFPS = showFPS;
+    this.mainContext = mainContext;
+    this.canvasDimensions = canvasDimensions;
 
-  /**
-   * @method resize - Resizes the canvas layer.
-   * @param {number} width - The new width of the canvas.
-   * @param {number} height - The new height of the canvas.
-   * @param {number} devicePixelRatio - The device pixel ratio.
-   */
-  resize(width, height, devicePixelRatio) {
-    this.canvas.width = width * devicePixelRatio;
-    this.canvas.height = height * devicePixelRatio;
-    this.context.scale(devicePixelRatio, devicePixelRatio);
-    this.markDirty();
-  }
+    this.frameCount = 0;
+    this.lastFPSTime = performance.now();
+    this.currentFPS = 0;
+    this.displayedFPSString = 'FPS: 0';
+    this.lastFPSDisplayUpdateTime = 0;
 
-  /**
-   * @method clear - Clears the canvas layer.
-   */
-  clear() {
-    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.markDirty();
-  }
-
-  /**
-   * @method markDirty - Marks the canvas layer as dirty, requiring re-rendering.
-   */
-  markDirty() {
-    this.isDirty = true;
-  }
-
-  /**
-   * @method markClean - Marks the canvas layer as clean, indicating it has been rendered.
-   */
-  markClean() {
-    this.isDirty = false;
-  }
-}
-
-/**
- * @class CanvasManager - Manages all off-screen canvas layers and their lifecycle.
- */
-class CanvasManager {
-  /**
-   * @constructor
-   */
-  constructor() {
-    this.layers = new Map();
-    this.width = null;
-    this.height = null;
-    this.devicePixelRatio = window.devicePixelRatio || 1;
-  }
-
-  /**
-   * @method registerLayer - Registers a new canvas layer.
-   * @param {string} name - The name of the canvas layer.
-   * @param {Object} options - The options for the canvas layer.
-   * @returns {CanvasLayer} - The registered canvas layer.
-   */
-  registerLayer(name, options = {}) {
-    const layer = new CanvasLayer(name, options);
-    this.layers.set(name, layer);
-    if (this.width && this.height) {
-      layer.resize(this.width, this.height, this.devicePixelRatio);
+    if (this.showFPS) {
+      this.mainContext.font = FPS_TEXT_STYLE;
+      this.mainContext.fillStyle = FPS_TEXT_COLOR;
     }
-    return layer;
   }
 
   /**
-   * @method getLayer - Gets a canvas layer by name.
-   * @param {string} name - The name of the canvas layer.
-   * @returns {CanvasLayer} - The canvas layer.
+   * @method tick - Call this on every animation frame to update FPS calculation.
    */
-  getLayer(name) {
-    return this.layers.get(name);
+  tick() {
+    this.frameCount++;
+    const now = performance.now();
+    const delta = now - this.lastFPSTime;
+
+    if (delta >= ONE_SECOND) {
+      this.currentFPS = (this.frameCount * ONE_SECOND) / delta;
+      this.frameCount = 0;
+      this.lastFPSTime = now;
+    }
+
+    if (
+      this.showFPS &&
+      now - this.lastFPSDisplayUpdateTime > FPS_UPDATE_INTERVAL
+    ) {
+      this.displayedFPSString = `FPS: ${this.currentFPS.toFixed(1)}`;
+      this.lastFPSDisplayUpdateTime = now;
+    }
   }
 
   /**
-   * @method resize - Resizes all canvas layers.
-   * @param {number} width - The new width of the canvases.
-   * @param {number} height - The new height of the canvases.
+   * @method draw - Draws the FPS counter if enabled.
    */
-  resize(width, height) {
-    this.width = width;
-    this.height = height;
-    this.devicePixelRatio = window.devicePixelRatio || 1;
-
-    this.layers.forEach((layer) => {
-      layer.resize(width, height, this.devicePixelRatio);
-    });
+  draw() {
+    if (!this.showFPS) {
+      return;
+    }
+    const textWidth = this.mainContext.measureText(
+      this.displayedFPSString,
+    ).width;
+    const x = this.canvasDimensions.width - textWidth - FPS_PADDING;
+    const y = this.canvasDimensions.height - FPS_PADDING;
+    this.mainContext.fillStyle = FPS_TEXT_COLOR;
+    this.mainContext.font = FPS_TEXT_STYLE;
+    this.mainContext.fillText(this.displayedFPSString, x, y);
   }
 
   /**
-   * @method clearAll - Clears all canvas layers.
+   * @method getCurrentFPS - Returns the currently calculated FPS.
+   * @returns {number} - The current FPS.
    */
-  clearAll() {
-    this.layers.forEach((layer) => {
-      layer.clear();
-    });
+  getCurrentFPS() {
+    return this.currentFPS;
   }
 
   /**
-   * @method getDirtyLayers - Gets all dirty canvas layers.
-   * @returns {Array<CanvasLayer>} - Array of dirty canvas layers.
-   */
-  getDirtyLayers() {
-    return Array.from(this.layers.values()).filter((layer) => layer.isDirty);
-  }
-
-  /**
-   * @method destroy - Destroys all canvas layers and releases resources.
+   * @method destroy - Cleans up resources.
    */
   destroy() {
-    this.layers.forEach((layer) => {
-      layer.canvas = null;
-      layer.context = null;
-    });
-    this.layers.clear();
+    this.mainContext = null;
+    this.canvasDimensions = null;
   }
 }
 
 /**
- * @class AssetManager - Manages loading and caching of game assets.
+ * @class _CanvasManager - Manages main and off-screen canvases.
+ * @private
  */
-class AssetManager {
+class _CanvasManager {
   /**
    * @constructor
+   * @param {HTMLElement} container - The DOM element to host the canvas.
+   * @param {Object} map - The game map data.
+   * @param {number} devicePixelRatio - The device's pixel ratio.
    */
-  constructor() {
+  constructor(container, map, devicePixelRatio) {
+    this.container = container;
+    this.map = map;
+    this.devicePixelRatio = devicePixelRatio;
+
+    this.canvas = document.createElement('canvas');
+    this.context = this.canvas.getContext('2d');
+
+    this.width = null;
+    this.height = null;
+    this.ratio = this.map.width / this.map.height;
+    this.widthRatio = null;
+    this.heightRatio = null;
+
+    this.offScreenCanvases = {
+      background: new OffscreenCanvas(1, 1),
+      pieces: new OffscreenCanvas(1, 1),
+      piecesPreview: new OffscreenCanvas(1, 1),
+      mask: new OffscreenCanvas(1, 1),
+      hitmap: new OffscreenCanvas(1, 1),
+      temp: new OffscreenCanvas(1, 1),
+    };
+    this.offScreenContexts = {
+      background: this.offScreenCanvases.background.getContext('2d'),
+      pieces: this.offScreenCanvases.pieces.getContext('2d'),
+      piecesPreview: this.offScreenCanvases.piecesPreview.getContext('2d'),
+      mask: this.offScreenCanvases.mask.getContext('2d'),
+      hitmap: this.offScreenCanvases.hitmap.getContext('2d', {
+        willReadFrequently: true,
+        initialImageSmoothingEnabled: false,
+        imageSmoothingEnabled: false,
+      }),
+      temp: this.offScreenCanvases.temp.getContext('2d', {
+        willReadFrequently: true,
+        initialImageSmoothingEnabled: false,
+        imageSmoothingEnabled: false,
+      }),
+    };
+
+    this.container.style.position = 'relative';
+  }
+
+  /**
+   * @method setupSizes - Sets up the canvas dimensions and scales contexts.
+   */
+  setupSizes() {
+    const containerWidth = this.container.clientWidth;
+    const containerHeight = this.container.clientHeight;
+    const mapRatio = this.ratio;
+    let canvasWidth, canvasHeight;
+
+    if (containerWidth / containerHeight > mapRatio) {
+      canvasHeight = containerHeight;
+      canvasWidth = canvasHeight * mapRatio;
+    } else {
+      canvasWidth = containerWidth;
+      canvasHeight = canvasWidth / mapRatio;
+    }
+
+    const dpr = this.devicePixelRatio;
+    this.canvas.width = canvasWidth * dpr;
+    this.canvas.height = canvasHeight * dpr;
+    this.canvas.style.width = `${canvasWidth}px`;
+    this.canvas.style.height = `${canvasHeight}px`;
+
+    const leftOffset = (containerWidth - canvasWidth) / HALF;
+    const topOffset = (containerHeight - canvasHeight) / HALF;
+    this.canvas.style.position = 'absolute';
+    this.canvas.style.left = `${leftOffset}px`;
+    this.canvas.style.top = `${topOffset}px`;
+
+    if (!this.canvas.parentNode) {
+      this.container.appendChild(this.canvas);
+    }
+
+    for (const key in this.offScreenCanvases) {
+      this.offScreenCanvases[key].width = canvasWidth * dpr;
+      this.offScreenCanvases[key].height = canvasHeight * dpr;
+    }
+
+    this.context.scale(dpr, dpr);
+    for (const key in this.offScreenContexts) {
+      this.offScreenContexts[key].scale(dpr, dpr);
+    }
+
+    this.width = canvasWidth;
+    this.height = canvasHeight;
+    this.widthRatio = canvasWidth / this.map.width;
+    this.heightRatio = canvasHeight / this.map.height;
+  }
+
+  /**
+   * @method getMainCanvas - Gets the main canvas element.
+   * @returns {HTMLCanvasElement} - The main canvas element.
+   */
+  getMainCanvas() {
+    return this.canvas;
+  }
+
+  /**
+   * @method getMainContext - Gets the main canvas rendering context.
+   * @returns {CanvasRenderingContext2D} - The main canvas context.
+   */
+  getMainContext() {
+    return this.context;
+  }
+
+  /**
+   * @method getOffscreenCanvas - Gets a specific off-screen canvas.
+   * @param {string} name - Name of the off-screen canvas.
+   * @returns {OffscreenCanvas} - The requested off-screen canvas.
+   */
+  getOffscreenCanvas(name) {
+    return this.offScreenCanvases[name];
+  }
+
+  /**
+   * @method getOffscreenContext - Gets a specific off-screen canvas context.
+   * @param {string} name - Name of the off-screen canvas context.
+   * @returns {CanvasRenderingContext2D} - The requested off-screen canvas context.
+   */
+  getOffscreenContext(name) {
+    return this.offScreenContexts[name];
+  }
+
+  /**
+   * @method getDimensions - Returns the logical width and height of the main canvas.
+   * @returns {{width: number, height: number}} - The dimensions of the main canvas.
+   */
+  getDimensions() {
+    return { width: this.width, height: this.height };
+  }
+
+  /**
+   * @method getRatios - Returns rendering ratios.
+   * @returns {{widthRatio: number, heightRatio: number, devicePixelRatio: number}} - The rendering ratios.
+   */
+  getRatios() {
+    return {
+      widthRatio: this.widthRatio,
+      heightRatio: this.heightRatio,
+      devicePixelRatio: this.devicePixelRatio,
+    };
+  }
+
+  /**
+   * @method clearAllCanvases - Clears all canvases.
+   */
+  clearAllCanvases() {
+    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height); // Scaled coords
+    for (const key in this.offScreenCanvases) {
+      this.offScreenContexts[key].clearRect(
+        0,
+        0,
+        this.offScreenCanvases[key].width, // Scaled coords
+        this.offScreenCanvases[key].height,
+      );
+    }
+  }
+
+  /**
+   * @method updateMap - Updates the map and recalculates ratios.
+   * @param {Object} newMap - The new map object.
+   */
+  updateMap(newMap) {
+    this.map = newMap;
+    this.ratio = this.map.width / this.map.height;
+  }
+
+  /**
+   * @method destroy - Cleans up canvas resources.
+   */
+  destroy() {
+    if (this.canvas && this.canvas.parentNode) {
+      this.container.removeChild(this.canvas);
+    }
+    this.canvas = null;
+    this.context = null;
+    for (const key in this.offScreenCanvases) {
+      this.offScreenCanvases[key] = null;
+      this.offScreenContexts[key] = null;
+    }
+    this.offScreenCanvases = null;
+    this.offScreenContexts = null;
+    this.container = null;
+    this.map = null;
+  }
+}
+
+/**
+ * @class _AssetLoader - Handles loading of game assets.
+ * @private
+ */
+class _AssetLoader {
+  /**
+   * @constructor
+   * @param {string} texturesUrl - URL for textures.
+   * @param {string} backgroundUrl - URL for background image.
+   * @param {string} gridUrl - URL for grid image.
+   */
+  constructor(texturesUrl, backgroundUrl, gridUrl) {
+    this.texturesUrl = texturesUrl;
+    this.backgroundUrl = backgroundUrl;
+    this.gridUrl = gridUrl;
+
     this.textures = null;
     this.background = null;
     this.grid = null;
   }
 
   /**
-   * @method loadAssets - Loads textures, background, and grid images.
-   * @param {string} texturesUrl - The URL of the texture pack.
-   * @param {string} backgroundUrl - The URL of the background image.
-   * @param {string} gridUrl - The URL of the grid image.
-   * @returns {Promise<void[]>} - A promise that resolves when all assets are loaded.
+   * @method loadAll - Loads all assets.
+   * @returns {Promise<void>} - Resolves when all assets are loaded.
    */
-  async loadAssets(texturesUrl, backgroundUrl, gridUrl) {
+  async loadAll() {
     const loadingAssetsPromises = [
-      new Promise((resolve) => {
-        this.textures = new TexturePack(texturesUrl, resolve);
+      new Promise((resolve, reject) => {
+        this.textures = new TexturePack(this.texturesUrl, resolve, reject);
       }),
-      new Promise((resolve) => {
+      new Promise((resolve, reject) => {
         this.background = new Image();
-        this.background.src = backgroundUrl;
+        this.background.src = this.backgroundUrl;
         this.background.onload = resolve;
+        this.background.onerror = reject;
       }),
-      new Promise((resolve) => {
+      new Promise((resolve, reject) => {
         this.grid = new Image();
-        this.grid.src = gridUrl;
+        this.grid.src = this.gridUrl;
         this.grid.onload = resolve;
+        this.grid.onerror = reject;
       }),
     ];
-
     return Promise.all(loadingAssetsPromises);
   }
 
   /**
-   * @method getTexture - Gets a texture by type and key.
-   * @param {string} type - The texture type.
-   * @param {string} key - The texture key.
-   * @returns {HTMLImageElement} - The texture image.
+   * @method getTexture - Gets a specific texture.
+   * @param {string} type - Texture type.
+   * @param {string} key - Texture key.
+   * @returns {HTMLImageElement} - The requested texture image.
+   * @throws {Error} - If textures are not loaded yet.
    */
   getTexture(type, key) {
     if (!this.textures) {
@@ -214,75 +373,71 @@ class AssetManager {
   }
 
   /**
-   * @method updateTextures - Updates the texture pack.
-   * @param {string} texturesUrl - The URL of the new texture pack.
-   * @returns {Promise<void>} - A promise that resolves when textures are loaded.
+   * @method getBackground - Gets the background image.
+   * @returns {HTMLImageElement} - The background image.
    */
-  async updateTextures(texturesUrl) {
-    if (typeof texturesUrl !== 'string') {
-      throw new Error(
-        'texturesUrl must be a string representing the URL of the texture pack',
-      );
-    }
+  getBackground() {
+    return this.background;
+  }
 
+  /**
+   * @method getGrid - Gets the grid image.
+   * @returns {HTMLImageElement} - The grid image.
+   */
+  getGrid() {
+    return this.grid;
+  }
+
+  /**
+   * @method updateTextures - Updates textures from a new URL.
+   * @param {string} newTexturesUrl - The new URL for textures.
+   * @returns {Promise<void>} - Resolves when new textures are loaded.
+   */
+  async updateTextures(newTexturesUrl) {
+    this.texturesUrl = newTexturesUrl;
     return new Promise((resolve, reject) => {
-      this.textures = new TexturePack(texturesUrl, resolve, (error) => {
-        console.error('Error loading new texture pack:', error);
-        reject(new Error('Failed to load new texture pack'));
-      });
+      this.textures = new TexturePack(this.texturesUrl, resolve, reject);
     });
   }
 
   /**
-   * @method updateBackground - Updates the background image.
-   * @param {string} backgroundUrl - The URL of the new background image.
-   * @returns {Promise<void>} - A promise that resolves when background is loaded.
+   * @method updateBackground - Updates the background image from a new URL.
+   * @param {string} newBackgroundUrl - The new URL for the background.
+   * @returns {Promise<void>} - Resolves when the new background is loaded.
    */
-  async updateBackground(backgroundUrl) {
-    if (typeof backgroundUrl !== 'string') {
-      throw new Error('backgroundUrl must be a string');
-    }
-
+  async updateBackground(newBackgroundUrl) {
+    this.backgroundUrl = newBackgroundUrl;
     return new Promise((resolve, reject) => {
       const newBackground = new Image();
-      newBackground.src = backgroundUrl;
+      newBackground.src = this.backgroundUrl;
       newBackground.onload = () => {
         this.background = newBackground;
         resolve();
       };
-      newBackground.onerror = (error) => {
-        console.error('Error loading new background image:', error);
-        reject(new Error('Failed to load new background image'));
-      };
+      newBackground.onerror = reject;
     });
   }
 
   /**
-   * @method updateGrid - Updates the grid image.
-   * @param {string} gridUrl - The URL of the new grid image.
-   * @returns {Promise<void>} - A promise that resolves when grid is loaded.
+   * @method updateGrid - Updates the grid image from a new URL.
+   * @param {string} newGridUrl - The new URL for the grid.
+   * @returns {Promise<void>} - Resolves when the new grid is loaded.
    */
-  async updateGrid(gridUrl) {
-    if (typeof gridUrl !== 'string') {
-      throw new Error('gridUrl must be a string');
-    }
-
+  async updateGrid(newGridUrl) {
+    this.gridUrl = newGridUrl;
     return new Promise((resolve, reject) => {
       const newGrid = new Image();
-      newGrid.src = gridUrl;
+      newGrid.src = this.gridUrl;
       newGrid.onload = () => {
         this.grid = newGrid;
         resolve();
       };
-      newGrid.onerror = (error) => {
-        console.error('Error loading new grid image:', error);
-        reject(new Error('Failed to load new grid image'));
-      };
+      newGrid.onerror = reject;
     });
   }
 
   /**
-   * @method destroy - Destroys the asset manager and releases resources.
+   * @method destroy - Cleans up asset references.
    */
   destroy() {
     this.textures = null;
@@ -292,744 +447,174 @@ class AssetManager {
 }
 
 /**
- * @class EventManager - Manages event listeners and event handling.
+ * @class _RenderLoop - Manages the animation frame loop and dirty rendering.
+ * @private
  */
-class EventManager {
+class _RenderLoop {
   /**
    * @constructor
-   * @param {HTMLCanvasElement} canvas - The main canvas element.
-   * @param {number} devicePixelRatio - The device pixel ratio.
-   * @param {Function} getPieceFromCoordinate - Function to get piece from coordinate.
+   * @param {CanvasRenderingContext2D} mainContext - Main canvas context.
+   * @param {Object<string, OffscreenCanvas>} offScreenCanvases - All off-screen canvases.
+   * @param {_FPSTracker} fpsTracker - FPS tracker instance.
+   * @param {function} getCanvasDimensions - Function to get current canvas dimensions.
+   * @param {Renderer} rendererRef - Reference to the main Renderer instance for drawing methods.
    */
-  constructor(canvas, devicePixelRatio, getPieceFromCoordinate) {
-    this.canvas = canvas;
-    this.devicePixelRatio = devicePixelRatio;
-    this.getPieceFromCoordinate = getPieceFromCoordinate;
-
-    this.eventListeners = {
-      dragover: new Set(),
-      dragoverAvailable: new Set(),
-      drop: new Set(),
-      dropAvailable: new Set(),
-      mousemove: new Set(),
-      mousemoveAvailable: new Set(),
-      click: new Set(),
-      clickAvailable: new Set(),
-      resize: new Set(),
-    };
-
-    this._initEventListeners();
-  }
-
-  /**
-   * @method _initEventListeners - Initializes event listeners for the canvas.
-   */
-  _initEventListeners() {
-    this.canvas.addEventListener('dragover', (event) => {
-      const dpr = this.devicePixelRatio;
-      const coords = {
-        x: event.offsetX * dpr,
-        y: event.offsetY * dpr,
-      };
-      event.preventDefault();
-      this._triggerEvent(
-        'dragover',
-        this.getPieceFromCoordinate(coords.x, coords.y),
-      );
-
-      const availablePiece = this.getPieceFromCoordinate(
-        coords.x,
-        coords.y,
-        true,
-      );
-      if (availablePiece !== NOT_FOUND) {
-        this._triggerEvent('dragoverAvailable', availablePiece);
-      }
-    });
-
-    this.canvas.addEventListener('drop', (event) => {
-      const dpr = this.devicePixelRatio;
-      const coords = {
-        x: event.offsetX * dpr,
-        y: event.offsetY * dpr,
-      };
-      event.preventDefault();
-      this._triggerEvent(
-        'drop',
-        this.getPieceFromCoordinate(coords.x, coords.y),
-      );
-
-      const availablePiece = this.getPieceFromCoordinate(
-        coords.x,
-        coords.y,
-        true,
-      );
-      if (availablePiece !== NOT_FOUND) {
-        this._triggerEvent('dropAvailable', availablePiece);
-      }
-    });
-
-    this.canvas.addEventListener('click', (event) => {
-      const dpr = this.devicePixelRatio;
-      const coords = {
-        x: event.offsetX * dpr,
-        y: event.offsetY * dpr,
-      };
-      this._triggerEvent(
-        'click',
-        this.getPieceFromCoordinate(coords.x, coords.y),
-      );
-
-      const availablePiece = this.getPieceFromCoordinate(
-        coords.x,
-        coords.y,
-        true,
-      );
-      if (availablePiece !== NOT_FOUND) {
-        this._triggerEvent('clickAvailable', availablePiece);
-      }
-    });
-
-    this.canvas.addEventListener('mousemove', (event) => {
-      const dpr = this.devicePixelRatio;
-      const coords = {
-        x: event.offsetX * dpr,
-        y: event.offsetY * dpr,
-      };
-      this._triggerEvent(
-        'mousemove',
-        this.getPieceFromCoordinate(coords.x, coords.y),
-      );
-
-      const availablePiece = this.getPieceFromCoordinate(
-        coords.x,
-        coords.y,
-        true,
-      );
-      if (availablePiece !== NOT_FOUND) {
-        this._triggerEvent('mousemoveAvailable', availablePiece);
-      }
-    });
-  }
-
-  /**
-   * @method _triggerEvent - Trigger an event for a specific action.
-   * @param {string} eventType - The type of event to trigger.
-   * @param {...*} args - The arguments to pass to the event listeners.
-   */
-  _triggerEvent(eventType, ...args) {
-    if (this.eventListeners[eventType]) {
-      this.eventListeners[eventType].forEach((listener) => {
-        listener(...args);
-      });
-    }
-  }
-
-  /**
-   * @method addEventListener - Adds an event listener.
-   * @param {string} eventType - The event type.
-   * @param {Function} listener - The listener function.
-   * @param {Object} options - Optional parameters.
-   */
-  addEventListener(eventType, listener, options = {}) {
-    if (!this.eventListeners[eventType] || eventType.endsWith('Available')) {
-      throw new Error('Invalid event type');
-    }
-
-    if (eventType !== 'resize' && options.onlyAvailable) {
-      this.eventListeners[`${eventType}Available`].add(listener);
-    } else {
-      this.eventListeners[eventType].add(listener);
-    }
-  }
-
-  /**
-   * @method removeEventListener - Removes an event listener.
-   * @param {string} eventType - The event type.
-   * @param {Function} listener - The listener function.
-   */
-  removeEventListener(eventType, listener) {
-    if (!this.eventListeners[eventType] || eventType.endsWith('Available')) {
-      throw new Error('Invalid event type');
-    }
-
-    this.eventListeners[eventType].delete(listener);
-    if (eventType !== 'resize') {
-      this.eventListeners[`${eventType}Available`].delete(listener);
-    }
-  }
-
-  /**
-   * @method destroy - Destroys the event manager and releases resources.
-   */
-  destroy() {
-    for (const eventType in this.eventListeners) {
-      this.eventListeners[eventType].clear();
-    }
-    this.eventListeners = null;
-  }
-}
-
-/**
- * @class FPSMonitor - Monitors and calculates frames per second.
- */
-class FPSMonitor {
-  /**
-   * @constructor
-   */
-  constructor() {
-    this.frameTimes = [];
-    this.lastFrameTime = performance.now();
-    this.fps = 0;
-  }
-
-  /**
-   * @method update - Updates FPS calculation with current frame time.
-   */
-  update() {
-    const currentTime = performance.now();
-    const frameTime = currentTime - this.lastFrameTime;
-    this.lastFrameTime = currentTime;
-
-    this.frameTimes.push(frameTime);
-    if (this.frameTimes.length > FPS_SAMPLE_SIZE) {
-      this.frameTimes.shift();
-    }
-    if (this.frameTimes.length > 0) {
-      const averageFrameTime =
-        this.frameTimes.reduce((sum, time) => sum + time, 0) /
-        this.frameTimes.length;
-      this.fps = Math.round(MILLISECONDS_PER_SECOND / averageFrameTime);
-    }
-  }
-
-  /**
-   * @method getFPS - Gets the current FPS.
-   * @returns {number} - The current frames per second.
-   */
-  getFPS() {
-    return this.fps;
-  }
-
-  /**
-   * @method reset - Resets the FPS monitor.
-   */
-  reset() {
-    this.frameTimes = [];
-    this.lastFrameTime = performance.now();
-    this.fps = 0;
-  }
-}
-
-/**
- * @class RenderingEngine - Handles all rendering operations and dirty rendering logic.
- */
-class RenderingEngine {
-  /**
-   * @constructor
-   * @param {CanvasManager} canvasManager - The canvas manager instance.
-   * @param {AssetManager} assetManager - The asset manager instance.
-   * @param {Object} map - The game map.
-   */
-  constructor(canvasManager, assetManager, map) {
-    this.canvasManager = canvasManager;
-    this.assetManager = assetManager;
-    this.map = map;
-
-    this.widthRatio = null;
-    this.heightRatio = null;
-
-    this.isRenderingRequested = false;
-    this.fpsMonitor = new FPSMonitor();
-
-    this._isPreviewing = false;
-    this._isShowingAvailablePositions = false;
-    this._showingAvailablePositions = new Array();
-    this._previewingPositions = new Map();
-  }
-
-  /**
-   * @method setDimensions - Sets the rendering dimensions and ratios.
-   * @param {number} width - The canvas width.
-   * @param {number} height - The canvas height.
-   */
-  setDimensions(width, height) {
-    this.widthRatio = width / this.map.width;
-    this.heightRatio = height / this.map.height;
-  }
-
-  /**
-   * @method requestRender - Requests a render frame using dirty rendering.
-   * @param {HTMLCanvasElement} mainCanvas - The main canvas to render to.
-   * @param {CanvasRenderingContext2D} mainContext - The main canvas context.
-   */
-  requestRender(mainCanvas, mainContext) {
-    if (this.isRenderingRequested) {
-      return;
-    }
-
-    this.isRenderingRequested = true;
-    requestAnimationFrame(() => {
-      this._performRender(mainCanvas, mainContext);
-      this.isRenderingRequested = false;
-      this.fpsMonitor.update();
-    });
-  }
-
-  /**
-   * @method _performRender - Performs the actual rendering of dirty layers.
-   * @param {HTMLCanvasElement} mainCanvas - The main canvas to render to.
-   * @param {CanvasRenderingContext2D} mainContext - The main canvas context.
-   */
-  _performRender(mainCanvas, mainContext) {
-    const dirtyLayers = this.canvasManager.getDirtyLayers();
-    if (dirtyLayers.length === 0) {
-      return;
-    }
-
-    const width = mainCanvas.width / this.canvasManager.devicePixelRatio;
-    const height = mainCanvas.height / this.canvasManager.devicePixelRatio;
-
-    mainContext.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
-
-    // Render layers in order: background, pieces, piecesPreview, mask
-    const layerOrder = ['background', 'pieces', 'piecesPreview', 'mask'];
-
-    layerOrder.forEach((layerName) => {
-      const layer = this.canvasManager.getLayer(layerName);
-      if (layer) {
-        mainContext.drawImage(layer.canvas, 0, 0, width, height);
-        layer.markClean();
-      }
-    });
-  }
-
-  /**
-   * @method renderBackgroundAndGrid - Renders background and grid to the background layer.
-   * @param {number} width - The canvas width.
-   * @param {number} height - The canvas height.
-   */
-  renderBackgroundAndGrid(width, height) {
-    const backgroundLayer = this.canvasManager.getLayer('background');
-    const backgroundContext = backgroundLayer.context;
-
-    backgroundContext.clearRect(
-      0,
-      0,
-      backgroundLayer.canvas.width,
-      backgroundLayer.canvas.height,
-    );
-
-    // Draw the background image
-    const bgWidth = this.assetManager.background.width;
-    const bgHeight = this.assetManager.background.height;
-    const bgRatio = bgWidth / bgHeight;
-
-    let bgDrawWidth, bgDrawHeight, bgOffsetX, bgOffsetY;
-
-    if (width / height > bgRatio) {
-      bgDrawWidth = width;
-      bgDrawHeight = width / bgRatio;
-      bgOffsetX = 0;
-      bgOffsetY = (height - bgDrawHeight) / HALF;
-    } else {
-      bgDrawHeight = height;
-      bgDrawWidth = height * bgRatio;
-      bgOffsetX = (width - bgDrawWidth) / HALF;
-      bgOffsetY = 0;
-    }
-
-    backgroundContext.drawImage(
-      this.assetManager.background,
-      bgOffsetX,
-      bgOffsetY,
-      bgDrawWidth,
-      bgDrawHeight,
-    );
-
-    // Draw the grid image
-    const gridWidth = this.assetManager.grid.width;
-    const gridHeight = this.assetManager.grid.height;
-    const gridRatio = gridWidth / gridHeight;
-
-    let gridDrawWidth, gridDrawHeight, gridOffsetX, gridOffsetY;
-
-    if (width / height > gridRatio) {
-      gridDrawHeight = height;
-      gridDrawWidth = height * gridRatio;
-      gridOffsetX = (width - gridDrawWidth) / HALF;
-      gridOffsetY = 0;
-    } else {
-      gridDrawWidth = width;
-      gridDrawHeight = width / gridRatio;
-      gridOffsetX = 0;
-      gridOffsetY = (height - gridDrawHeight) / HALF;
-    }
-
-    backgroundContext.drawImage(
-      this.assetManager.grid,
-      gridOffsetX,
-      gridOffsetY,
-      gridDrawWidth,
-      gridDrawHeight,
-    );
-
-    backgroundLayer.markDirty();
-  }
-
-  /**
-   * @method renderPiecesAndHexagons - Renders all pieces and hexagons.
-   * @param {Board} board - The game board.
-   */
-  renderPiecesAndHexagons(board) {
-    this.clearBoard();
-    this.renderPieces(board);
-    this.renderHexagons(board);
-  }
-
-  /**
-   * @method renderPieces - Renders all pieces from the board.
-   * @param {Board} board - The game board.
-   */
-  renderPieces(board) {
-    const pieces = board.indexes;
-    for (let i = 0; i < pieces.length; i++) {
-      const piece = pieces[i];
-      if (piece) {
-        const flipped = this.map.tiles[i].flipped;
-        this.renderPiece(i, piece.colorsKey, flipped);
-      }
-    }
-  }
-
-  /**
-   * @method renderPiece - Renders a single game piece.
-   * @param {number} index - The piece index.
-   * @param {string} colorsKey - The color key.
-   * @param {boolean} flipped - Whether the piece is flipped.
-   * @param {string} layerName - The target layer name.
-   * @param {string} fillColor - Optional fill color.
-   */
-  renderPiece(
-    index,
-    colorsKey,
-    flipped,
-    layerName = 'pieces',
-    fillColor = null,
+  constructor(
+    mainContext,
+    offScreenCanvases,
+    fpsTracker,
+    getCanvasDimensions,
+    rendererRef,
   ) {
-    const targetLayer = this.canvasManager.getLayer(layerName);
-    const targetContext = targetLayer.context;
+    this.mainContext = mainContext;
+    this.offScreenCanvases = offScreenCanvases;
+    this.fpsTracker = fpsTracker;
+    this.getCanvasDimensions = getCanvasDimensions;
+    this.rendererRef = rendererRef;
 
-    const tile = this.map.tiles[index];
-    if (!tile) {
-      throw new Error(`Tile index ${index} out of bounds`);
-    }
+    this.animationFrameId = null;
+    this.isLooping = false;
 
-    const textureKey = flipped ? `${colorsKey}-flipped` : colorsKey;
-    const texture = this.assetManager.getTexture('tiles', textureKey);
-    if (!texture) {
-      throw new Error(`Texture key "${textureKey}" not found in textures`);
-    }
-
-    const x = tile.x * this.widthRatio;
-    const y = tile.y * this.heightRatio;
-    const imageWidth = texture.width;
-    const imageHeight = texture.height;
-
-    let width, height;
-    if (tile.width !== undefined && tile.width !== null) {
-      width = tile.width * this.widthRatio;
-      height =
-        tile.height !== undefined && tile.height !== null
-          ? tile.height * this.heightRatio
-          : (width * imageHeight) / imageWidth;
-    } else if (tile.height !== undefined && tile.height !== null) {
-      height = tile.height * this.heightRatio;
-      width = (height * imageWidth) / imageHeight;
-    } else {
-      width = imageWidth * (this.widthRatio || 1);
-      height = imageHeight * (this.heightRatio || 1);
-    }
-
-    if (!(width > 0 && height > 0)) {
-      return;
-    }
-
-    const rotation = tile.rotation || 0;
-    const angle = (rotation * Math.PI) / HALF_PI_DEGREES;
-
-    targetContext.save();
-    targetContext.translate(x + width / HALF, y + height / HALF);
-    targetContext.rotate(angle);
-
-    if (fillColor) {
-      const tempLayer = this.canvasManager.getLayer('temp');
-      const tempCanvas = tempLayer.canvas;
-      const tempCtx = tempLayer.context;
-
-      tempCanvas.width = Math.max(
-        1,
-        Math.ceil(width * this.canvasManager.devicePixelRatio),
-      );
-      tempCanvas.height = Math.max(
-        1,
-        Math.ceil(height * this.canvasManager.devicePixelRatio),
-      );
-
-      tempCtx.drawImage(texture, 0, 0, tempCanvas.width, tempCanvas.height);
-
-      tempCtx.globalCompositeOperation = 'source-in';
-      tempCtx.fillStyle = fillColor;
-      tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-
-      tempCtx.globalCompositeOperation = 'source-over';
-
-      targetContext.drawImage(
-        tempCanvas,
-        -width / HALF,
-        -height / HALF,
-        width,
-        height,
-      );
-    } else {
-      targetContext.drawImage(
-        texture,
-        -width / HALF,
-        -height / HALF,
-        width,
-        height,
-      );
-    }
-
-    targetContext.restore();
-    targetLayer.markDirty();
+    this.dirtyCanvases = {
+      background: true, // Initially dirty to draw background and grid
+      pieces: true, // Initially dirty if there are pieces
+      piecesPreview: false,
+      mask: false,
+      // Hitmap is not rendered to main, temp is for utility
+    };
+    this.isAnyDirty = true; // Combined dirty flag
   }
 
   /**
-   * @method renderHexagons - Renders complete hexagons.
-   * @param {Board} board - The game board.
+   * @method markDirty - Marks a specific off-screen canvas as dirty.
+   * @param {string} canvasName - The name of the canvas to mark dirty.
    */
-  renderHexagons(board) {
-    const hexagons = board.getCompleteHexagons();
-    for (const hexagon of hexagons) {
-      this.renderHexagon(hexagon.coordinate, hexagon.color);
+  markDirty(canvasName) {
+    if (this.dirtyCanvases.hasOwnProperty(canvasName)) {
+      this.dirtyCanvases[canvasName] = true;
+      this.isAnyDirty = true;
     }
   }
 
   /**
-   * @method renderHexagon - Renders a single hexagon.
-   * @param {Array<number>} coordinate - The hexagon coordinate.
-   * @param {string} color - The hexagon color.
+   * @method markAllDirty - Marks all renderable off-screen canvases as dirty.
    */
-  renderHexagon(coordinate, color) {
-    const piecesLayer = this.canvasManager.getLayer('pieces');
-    const piecesContext = piecesLayer.context;
-
-    const hexagon = this.map.hexagons[`${coordinate[0]}-${coordinate[1]}`];
-    const texture = this.assetManager.getTexture('hexagons', color);
-    const x = hexagon.x * this.widthRatio;
-    const y = hexagon.y * this.heightRatio;
-    const imageWidth = texture.width;
-    const imageHeight = texture.height;
-
-    const width = hexagon.width
-      ? hexagon.width * this.widthRatio
-      : (hexagon.height * this.heightRatio * imageWidth) / imageHeight;
-    const height = hexagon.height
-      ? hexagon.height * this.heightRatio
-      : (hexagon.width * this.widthRatio * imageHeight) / imageWidth;
-
-    piecesContext.drawImage(texture, x, y, width, height);
-    piecesLayer.markDirty();
+  markAllDirty() {
+    this.dirtyCanvases.background = true;
+    this.dirtyCanvases.pieces = true;
+    this.dirtyCanvases.piecesPreview = true;
+    this.dirtyCanvases.mask = true;
+    this.isAnyDirty = true;
   }
 
   /**
-   * @method clearBoard - Clears the pieces layer.
+   * @method _loop - The main animation loop.
    */
-  clearBoard() {
-    const piecesLayer = this.canvasManager.getLayer('pieces');
-    piecesLayer.clear();
-  }
+  _loop() {
+    if (!this.isLooping) return;
 
-  /**
-   * @method previewPiece - Renders a piece preview.
-   * @param {number} index - The piece index.
-   * @param {Object} piece - The piece object.
-   * @param {string} fillColor - The preview fill color.
-   */
-  previewPiece(index, piece, fillColor = 'rgba(255, 255, 255, 0.5)') {
-    if (!piece || !piece.colorsKey) {
-      throw new Error('Invalid piece object for preview');
-    }
+    this.fpsTracker.tick();
 
-    const tile = this.map.tiles[index];
-    if (!tile) {
-      throw new Error('Tile index out of bounds for preview');
-    }
+    if (this.isAnyDirty) {
+      const { width, height } = this.getCanvasDimensions();
+      this.mainContext.clearRect(
+        0,
+        0,
+        width * this.rendererRef._canvasManager.devicePixelRatio,
+        height * this.rendererRef._canvasManager.devicePixelRatio,
+      ); // Use physical pixels for clearRect
 
-    this.renderPiece(index, piece.colorsKey, tile.flipped, 'piecesPreview');
-    this.renderPiece(
-      index,
-      piece.colorsKey,
-      tile.flipped,
-      'piecesPreview',
-      fillColor,
-    );
-
-    this._isPreviewing = true;
-    this._previewingPositions.set(index, piece);
-  }
-
-  /**
-   * @method clearPreview - Clears piece previews.
-   */
-  clearPreview() {
-    const previewLayer = this.canvasManager.getLayer('piecesPreview');
-    previewLayer.clear();
-    this._isPreviewing = false;
-    this._previewingPositions.clear();
-  }
-
-  /**
-   * @method showAvailablePositions - Shows available positions with a mask.
-   * @param {Array<number>} positions - The available positions.
-   * @param {string} fillColor - The mask fill color.
-   */
-  showAvailablePositions(positions, fillColor = 'rgba(0, 0, 0, 0.5)') {
-    if (!Array.isArray(positions)) {
-      throw new Error(
-        'positions must be an array of available position indexes',
-      );
-    }
-
-    if (this._isShowingAvailablePositions) {
-      this.clearAvailablePositions();
-    }
-
-    const maskLayer = this.canvasManager.getLayer('mask');
-    const maskContext = maskLayer.context;
-
-    maskContext.fillStyle = fillColor;
-    maskContext.fillRect(0, 0, maskLayer.canvas.width, maskLayer.canvas.height);
-
-    for (const index of positions) {
-      const tile = this.map.tiles[index];
-      if (!tile) {
-        continue;
-      }
-
-      const texture = this.assetManager.getTexture(
-        'tiles',
-        `${this.map.tiles[index].flipped ? 'empty-flipped' : 'empty'}`,
-      );
-
-      const x = tile.x * this.widthRatio;
-      const y = tile.y * this.heightRatio;
-      const imageWidth = texture.width;
-      const imageHeight = texture.height;
-
-      let width, height;
-      if (tile.width !== undefined && tile.width !== null) {
-        width = tile.width * this.widthRatio;
-        height =
-          tile.height !== undefined && tile.height !== null
-            ? tile.height * this.heightRatio
-            : (width * imageHeight) / imageWidth;
-      } else if (tile.height !== undefined && tile.height !== null) {
-        height = tile.height * this.heightRatio;
-        width = (height * imageWidth) / imageHeight;
-      } else {
-        width = imageWidth * (this.widthRatio || 1);
-        height = imageHeight * (this.heightRatio || 1);
-      }
-
-      if (!(width > 0 && height > 0)) {
-        continue;
-      }
-
-      const rotation = tile.rotation || 0;
-      const angle = (rotation * Math.PI) / HALF_PI_DEGREES;
-
-      maskContext.save();
-      maskContext.translate(x + width / HALF, y + height / HALF);
-      maskContext.rotate(angle);
-
-      maskContext.globalCompositeOperation = 'destination-out';
-      maskContext.drawImage(
-        texture,
-        -width / HALF,
-        -height / HALF,
-        width,
-        height,
-      );
-
-      maskContext.restore();
-    }
-
-    maskLayer.markDirty();
-    this._isShowingAvailablePositions = true;
-    this._showingAvailablePositions = positions;
-  }
-
-  /**
-   * @method clearAvailablePositions - Clears available position highlights.
-   */
-  clearAvailablePositions() {
-    const maskLayer = this.canvasManager.getLayer('mask');
-    maskLayer.clear();
-    this._isShowingAvailablePositions = false;
-    this._showingAvailablePositions = [];
-  }
-
-  /**
-   * @method setUpHitmap - Sets up the hitmap for piece detection.
-   * @param {Board} board - The game board.
-   */
-  setUpHitmap(board) {
-    const hitmapLayer = this.canvasManager.getLayer('hitmap');
-    hitmapLayer.clear();
-
-    const pieceIndices = board.map.positions.map((_, index) => index);
-
-    for (const index of pieceIndices) {
-      const gappedPieceId = index * COLOR_GAP_FACTOR + 1;
-
-      if (gappedPieceId > MAX_PIECE_ID_RGB) {
-        console.warn(
-          `Gapped ID ${gappedPieceId} for index ${index} exceeds limit.`,
+      // Draw layers, order matters
+      if (this.dirtyCanvases.background || true) {
+        // Always draw background for now or if it's dirty
+        this.mainContext.drawImage(
+          this.offScreenCanvases.background,
+          0,
+          0,
+          width,
+          height,
         );
-        continue;
+      }
+      if (this.dirtyCanvases.pieces || true) {
+        // Always draw pieces
+        this.mainContext.drawImage(
+          this.offScreenCanvases.pieces,
+          0,
+          0,
+          width,
+          height,
+        );
+      }
+      if (this.dirtyCanvases.piecesPreview || this.rendererRef._isPreviewing) {
+        this.mainContext.drawImage(
+          this.offScreenCanvases.piecesPreview,
+          0,
+          0,
+          width,
+          height,
+        );
+      }
+      if (
+        this.dirtyCanvases.mask ||
+        this.rendererRef._isShowingAvailablePositions
+      ) {
+        this.mainContext.drawImage(
+          this.offScreenCanvases.mask,
+          0,
+          0,
+          width,
+          height,
+        );
       }
 
-      const r = gappedPieceId & MAX_COLOR_COMPONENT;
-      const g = (gappedPieceId >> BITS_PER_BYTE) & MAX_COLOR_COMPONENT;
-      const b = (gappedPieceId >> BITS_PER_TWO_BYTES) & MAX_COLOR_COMPONENT;
-      const hitColor = `rgb(${r}, ${g}, ${b})`;
+      this.fpsTracker.draw(); // Draw FPS only when canvas is updated
 
-      this.renderPiece(
-        index,
-        'empty',
-        this.map.tiles[index].flipped,
-        'hitmap',
-        hitColor,
-      );
+      // Reset dirty flags after rendering
+      this.dirtyCanvases.background = false;
+      this.dirtyCanvases.pieces = false;
+      this.dirtyCanvases.piecesPreview = false;
+      this.dirtyCanvases.mask = false;
+      this.isAnyDirty = false;
+    }
+
+    this.animationFrameId = requestAnimationFrame(this._loop.bind(this));
+  }
+
+  /**
+   * @method start - Starts the rendering loop.
+   */
+  start() {
+    if (!this.isLooping) {
+      this.isLooping = true;
+      this.markAllDirty(); // Ensure first frame renders everything
+      this._loop();
     }
   }
 
   /**
-   * @method getFPS - Gets the current FPS.
-   * @returns {number} - The current frames per second.
+   * @method stop - Stops the rendering loop.
    */
-  getFPS() {
-    return this.fpsMonitor.getFPS();
+  stop() {
+    if (this.isLooping) {
+      this.isLooping = false;
+      if (this.animationFrameId) {
+        cancelAnimationFrame(this.animationFrameId);
+        this.animationFrameId = null;
+      }
+    }
   }
 
   /**
-   * @method destroy - Destroys the rendering engine and releases resources.
+   * @method destroy - Cleans up.
    */
   destroy() {
-    this.fpsMonitor.reset();
-    this._previewingPositions.clear();
+    this.stop();
+    this.mainContext = null;
+    this.offScreenCanvases = null;
+    if (this.fpsTracker) this.fpsTracker.destroy();
+    this.fpsTracker = null;
+    this.getCanvasDimensions = null;
+    this.rendererRef = null;
   }
 }
 
@@ -1046,8 +631,9 @@ class Renderer {
    * @param {string} options.texturesUrl - The URL of the texture pack.
    * @param {string} options.backgroundUrl - The URL of the background image.
    * @param {string} options.gridUrl - The URL of the grid image.
+   * @param {boolean} [options.showFPS=false] - Whether to display FPS counter.
    * @param {Function} callback - A callback function to be executed after loading the textures, background, and grid.
-   * @throws {Error} - If board is not an instance of Board, if canvas is not an HTMLElement, or if map is not a valid map object, or if texturesUrl, backgroundUrl, or gridUrl are not strings, or if the callback is not a function, or if the environment is not a browser.
+   * @throws {Error} - If board is not an instance of Board, if container is not an HTMLElement, or if map is not a valid map object, or if texturesUrl, backgroundUrl, or gridUrl are not strings, or if the callback is not a function, or if the environment is not a browser.
    */
   constructor(
     {
@@ -1057,6 +643,7 @@ class Renderer {
       texturesUrl = DEFAULT_ASSETS_URL + 'textures/classic/normal',
       backgroundUrl = DEFAULT_ASSETS_URL + 'backgrounds/wooden-board.jpg',
       gridUrl = DEFAULT_ASSETS_URL + 'grids/black.png',
+      showFPS = false,
     },
     callback = () => {},
   ) {
@@ -1064,7 +651,8 @@ class Renderer {
       throw new Error('board must be an instance of Board');
     }
     if (!(container instanceof HTMLElement)) {
-      throw new Error('canvas must be an instance of HTMLElement');
+      // Corrected error message from 'canvas' to 'container'
+      throw new Error('container must be an instance of HTMLElement');
     }
     if (
       !map ||
@@ -1095,47 +683,117 @@ class Renderer {
     }
 
     this.board = board;
-    this.map = map;
-
+    this.map = map; // Initial map
     this.container = container;
-    this.container.style.position = 'relative';
-    this.canvas = document.createElement('canvas');
-    this.context = this.canvas.getContext('2d');
 
-    this.width = null;
-    this.height = null;
-    this.ratio = this.map.width / this.map.height;
-    this.devicePixelRatio = window.devicePixelRatio || 1;
-
-    // Initialize modular components
-    this.canvasManager = new CanvasManager();
-    this.assetManager = new AssetManager();
-    this.renderingEngine = new RenderingEngine(
-      this.canvasManager,
-      this.assetManager,
+    // Initialize helper modules
+    this._canvasManager = new _CanvasManager(
+      container,
       this.map,
+      window.devicePixelRatio || 1,
+    );
+    this._assetLoader = new _AssetLoader(texturesUrl, backgroundUrl, gridUrl);
+    this._fpsTracker = new _FPSTracker(
+      showFPS,
+      this._canvasManager.getMainContext(),
+      this._canvasManager.getDimensions(),
+    );
+    this._renderLoop = new _RenderLoop(
+      this._canvasManager.getMainContext(),
+      this._canvasManager.offScreenCanvases, // Pass all offScreenCanvases
+      this._fpsTracker,
+      this._canvasManager.getDimensions.bind(this._canvasManager),
+      this,
     );
 
-    // Register canvas layers
-    this._registerCanvasLayers();
+    this.eventListeners = {
+      dragover: new Set(),
+      dragoverAvailable: new Set(),
+      drop: new Set(),
+      dropAvailable: new Set(),
+      mousemove: new Set(),
+      mousemoveAvailable: new Set(),
+      click: new Set(),
+      clickAvailable: new Set(),
+      resize: new Set(),
+    };
+    this.eventHandlers = new Map(); // For board events
 
-    this.eventManager = null; // Will be initialized after canvas setup
-    this.eventHandlers = new Map();
+    this._isPreviewing = false;
+    this._isShowingAvailablePositions = false;
+    this._showingAvailablePositions = new Array();
+    this._previewingPositions = new Map();
 
+    this.isDestroyed = false;
     this.resizeObserverInitialized = false;
+
+    this._initResizeObserver();
+    this._initMutationObserver();
+    this._initEventListeners();
+    this._setUpBoardEventHandlers();
+
+    this._assetLoader.loadAll().then(() => {
+      this._setUpCanvasAndInitialRender();
+      this._renderLoop.start();
+      callback(this);
+    });
+  }
+
+  /**
+   * @method _setUpCanvasAndInitialRender - Sets up canvas and performs initial render operations.
+   */
+  _setUpCanvasAndInitialRender() {
+    this._canvasManager.setupSizes();
+    this._fpsTracker.mainContext = this._canvasManager.getMainContext(); // Re-assign context if it was scaled
+    this._fpsTracker.canvasDimensions = this._canvasManager.getDimensions(); // Update dimensions ref
+
+    this._canvasManager.clearAllCanvases();
+    this._renderBackgroundAndGrid(); // Renders to off-screen, marks dirty
+    if (this.board.indexes.length) {
+      this._renderPiecesAndHexagons(); // Renders to off-screen, marks dirty
+    }
+
+    this._setUpHitmap(); // Renders to off-screen (hitmap)
+  }
+
+  /**
+   * @method _initResizeObserver - Initializes the ResizeObserver.
+   */
+  _initResizeObserver() {
     this.resizeObserver = new ResizeObserver(() => {
       if (!this.resizeObserverInitialized) {
         this.resizeObserverInitialized = true;
         return;
       }
 
-      this._setUpCanvas();
-      this.renderingEngine.requestRender(this.canvas, this.context);
+      this._canvasManager.setupSizes();
+      this._fpsTracker.mainContext = this._canvasManager.getMainContext();
+      this._fpsTracker.canvasDimensions = this._canvasManager.getDimensions();
 
-      this.eventManager._triggerEvent('resize', {
+      // Mark all relevant off-screen canvases dirty for redraw
+      this._renderBackgroundAndGrid(); // Re-renders background/grid to its off-screen
+      this._renderPiecesAndHexagons(); // Re-renders pieces to its off-screen
+      this._setUpHitmap(); // Re-renders hitmap
+
+      if (this._isShowingAvailablePositions) {
+        // Re-apply mask based on current state
+        const positions = [...this._showingAvailablePositions];
+        this.clearAvailablePositions(false); // Clear without triggering render loop immediately
+        this.showAvailablePositions(positions, undefined, false); // Show without triggering render loop immediately
+      }
+      if (this._isPreviewing) {
+        const previews = new Map(this._previewingPositions);
+        this.clearPreview(false);
+        previews.forEach((piece, index) => {
+          this.previewPiece(index, piece, undefined, false);
+        });
+      }
+      this._renderLoop.markAllDirty(); // Ensure the loop picks up all changes
+
+      this._triggerEvent('resize', {
         canvas: {
-          width: this.canvas.width,
-          height: this.canvas.height,
+          width: this._canvasManager.getMainCanvas().width,
+          height: this._canvasManager.getMainCanvas().height,
         },
         container: {
           width: this.container.clientWidth,
@@ -1144,12 +802,20 @@ class Renderer {
       });
     });
     this.resizeObserver.observe(this.container);
+  }
 
-    this.mutationObserver = new MutationObserver((mutationsList, observer) => {
+  /**
+   * @method _initMutationObserver - Initializes the MutationObserver.
+   */
+  _initMutationObserver() {
+    this.mutationObserver = new MutationObserver((mutationsList) => {
       for (const mutation of mutationsList) {
         if (mutation.removedNodes) {
           mutation.removedNodes.forEach((removedNode) => {
-            if (removedNode === this.canvas || removedNode === this.container) {
+            if (
+              removedNode === this._canvasManager.getMainCanvas() ||
+              removedNode === this.container
+            ) {
               this.destroy();
             }
           });
@@ -1160,181 +826,444 @@ class Renderer {
       childList: true,
       subtree: true,
     });
+  }
 
-    this._setUpBoard();
-    this.assetManager
-      .loadAssets(texturesUrl, backgroundUrl, gridUrl)
-      .then(() => {
-        this._setUpCanvas();
-        callback(this);
+  /**
+   * @method _initEventListeners - Initializes event listeners for the main canvas.
+   */
+  _initEventListeners() {
+    const canvas = this._canvasManager.getMainCanvas();
+    const getEventCoords = (event) => {
+      const dpr = this._canvasManager.getRatios().devicePixelRatio;
+      return { x: event.offsetX * dpr, y: event.offsetY * dpr };
+    };
+
+    canvas.addEventListener('dragover', (event) => {
+      const coords = getEventCoords(event);
+      event.preventDefault();
+      this._triggerEvent(
+        'dragover',
+        this._getPieceFromCoordinate(coords.x, coords.y),
+      );
+      const availablePiece = this._getPieceFromCoordinate(
+        coords.x,
+        coords.y,
+        true,
+      );
+      if (availablePiece !== NOT_FOUND) {
+        this._triggerEvent('dragoverAvailable', availablePiece);
+      }
+    });
+
+    canvas.addEventListener('drop', (event) => {
+      const coords = getEventCoords(event);
+      event.preventDefault();
+      this._triggerEvent(
+        'drop',
+        this._getPieceFromCoordinate(coords.x, coords.y),
+      );
+      const availablePiece = this._getPieceFromCoordinate(
+        coords.x,
+        coords.y,
+        true,
+      );
+      if (availablePiece !== NOT_FOUND) {
+        this._triggerEvent('dropAvailable', availablePiece);
+      }
+    });
+
+    canvas.addEventListener('click', (event) => {
+      const coords = getEventCoords(event);
+      this._triggerEvent(
+        'click',
+        this._getPieceFromCoordinate(coords.x, coords.y),
+      );
+      const availablePiece = this._getPieceFromCoordinate(
+        coords.x,
+        coords.y,
+        true,
+      );
+      if (availablePiece !== NOT_FOUND) {
+        this._triggerEvent('clickAvailable', availablePiece);
+      }
+    });
+
+    canvas.addEventListener('mousemove', (event) => {
+      const coords = getEventCoords(event);
+      this._triggerEvent(
+        'mousemove',
+        this._getPieceFromCoordinate(coords.x, coords.y),
+      );
+      const availablePiece = this._getPieceFromCoordinate(
+        coords.x,
+        coords.y,
+        true,
+      );
+      if (availablePiece !== NOT_FOUND) {
+        this._triggerEvent('mousemoveAvailable', availablePiece);
+      }
+    });
+  }
+
+  /**
+   * @method _triggerEvent - Trigger an event for a specific action.
+   * @param {string} eventType - The type of event to trigger.
+   * @param {...*} args - The arguments to pass to the event listeners.
+   */
+  _triggerEvent(eventType, ...args) {
+    if (this.eventListeners[eventType]) {
+      this.eventListeners[eventType].forEach((listener) => {
+        listener(...args);
       });
-
-    this.isDestroyed = false;
+    }
   }
 
   /**
-   * @method _registerCanvasLayers - Registers all required canvas layers.
+   * @method _setUpBoardEventHandlers - Sets up board event listeners for rendering.
    */
-  _registerCanvasLayers() {
-    this.canvasManager.registerLayer('background');
-    this.canvasManager.registerLayer('pieces');
-    this.canvasManager.registerLayer('piecesPreview');
-    this.canvasManager.registerLayer('mask');
-    this.canvasManager.registerLayer('hitmap', {
-      willReadFrequently: true,
-      initialImageSmoothingEnabled: false,
-      imageSmoothingEnabled: false,
-    });
-    this.canvasManager.registerLayer('temp', {
-      willReadFrequently: true,
-      initialImageSmoothingEnabled: false,
-      imageSmoothingEnabled: false,
-    });
-  }
-
-  /**
-   * @method _setUpBoard - Sets up the board event listeners for rendering.
-   */
-  _setUpBoard() {
-    const renderPiece = function renderPiece(index, piece) {
-      this.renderingEngine.renderPiece(
+  _setUpBoardEventHandlers() {
+    const renderPieceHandler = (index, piece) => {
+      this._renderPieceToOfflineCanvas(
         index,
         piece.colorsKey,
         this.map.tiles[index].flipped,
       );
-      this.renderingEngine.requestRender(this.canvas, this.context);
-    }.bind(this);
+      this._renderLoop.markDirty('pieces');
+    };
 
-    const renderPiecesAndHexagons = function renderPiecesAndHexagons() {
-      this.renderingEngine.renderPiecesAndHexagons(this.board);
-      this.renderingEngine.requestRender(this.canvas, this.context);
-    }.bind(this);
+    const renderPiecesAndHexagonsHandler = () => {
+      this._renderPiecesAndHexagons(); // This internally marks 'pieces' dirty via its sub-calls
+    };
 
-    const renderHexagons = function renderHexagons(hexagons) {
+    const renderHexagonsHandler = (hexagons) => {
       for (const hexagon of hexagons) {
-        this.renderingEngine.renderHexagon(hexagon.coordinate, hexagon.color);
+        this._renderHexagonToOfflineCanvas(hexagon.coordinate, hexagon.color);
       }
-      this.renderingEngine.requestRender(this.canvas, this.context);
-    }.bind(this);
+      this._renderLoop.markDirty('pieces');
+    };
 
-    const clearBoard = function clearBoard() {
-      this.renderingEngine.clearBoard();
-      this.renderingEngine.requestRender(this.canvas, this.context);
-    }.bind(this);
+    const clearBoardHandler = () => {
+      this._clearBoardOfflineCanvas();
+      this._renderLoop.markDirty('pieces');
+    };
 
-    this.board.addEventListener('set', renderPiece);
-    this.board.addEventListener('remove', renderPiecesAndHexagons);
-    this.board.addEventListener('form', renderHexagons);
-    this.board.addEventListener('destroy', renderPiecesAndHexagons);
-    this.board.addEventListener('clear', clearBoard);
-
-    this.eventHandlers.set('set', renderPiece);
-    this.eventHandlers.set('remove', renderPiecesAndHexagons);
-    this.eventHandlers.set('form', renderHexagons);
-    this.eventHandlers.set('destroy', renderPiecesAndHexagons);
-    this.eventHandlers.set('clear', clearBoard);
+    this._registerBoardEventHandler('set', renderPieceHandler);
+    this._registerBoardEventHandler('remove', renderPiecesAndHexagonsHandler);
+    this._registerBoardEventHandler('form', renderHexagonsHandler);
+    this._registerBoardEventHandler('destroy', renderPiecesAndHexagonsHandler);
+    this._registerBoardEventHandler('clear', clearBoardHandler);
   }
 
   /**
-   * @method _setUpCanvas - Sets up the canvas dimensions and renders initial elements, applying device pixel ratio (DPR) for high-DPI displays.
+   * @method _registerBoardEventHandler - Helper to add event listener to board and store handler.
+   * @param {string} eventName - Name of the board event.
+   * @param {Function} handler - The handler function.
    */
-  _setUpCanvas() {
-    const containerWidth = this.container.clientWidth;
-    const containerHeight = this.container.clientHeight;
-    const mapRatio = this.ratio;
-    let canvasWidth, canvasHeight;
-
-    if (containerWidth / containerHeight > mapRatio) {
-      canvasHeight = containerHeight;
-      canvasWidth = canvasHeight * mapRatio;
-    } else {
-      canvasWidth = containerWidth;
-      canvasHeight = canvasWidth / mapRatio;
-    }
-
-    const dpr = this.devicePixelRatio;
-    this.canvas.width = canvasWidth * dpr;
-    this.canvas.height = canvasHeight * dpr;
-    this.canvas.style.width = `${canvasWidth}px`;
-    this.canvas.style.height = `${canvasHeight}px`;
-
-    const leftOffset = (containerWidth - canvasWidth) / HALF;
-    const topOffset = (containerHeight - canvasHeight) / HALF;
-    this.canvas.style.position = 'absolute';
-    this.canvas.style.left = `${leftOffset}px`;
-    this.canvas.style.top = `${topOffset}px`;
-
-    if (!this.canvas.parentNode) {
-      this.container.appendChild(this.canvas);
-    }
-
-    this.context.scale(dpr, dpr);
-
-    this.width = canvasWidth;
-    this.height = canvasHeight;
-
-    // Update canvas manager and rendering engine
-    this.canvasManager.resize(canvasWidth, canvasHeight);
-    this.renderingEngine.setDimensions(canvasWidth, canvasHeight);
-
-    // Initialize event manager if not already done
-    if (!this.eventManager) {
-      this.eventManager = new EventManager(
-        this.canvas,
-        this.devicePixelRatio,
-        this._getPieceFromCoordinate.bind(this),
-      );
-    }
-
-    this.canvasManager.clearAll();
-    this.renderingEngine.renderBackgroundAndGrid(canvasWidth, canvasHeight);
-    if (this.board.indexes.length) {
-      this.renderingEngine.renderPiecesAndHexagons(this.board);
-    }
-    if (this.renderingEngine._isShowingAvailablePositions) {
-      this.showAvailablePositions(
-        this.renderingEngine._showingAvailablePositions,
-      );
-    }
-    if (this.renderingEngine._isPreviewing) {
-      this.renderingEngine._previewingPositions.forEach((piece, index) => {
-        this.previewPiece(index, piece);
-      });
-    }
-    this.renderingEngine.setUpHitmap(this.board);
-    this.renderingEngine.requestRender(this.canvas, this.context);
+  _registerBoardEventHandler(eventName, handler) {
+    const boundHandler = handler.bind(this);
+    this.board.addEventListener(eventName, boundHandler);
+    this.eventHandlers.set(eventName, boundHandler);
   }
 
   /**
-   * @method _getPieceFromCoordinate - Retrieves the index of a piece at a given canvas coordinate using the hitmap.
-   * @param {number} x - The x coordinate on the canvas.
-   * @param {number} y - The y coordinate on the canvas.
-   * @param {boolean} [onlyAvailable=false] - Optional flag to only consider available positions.
-   * @returns {number} - The index of the piece at the coordinate, or -1 if no piece is found.
+   * @method _removeBoardEventHandlers - Removes all registered board event handlers.
+   */
+  _removeBoardEventHandlers() {
+    this.eventHandlers.forEach((handler, eventName) => {
+      this.board.removeEventListener(eventName, handler);
+    });
+    this.eventHandlers.clear();
+  }
+
+  /**
+   * @method _renderBackgroundAndGrid - Renders background and grid to their off-screen canvas.
+   */
+  _renderBackgroundAndGrid() {
+    const backgroundContext =
+      this._canvasManager.getOffscreenContext('background');
+    const { width: canvasWidth, height: canvasHeight } =
+      this._canvasManager.getDimensions();
+
+    backgroundContext.clearRect(
+      0,
+      0,
+      canvasWidth * this._canvasManager.devicePixelRatio,
+      canvasHeight * this._canvasManager.devicePixelRatio,
+    );
+
+    const bg = this._assetLoader.getBackground();
+    const grid = this._assetLoader.getGrid();
+
+    if (!bg || !grid) return; // Assets not loaded
+
+    const bgWidth = bg.width;
+    const bgHeight = bg.height;
+    const bgRatio = bgWidth / bgHeight;
+    let bgDrawWidth, bgDrawHeight, bgOffsetX, bgOffsetY;
+    if (canvasWidth / canvasHeight > bgRatio) {
+      bgDrawWidth = canvasWidth;
+      bgDrawHeight = canvasWidth / bgRatio;
+      bgOffsetX = 0;
+      bgOffsetY = (canvasHeight - bgDrawHeight) / HALF;
+    } else {
+      bgDrawHeight = canvasHeight;
+      bgDrawWidth = canvasHeight * bgRatio;
+      bgOffsetX = (canvasWidth - bgDrawWidth) / HALF;
+      bgOffsetY = 0;
+    }
+    backgroundContext.drawImage(
+      bg,
+      bgOffsetX,
+      bgOffsetY,
+      bgDrawWidth,
+      bgDrawHeight,
+    );
+
+    const gridWidth = grid.width;
+    const gridHeight = grid.height;
+    const gridRatio = gridWidth / gridHeight;
+    let gridDrawWidth, gridDrawHeight, gridOffsetX, gridOffsetY;
+    if (canvasWidth / canvasHeight > gridRatio) {
+      gridDrawHeight = canvasHeight;
+      gridDrawWidth = canvasHeight * gridRatio;
+      gridOffsetX = (canvasWidth - gridDrawWidth) / HALF;
+      gridOffsetY = 0;
+    } else {
+      gridDrawWidth = canvasWidth;
+      gridDrawHeight = canvasWidth / gridRatio;
+      gridOffsetX = 0;
+      gridOffsetY = (canvasHeight - gridDrawHeight) / HALF;
+    }
+    backgroundContext.drawImage(
+      grid,
+      gridOffsetX,
+      gridOffsetY,
+      gridDrawWidth,
+      gridDrawHeight,
+    );
+    this._renderLoop.markDirty('background');
+  }
+
+  /**
+   * @method _renderPiecesAndHexagons - Clears and re-renders all pieces and hexagons on the pieces off-screen canvas.
+   */
+  _renderPiecesAndHexagons() {
+    this._clearBoardOfflineCanvas(); // Clears pieces off-screen
+    this._renderAllPiecesToOfflineCanvas();
+    this._renderAllHexagonsToOfflineCanvas();
+
+    this._renderLoop.markDirty('pieces');
+  }
+
+  /**
+   * @method _renderAllPiecesToOfflineCanvas - Renders all pieces from board to off-screen.
+   */
+  _renderAllPiecesToOfflineCanvas() {
+    const pieces = this.board.indexes;
+    for (let i = 0; i < pieces.length; i++) {
+      const piece = pieces[i];
+      if (piece) {
+        const flipped = this.map.tiles[i].flipped;
+        this._renderPieceToOfflineCanvas(i, piece.colorsKey, flipped);
+      }
+    }
+  }
+
+  /**
+   * @method _renderPieceToOfflineCanvas - Renders a single piece to a specified off-screen canvas or default 'pieces'.
+   * @param {number} index - The index of the piece.
+   * @param {string} colorsKey - The color key.
+   * @param {boolean} flipped - If the piece is flipped.
+   * @param {string} [targetCanvasName='pieces'] - Name of the off-screen canvas ('pieces' or 'piecesPreview').
+   * @param {string} [fillColor] - Optional fill color for hitmap or preview.
+   * @throws {Error} - If the tile index is out of bounds or texture key is not found.
+   */
+  _renderPieceToOfflineCanvas(
+    index,
+    colorsKey,
+    flipped,
+    targetCanvasName = 'pieces',
+    fillColor,
+  ) {
+    const tile = this.map.tiles[index];
+    if (!tile) throw new Error(`Tile index ${index} out of bounds`);
+
+    const textureKey = flipped ? `${colorsKey}-flipped` : colorsKey;
+    const texture = this._assetLoader.getTexture('tiles', textureKey);
+    if (!texture) {
+      throw new Error(`Texture key "${textureKey}" not found in textures`);
+    }
+
+    const { widthRatio, heightRatio } = this._canvasManager.getRatios();
+    const targetContext =
+      this._canvasManager.getOffscreenContext(targetCanvasName);
+
+    const x = tile.x * widthRatio;
+    const y = tile.y * heightRatio;
+    const imageWidth = texture.width;
+    const imageHeight = texture.height;
+
+    let width, height;
+    if (tile.width !== undefined && tile.width !== null) {
+      width = tile.width * widthRatio;
+      height =
+        tile.height !== undefined && tile.height !== null
+          ? tile.height * heightRatio
+          : (width * imageHeight) / imageWidth;
+    } else if (tile.height !== undefined && tile.height !== null) {
+      height = tile.height * heightRatio;
+      width = (height * imageWidth) / imageHeight;
+    } else {
+      width = imageWidth * (widthRatio || 1);
+      height = imageHeight * (heightRatio || 1);
+    }
+
+    if (!(width > 0 && height > 0)) return;
+
+    const rotation = tile.rotation || 0;
+    const angle = (rotation * Math.PI) / HALF_PI_DEGREES;
+
+    targetContext.save();
+    targetContext.translate(x + width / HALF, y + height / HALF);
+    targetContext.rotate(angle);
+
+    if (fillColor) {
+      const tempCanvas = this._canvasManager.getOffscreenCanvas('temp');
+      const tempCtx = this._canvasManager.getOffscreenContext('temp');
+      tempCanvas.width = Math.max(1, Math.ceil(width));
+      tempCanvas.height = Math.max(1, Math.ceil(height));
+
+      tempCtx.drawImage(texture, 0, 0, tempCanvas.width, tempCanvas.height);
+      tempCtx.globalCompositeOperation = 'source-in';
+      tempCtx.fillStyle = fillColor;
+      tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+      tempCtx.globalCompositeOperation = 'source-over';
+      targetContext.drawImage(
+        tempCanvas,
+        -width / HALF,
+        -height / HALF,
+        width,
+        height,
+      );
+    } else {
+      targetContext.drawImage(
+        texture,
+        -width / HALF,
+        -height / HALF,
+        width,
+        height,
+      );
+    }
+    targetContext.restore();
+
+    if (targetCanvasName !== 'hitmap') {
+      // Hitmap doesn't get rendered to main display
+      this._renderLoop.markDirty(targetCanvasName);
+    }
+  }
+
+  /**
+   * @method _renderAllHexagonsToOfflineCanvas - Renders all complete hexagons to pieces off-screen.
+   */
+  _renderAllHexagonsToOfflineCanvas() {
+    const hexagons = this.board.getCompleteHexagons();
+    for (const hexagon of hexagons) {
+      this._renderHexagonToOfflineCanvas(hexagon.coordinate, hexagon.color);
+    }
+  }
+
+  /**
+   * @method _renderHexagonToOfflineCanvas - Renders a single hexagon to pieces off-screen.
+   * @param {Array<number>} coordinate - The hexagon coordinate.
+   * @param {string} color - The color key.
+   */
+  _renderHexagonToOfflineCanvas(coordinate, color) {
+    const hexagonMapData =
+      this.map.hexagons[`${coordinate[0]}-${coordinate[1]}`];
+    const texture = this._assetLoader.getTexture('hexagons', color);
+    const { widthRatio, heightRatio } = this._canvasManager.getRatios();
+    const piecesContext = this._canvasManager.getOffscreenContext('pieces');
+
+    const x = hexagonMapData.x * widthRatio;
+    const y = hexagonMapData.y * heightRatio;
+    const imageWidth = texture.width;
+    const imageHeight = texture.height;
+
+    const width = hexagonMapData.width
+      ? hexagonMapData.width * widthRatio
+      : (hexagonMapData.height * heightRatio * imageWidth) / imageHeight;
+    const height = hexagonMapData.height
+      ? hexagonMapData.height * heightRatio
+      : (hexagonMapData.width * widthRatio * imageHeight) / imageWidth;
+
+    piecesContext.drawImage(texture, x, y, width, height);
+    this._renderLoop.markDirty('pieces');
+  }
+
+  /**
+   * @method _clearBoardOfflineCanvas - Clears the pieces off-screen canvas.
+   */
+  _clearBoardOfflineCanvas() {
+    const piecesContext = this._canvasManager.getOffscreenContext('pieces');
+    const { width, height } = this._canvasManager.getOffscreenCanvas('pieces');
+    piecesContext.clearRect(0, 0, width, height);
+    this._renderLoop.markDirty('pieces');
+  }
+
+  /**
+   * @method _setUpHitmap - Sets up the hitmap off-screen canvas.
+   */
+  _setUpHitmap() {
+    const hitmapContext = this._canvasManager.getOffscreenContext('hitmap');
+    const { width, height } = this._canvasManager.getOffscreenCanvas('hitmap');
+    hitmapContext.clearRect(0, 0, width, height);
+
+    const pieceIndices = this.board.map.positions.map((_, index) => index);
+    for (const index of pieceIndices) {
+      const gappedPieceId = index * COLOR_GAP_FACTOR + 1;
+      if (gappedPieceId > MAX_PIECE_ID_RGB) {
+        console.warn(
+          `Gapped ID ${gappedPieceId} for index ${index} exceeds limit.`,
+        );
+        continue;
+      }
+      const r = gappedPieceId & MAX_COLOR_COMPONENT;
+      const g = (gappedPieceId >> BITS_PER_BYTE) & MAX_COLOR_COMPONENT;
+      const b = (gappedPieceId >> BITS_PER_TWO_BYTES) & MAX_COLOR_COMPONENT;
+      const hitColor = `rgb(${r}, ${g}, ${b})`;
+
+      this._renderPieceToOfflineCanvas(
+        index,
+        'empty',
+        this.map.tiles[index].flipped,
+        'hitmap',
+        hitColor,
+      );
+    }
+  }
+
+  /**
+   * @method _getPieceFromCoordinate - Retrieves piece index from coordinate using hitmap.
+   * @param {number} x - X coordinate (physical pixels).
+   * @param {number} y - Y coordinate (physical pixels).
+   * @param {boolean} [onlyAvailable=false] - Only consider available positions.
+   * @returns {number} - Piece index or NOT_FOUND.
    */
   _getPieceFromCoordinate(x, y, onlyAvailable = false) {
-    const hitmapLayer = this.canvasManager.getLayer('hitmap');
-    const imageData = hitmapLayer.context.getImageData(x, y, 1, 1);
+    const hitmapContext = this._canvasManager.getOffscreenContext('hitmap');
+    const imageData = hitmapContext.getImageData(x, y, 1, 1);
     const pixelData = imageData.data;
     const r = pixelData[0];
     const g = pixelData[1];
-    const b = pixelData[TWO];
+    const b = pixelData[TWO]; // Index 2
     const alpha = pixelData[ALPHA_CHANNEL_INDEX];
 
-    if (alpha === 0) {
-      return NOT_FOUND;
-    }
+    if (alpha === 0) return NOT_FOUND;
 
     const decodedGappedId =
       r | (g << BITS_PER_BYTE) | (b << BITS_PER_TWO_BYTES);
-
-    if (decodedGappedId === 0) {
-      return NOT_FOUND;
-    }
-
-    if ((decodedGappedId - 1) % COLOR_GAP_FACTOR !== 0) {
-      return NOT_FOUND;
-    }
+    if (decodedGappedId === 0) return NOT_FOUND;
+    if ((decodedGappedId - 1) % COLOR_GAP_FACTOR !== 0) return NOT_FOUND;
 
     const pieceIndex = (decodedGappedId - 1) / COLOR_GAP_FACTOR;
     if (!(pieceIndex >= 0 && pieceIndex < this.board.map.positions.length)) {
@@ -1343,103 +1272,195 @@ class Renderer {
 
     if (onlyAvailable) {
       const availablePositions = new Set(this.board.getAvailablePositions());
-      if (!availablePositions.has(pieceIndex)) {
-        return NOT_FOUND;
-      }
+      if (!availablePositions.has(pieceIndex)) return NOT_FOUND;
     }
-
     return pieceIndex;
   }
 
   /**
-   * @method previewPiece - Renders a preview of a piece at a given index with a semi-transparent overlay.
-   * @param {number} index - The index of the board position where the piece preview is to be rendered.
-   * @param {Piece} piece - The Piece object to be previewed.
-   * @param {string} [fillColor='rgba(255, 255, 255, 0.5)'] - Optional fill color for the preview overlay, default is semi-transparent white.
+   * @method previewPiece - Renders a preview of a piece.
+   * @param {number} index - Board position index.
+   * @param {Piece} piece - Piece object.
+   * @param {string} [fillColor='rgba(255, 255, 255, 0.5)'] - Preview overlay color.
+   * @param {boolean} [markDirty=true] - Whether to mark the render loop dirty.
    * @throws {Error} - If the piece is invalid or if the index is out of bounds.
    */
-  previewPiece(index, piece, fillColor = 'rgba(255, 255, 255, 0.5)') {
-    this.renderingEngine.previewPiece(index, piece, fillColor);
-    this.renderingEngine.requestRender(this.canvas, this.context);
+  previewPiece(
+    index,
+    piece,
+    fillColor = 'rgba(255, 255, 255, 0.5)',
+    markDirty = true,
+  ) {
+    if (!piece || !piece.colorsKey) {
+      throw new Error('Invalid piece object for preview');
+    }
+
+    const tile = this.map.tiles[index];
+    if (!tile) throw new Error('Tile index out of bounds for preview');
+
+    this._renderPieceToOfflineCanvas(
+      index,
+      piece.colorsKey,
+      tile.flipped,
+      'piecesPreview',
+    );
+    this._renderPieceToOfflineCanvas(
+      index,
+      piece.colorsKey,
+      tile.flipped,
+      'piecesPreview',
+      fillColor,
+    );
+
+    this._isPreviewing = true;
+    this._previewingPositions.set(index, piece);
+    if (markDirty) this._renderLoop.markDirty('piecesPreview');
   }
 
   /**
-   * @method clearPreview - Clears any piece previews currently rendered on the piecesPreview off-screen canvas.
+   * @method clearPreview - Clears piece previews.
+   * @param {boolean} [markDirty=true] - Whether to mark the render loop dirty.
    */
-  clearPreview() {
-    this.renderingEngine.clearPreview();
-    this.renderingEngine.requestRender(this.canvas, this.context);
+  clearPreview(markDirty = true) {
+    const previewContext =
+      this._canvasManager.getOffscreenContext('piecesPreview');
+    const { width, height } =
+      this._canvasManager.getOffscreenCanvas('piecesPreview');
+    previewContext.clearRect(0, 0, width, height);
+
+    this._isPreviewing = false;
+    this._previewingPositions.clear();
+    if (markDirty) this._renderLoop.markDirty('piecesPreview');
   }
 
   /**
-   * @method showAvailablePositions - Highlights available positions on the board using a mask on the mask off-screen canvas.
-   * @param {Array<number>} [positions=this.board.getAvailablePositions()] - An array of position indexes to highlight as available.
-   * @param {string} [fillColor='rgba(0, 0, 0, 0.5)'] - Optional fill color for the highlight mask, default is semi-transparent black.
+   * @method showAvailablePositions - Highlights available positions.
+   * @param {Array<number>} [positions=this.board.getAvailablePositions()] - Positions to highlight.
+   * @param {string} [fillColor='rgba(0, 0, 0, 0.5)'] - Highlight mask color.
+   * @param {boolean} [markDirty=true] - Whether to mark the render loop dirty.
    * @throws {Error} - If positions is not an array.
    */
   showAvailablePositions(
     positions = this.board.getAvailablePositions(),
     fillColor = 'rgba(0, 0, 0, 0.5)',
+    markDirty = true,
   ) {
-    this.renderingEngine.showAvailablePositions(positions, fillColor);
-    this.renderingEngine.requestRender(this.canvas, this.context);
+    if (!Array.isArray(positions)) {
+      throw new Error(
+        'positions must be an array of available position indexes',
+      );
+    }
+
+    if (this._isShowingAvailablePositions) {
+      this.clearAvailablePositions(false); // Clear without immediate render trigger
+    }
+
+    const maskContext = this._canvasManager.getOffscreenContext('mask');
+    const { width: canvasPhysicalWidth, height: canvasPhysicalHeight } =
+      this._canvasManager.getOffscreenCanvas('mask');
+
+    maskContext.fillStyle = fillColor;
+    maskContext.fillRect(0, 0, canvasPhysicalWidth, canvasPhysicalHeight);
+
+    const { widthRatio, heightRatio } = this._canvasManager.getRatios();
+
+    for (const index of positions) {
+      const tile = this.map.tiles[index];
+      if (!tile) continue;
+      const texture = this._assetLoader.getTexture(
+        'tiles',
+        `${tile.flipped ? 'empty-flipped' : 'empty'}`,
+      );
+      if (!texture) continue;
+
+      const x = tile.x * widthRatio;
+      const y = tile.y * heightRatio;
+      const imageWidth = texture.width;
+      const imageHeight = texture.height;
+      let width, height;
+      if (tile.width !== undefined && tile.width !== null) {
+        width = tile.width * widthRatio;
+        height =
+          tile.height !== undefined && tile.height !== null
+            ? tile.height * heightRatio
+            : (width * imageHeight) / imageWidth;
+      } else if (tile.height !== undefined && tile.height !== null) {
+        height = tile.height * heightRatio;
+        width = (height * imageWidth) / imageHeight;
+      } else {
+        width = imageWidth * (widthRatio || 1);
+        height = imageHeight * (heightRatio || 1);
+      }
+      if (!(width > 0 && height > 0)) continue;
+
+      const rotation = tile.rotation || 0;
+      const angle = (rotation * Math.PI) / HALF_PI_DEGREES;
+      maskContext.save();
+      maskContext.translate(x + width / HALF, y + height / HALF);
+      maskContext.rotate(angle);
+      maskContext.globalCompositeOperation = 'destination-out';
+      maskContext.drawImage(
+        texture,
+        -width / HALF,
+        -height / HALF,
+        width,
+        height,
+      );
+      maskContext.restore();
+    }
+
+    this._isShowingAvailablePositions = true;
+    this._showingAvailablePositions = positions;
+    if (markDirty) this._renderLoop.markDirty('mask');
   }
 
   /**
-   * @method clearAvailablePositions - Clears the highlight mask from the mask off-screen canvas, removing highlights of available positions.
+   * @method clearAvailablePositions - Clears highlights of available positions.
+   * @param {boolean} [markDirty=true] - Whether to mark the render loop dirty.
    */
-  clearAvailablePositions() {
-    this.renderingEngine.clearAvailablePositions();
-    this.renderingEngine.requestRender(this.canvas, this.context);
+  clearAvailablePositions(markDirty = true) {
+    const maskContext = this._canvasManager.getOffscreenContext('mask');
+    const { width, height } = this._canvasManager.getOffscreenCanvas('mask');
+    maskContext.clearRect(0, 0, width, height);
+
+    this._isShowingAvailablePositions = false;
+    this._showingAvailablePositions = [];
+    if (markDirty) this._renderLoop.markDirty('mask');
   }
 
   /**
-   * @method getTexture - Retrieves a texture from the loaded texture pack by type and key.
-   * @param {string} type - The texture type (e.g., 'tiles', 'hexagons').
-   * @param {string} key - The key of the texture image within the texture type.
+   * @method getTexture - Retrieves a texture.
+   * @param {string} type - Texture type.
+   * @param {string} key - Texture key.
    * @returns {HTMLImageElement} - The requested texture image element.
    * @throws {Error} - If textures have not been loaded yet, indicating assets are not ready.
    */
   getTexture(type, key) {
-    return this.assetManager.getTexture(type, key);
+    return this._assetLoader.getTexture(type, key);
   }
 
   /**
-   * @method getFPS - Gets the current frames per second.
-   * @returns {number} - The current FPS value.
-   */
-  getFPS() {
-    return this.renderingEngine.getFPS();
-  }
-
-  /**
-   * @method updateBoard - Updates the board instance used by the renderer, re-initializing the canvas and re-rendering the board.
-   * @param {Board} newBoard - The new board instance to replace the current board.
+   * @method updateBoard - Updates the board instance.
+   * @param {Board} newBoard - The new board instance.
    * @throws {Error} - If newBoard is not a valid board instance.
    */
   updateBoard(newBoard) {
     if (!(newBoard instanceof Board)) {
       throw new Error('newBoard must be a valid board instance');
     }
-
-    this.board.removeEventListener('set', this.eventHandlers.get('set'));
-    this.board.removeEventListener('remove', this.eventHandlers.get('remove'));
-    this.board.removeEventListener('form', this.eventHandlers.get('form'));
-    this.board.removeEventListener(
-      'destroy',
-      this.eventHandlers.get('destroy'),
-    );
-    this.board.removeEventListener('clear', this.eventHandlers.get('clear'));
-    this.eventHandlers.clear();
-
+    this._removeBoardEventHandlers();
     this.board = newBoard;
-    this._setUpBoard();
-    this._setUpCanvas();
+    this._setUpBoardEventHandlers();
+
+    // Re-render based on new board
+    this._canvasManager.setupSizes();
+    this._renderPiecesAndHexagons();
+    this._setUpHitmap();
   }
 
   /**
-   * @method updateMap - Updates the game board map, re-initializes the canvas, and re-renders the board.
-   * @param {Object} newMap - The new map configuration object to replace the current map.
+   * @method updateMap - Updates the game board map.
+   * @param {Object} newMap - The new map object.
    * @throws {Error} - If newMap is not a valid map object, validation checks for required map properties.
    */
   updateMap(newMap) {
@@ -1453,146 +1474,161 @@ class Renderer {
     ) {
       throw new Error('newMap must be a valid map object');
     }
-
     this.map = newMap;
-    this.ratio = this.map.width / this.map.height;
-    this.renderingEngine.map = newMap;
+    this._canvasManager.updateMap(newMap); // Inform CanvasManager
+    this._canvasManager.setupSizes(); // Recalculate sizes and ratios
 
-    this.board.removeEventListener('set', this.eventHandlers.get('set'));
-    this.board.removeEventListener('remove', this.eventHandlers.get('remove'));
-    this.board.removeEventListener('form', this.eventHandlers.get('form'));
-    this.board.removeEventListener(
-      'destroy',
-      this.eventHandlers.get('destroy'),
-    );
-    this.board.removeEventListener('clear', this.eventHandlers.get('clear'));
-    this.eventHandlers.clear();
-    this._setUpBoard();
-    this._setUpCanvas();
+    this._renderBackgroundAndGrid();
+    this._renderPiecesAndHexagons();
+    this._setUpHitmap();
+
+    if (this._isShowingAvailablePositions) {
+      const currentPositions = [...this._showingAvailablePositions];
+      this.clearAvailablePositions(false);
+      this.showAvailablePositions(currentPositions, undefined, false);
+    }
+    if (this._isPreviewing) {
+      const currentPreviews = new Map(this._previewingPositions);
+      this.clearPreview(false);
+      currentPreviews.forEach((piece, index) =>
+        this.previewPiece(index, piece, undefined, false),
+      );
+    }
+    this._renderLoop.markAllDirty();
   }
 
   /**
-   * @method updateTextures - Updates the texture pack used by the renderer, loading new textures from a given URL.
-   * @param {string} texturesUrl - The URL from which to load the new texture pack.
+   * @method updateTextures - Updates the texture pack.
+   * @param {string} texturesUrl - URL of the new texture pack.
    * @returns {Promise<void>} - A promise that resolves when the new texture pack is loaded, pieces and hitmap are re-rendered.
    * @throws {Error} - If texturesUrl is not a string or if loading the texture pack fails.
    */
   async updateTextures(texturesUrl) {
-    await this.assetManager.updateTextures(texturesUrl);
-    this.renderingEngine.renderPiecesAndHexagons(this.board);
-    this.renderingEngine.setUpHitmap(this.board);
-
-    if (this.renderingEngine._isPreviewing) {
-      const previewingPositions = [
-        ...this.renderingEngine._previewingPositions,
-      ];
-      this.clearPreview();
-      previewingPositions.forEach(([index, piece]) => {
-        this.previewPiece(index, piece);
-      });
+    if (typeof texturesUrl !== 'string') {
+      throw new Error('texturesUrl must be a string');
     }
-
-    this.renderingEngine.requestRender(this.canvas, this.context);
+    await this._assetLoader.updateTextures(texturesUrl);
+    this._renderPiecesAndHexagons();
+    this._setUpHitmap();
+    if (this._isPreviewing) {
+      const previews = new Map(this._previewingPositions);
+      this.clearPreview(false); // Clear old preview with old textures
+      previews.forEach((piece, index) =>
+        this.previewPiece(index, piece, undefined, false),
+      ); // Re-preview with new textures
+    }
+    if (this._isShowingAvailablePositions) {
+      const positions = [...this._showingAvailablePositions];
+      this.clearAvailablePositions(false);
+      this.showAvailablePositions(positions, undefined, false);
+    }
+    this._renderLoop.markAllDirty();
   }
 
   /**
-   * @method updateBackground - Updates the background image of the renderer with a new image from the provided URL.
-   * @param {string} backgroundUrl - The URL of the new background image to load.
+   * @method updateBackground - Updates the background image.
+   * @param {string} backgroundUrl - URL of the new background image.
    * @returns {Promise<void>} - A promise that resolves when the new background image is loaded and the canvas is re-rendered.
    * @throws {Error} - If backgroundUrl is not a string or if loading the background image fails.
    */
   async updateBackground(backgroundUrl) {
-    await this.assetManager.updateBackground(backgroundUrl);
-    this.renderingEngine.renderBackgroundAndGrid(this.width, this.height);
-    this.renderingEngine.requestRender(this.canvas, this.context);
+    if (typeof backgroundUrl !== 'string') {
+      throw new Error('backgroundUrl must be a string');
+    }
+    await this._assetLoader.updateBackground(backgroundUrl);
+    this._renderBackgroundAndGrid(); // Re-renders to off-screen and marks dirty
   }
 
   /**
-   * @method updateGrid - Updates the grid image of the renderer with a new image from the provided URL.
-   * @param {string} gridUrl - The URL of the new grid image to load.
+   * @method updateGrid - Updates the grid image.
+   * @param {string} gridUrl - URL of the new grid image.
    * @returns {Promise<void>} - A promise that resolves when the new grid image is loaded and the canvas is re-rendered.
    * @throws {Error} - If gridUrl is not a string or if loading the grid image fails.
    */
   async updateGrid(gridUrl) {
-    await this.assetManager.updateGrid(gridUrl);
-    this.renderingEngine.renderBackgroundAndGrid(this.width, this.height);
-    this.renderingEngine.requestRender(this.canvas, this.context);
+    if (typeof gridUrl !== 'string') {
+      throw new Error('gridUrl must be a string');
+    }
+    await this._assetLoader.updateGrid(gridUrl);
+    this._renderBackgroundAndGrid(); // Re-renders to off-screen and marks dirty
   }
 
   /**
-   * @method addEventListener - Adds a listener for specific renderer events, enabling custom actions on events like piece placement.
-   * @param {string} eventType - The event type to listen for (dragover, drop, mousemove, click, resize).
-   * @param {Function} listener - The function to execute when the event is triggered; receives event-specific arguments.
-   * @param {Object} [options] - Optional parameters, including `onlyAvailable: true` to filter events to available positions only.
+   * @method addEventListener - Adds an event listener.
+   * @param {string} eventType - Event type.
+   * @param {Function} listener - Listener function.
+   * @param {Object} [options] - Options, e.g., { onlyAvailable: true }.
    * @throws {Error} - If eventType is not a valid event type.
    */
   addEventListener(eventType, listener, options = {}) {
-    this.eventManager.addEventListener(eventType, listener, options);
+    if (!this.eventListeners[eventType] || eventType.endsWith('Available')) {
+      throw new Error('Invalid event type');
+    }
+    if (eventType !== 'resize' && options.onlyAvailable) {
+      this.eventListeners[`${eventType}Available`].add(listener);
+    } else {
+      this.eventListeners[eventType].add(listener);
+    }
   }
 
   /**
-   * @method removeEventListener - Removes a previously added event listener for a given event type, preventing further execution on that event.
-   * @param {string} eventType - The event type from which to remove the listener.
-   * @param {Function} listener - The listener function to be removed.
+   * @method removeEventListener - Removes an event listener.
+   * @param {string} eventType - Event type.
+   * @param {Function} listener - Listener function.
    * @throws {Error} - If eventType is not a valid event type, indicating an attempt to remove listener from a non-existent event.
    */
   removeEventListener(eventType, listener) {
-    this.eventManager.removeEventListener(eventType, listener);
+    if (!this.eventListeners[eventType] || eventType.endsWith('Available')) {
+      throw new Error('Invalid event type');
+    }
+    this.eventListeners[eventType].delete(listener);
+    if (eventType !== 'resize') {
+      this.eventListeners[`${eventType}Available`].delete(listener);
+    }
   }
 
   /**
-   * @method destroy - Tears down the renderer, releasing resources, removing listeners, and detaching the canvas from the DOM.
+   * @method getFPS - Returns the current FPS.
+   * @returns {number} - The current frames per second.
+   */
+  getFPS() {
+    return this._fpsTracker.getCurrentFPS();
+  }
+
+  /**
+   * @method destroy - Tears down the renderer.
    */
   destroy() {
-    if (this.isDestroyed) {
-      return;
+    if (this.isDestroyed) return;
+
+    this._renderLoop.stop();
+    if (this.resizeObserver) this.resizeObserver.disconnect();
+    if (this.mutationObserver) this.mutationObserver.disconnect();
+
+    this._removeBoardEventHandlers();
+
+    // Destroy helper modules
+    if (this._canvasManager) this._canvasManager.destroy();
+    if (this._assetLoader) this._assetLoader.destroy();
+    if (this._renderLoop) this._renderLoop.destroy();
+
+    // Clear event listeners sets
+    for (const eventType in this.eventListeners) {
+      this.eventListeners[eventType].clear();
     }
 
-    this.board.removeEventListener('set', this.eventHandlers.get('set'));
-    this.board.removeEventListener('remove', this.eventHandlers.get('remove'));
-    this.board.removeEventListener('form', this.eventHandlers.get('form'));
-    this.board.removeEventListener(
-      'destroy',
-      this.eventHandlers.get('destroy'),
-    );
-    this.board.removeEventListener('clear', this.eventHandlers.get('clear'));
-
-    this.eventHandlers.clear();
-
-    if (this.eventManager) {
-      this.eventManager.destroy();
-    }
-
-    this.canvasManager.clearAll();
-
-    if (this.resizeObserver) {
-      this.resizeObserver.disconnect();
-    }
-
-    if (this.mutationObserver) {
-      this.mutationObserver.disconnect();
-    }
-
-    if (this.canvas.parentNode) {
-      this.container.removeChild(this.canvas);
-    }
-
-    this.canvas = null;
-    this.context = null;
-    this.canvasManager.destroy();
-    this.assetManager.destroy();
-    this.renderingEngine.destroy();
-
+    // Nullify references
     this.board = null;
     this.map = null;
     this.container = null;
-
-    this.resizeObserverInitialized = false;
+    this._canvasManager = null;
+    this._assetLoader = null;
+    this._fpsTracker = null;
+    this._renderLoop = null;
+    this.eventListeners = null;
     this.eventHandlers = null;
-    this.canvasManager = null;
-    this.assetManager = null;
-    this.renderingEngine = null;
-    this.eventManager = null;
+    this._showingAvailablePositions = null;
+    this._previewingPositions = null;
 
     this.isDestroyed = true;
   }
