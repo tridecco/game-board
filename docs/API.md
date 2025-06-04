@@ -138,8 +138,10 @@ This document provides a comprehensive guide to the API of the Tridecco Game Boa
       - [Example](#example-58)
     - [`removeEventListener(eventType, listener)`](#removeeventlistenereventtype-listener)
       - [Example](#example-59)
-    - [`destroy()`](#destroy)
+    - [`getFPS()`](#getfps)
       - [Example](#example-60)
+    - [`destroy()`](#destroy)
+      - [Example](#example-61)
 
 ## Import the Library
 
@@ -1583,6 +1585,7 @@ Creates a new `Renderer` instance to visualize a `Board` object on an HTML canva
   - `texturesUrl` (string, optional): The base URL for the texture pack to use. Defaults to a predefined path.
   - `backgroundUrl` (string, optional): The URL for the background image. Defaults to a predefined path.
   - `gridUrl` (string, optional): The URL for the grid overlay image. Defaults to a predefined path.
+  - `showFPS` (boolean, optional): If `true`, displays the frames per second (FPS) in the bottom right corner of the canvas. Defaults to `false`.
 - `callback` (Function, optional): A callback function executed after the renderer is initialized and initial assets are loaded. Receives the `Renderer` instance as an argument.
 
 > **Note**: Please refer to the [Available Assets documentation](ASSETS.md) for detailed information on the available texture packs, background images, and grid overlays.
@@ -1604,6 +1607,7 @@ const renderer = new Renderer(
     container: containerElement,
     // Optional: map: maps.renderer.default,
     // Optional: texturesUrl: '/path/to/my/textures',
+    // (more options...)
   },
   (rendererInstance) => {
     console.log('Renderer initialized!', rendererInstance);
@@ -1953,6 +1957,27 @@ function handleClick(pieceIndex) {
 renderer.addEventListener('click', handleClick);
 // Later...
 renderer.removeEventListener('click', handleClick);
+```
+
+### `getFPS()`
+
+```javascript
+getFPS();
+```
+
+**Description:**
+
+Retrieves the current frames per second (FPS), which indicates how many frames are being rendered per second. This is useful for performance monitoring.
+
+**Returns:**
+
+- `number`: The current FPS value.
+
+#### Example
+
+```javascript
+const currentFPS = renderer.getFPS();
+console.log(`Current FPS: ${currentFPS}`);
 ```
 
 ### `destroy()`
