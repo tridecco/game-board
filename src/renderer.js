@@ -651,7 +651,6 @@ class Renderer {
       throw new Error('board must be an instance of Board');
     }
     if (!(container instanceof HTMLElement)) {
-      // Corrected error message from 'canvas' to 'container'
       throw new Error('container must be an instance of HTMLElement');
     }
     if (
