@@ -24,7 +24,9 @@
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
     "test": "jest --verbose --silent --coverage --ci --bail",
-    "build": "webpack"
+    "build": "npm run build:js && npm run build:textures",
+    "build:js": "webpack",
+    "build:textures": "node scripts/texture-pack-bundler.js"
   },
   "devDependencies": {
     "eslint": "^9.22.0",
