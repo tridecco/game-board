@@ -14,9 +14,24 @@
         "empty-flipped": "tiles/empty-flipped.png"
     },
     "hexagons": {
-        "blue": "hexagons/blue.png",
-        "white": "hexagons/white.png",
-        "red": "hexagons/red.png",
-        "yellow": "hexagons/yellow.png"
+        "glow": {
+            "blue": "hexagons/glow/blue.png",
+            "white": "hexagons/glow/white.png",
+            "red": "hexagons/glow/red.png",
+            "yellow": "hexagons/glow/yellow.png"
+        },
+        "particle": "hexagons/particle/[0-179].png",
+        "flash": {
+            "blue": "hexagons/flash/blue/[0-59].png",
+            "white": "hexagons/flash/white/[0-59].png",
+            "red": "hexagons/flash/red/[0-59].png",
+            "yellow": "hexagons/flash/yellow/[0-59].png"
+        },
+        "loop": {
+            "blue": "hexagons/loop/blue/[0-179].png",
+            "white": "hexagons/loop/white/[0-179].png",
+            "red": "hexagons/loop/red/[0-179].png",
+            "yellow": "hexagons/loop/yellow/[0-179].png"
+        }
     }
 }
