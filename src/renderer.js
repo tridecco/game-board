@@ -37,6 +37,7 @@ class LayersManager {
    * @param {number} layer.fps - The desired frames per second for the layer's rendering.
    * @param {number} [layer.zIndex=0] - The z-index of the layer. (negative values will not be rendered)
    * @param {Function} layer.render - The render function for the layer.
+   * @returns {HTMLCanvasContext} - The context of the layer.
    * @throws {Error} - If the layer is not an object, or if the name is not a string, or if the fps is not a number, or if the render function is not a function.
    */
   addLayer(layer) {
@@ -55,15 +56,18 @@ class LayersManager {
 
     layer.zIndex = layer.zIndex || 0;
 
-    layer.context = new OffscreenCanvas(1, 1).getContext('2d');
-    layer.context.canvas.width = this.context.canvas.width;
-    layer.context.canvas.height = this.context.canvas.height;
+    layer.context = new OffscreenCanvas(
+      this.context.canvas.width,
+      this.context.canvas.height,
+    ).getContext('2d');
 
     layer._frameInterval = ONE_SECOND / layer.fps;
     layer._lastRender = 0;
 
     this.layers.push(layer);
     this.layers.sort((a, b) => a.zIndex - b.zIndex);
+
+    return layer.context;
   }
 
   /**
