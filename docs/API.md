@@ -1550,8 +1550,10 @@ Retrieves the atlas image and the definition (coordinates, dimensions) for a spe
 
 - `Object | null`: An object containing:
   - `image` (HTMLImageElement): The loaded atlas image.
-  - `definition` (Object | Array\<Object>): The metadata for the texture. This can be an object with `x, y, w, h` properties for a single frame, or an array of such objects for animated/series textures.
-    Returns `null` if the type or key is invalid, or if the texture pack is not fully loaded.
+  - `definition` (Object | Array\<Object>): The metadata for the texture. This can be:
+    - An object with `x, y, w, h` properties for a single frame,
+    - Or an animation object with `{ frames: Array<{x, y, w, h}>, fps: number, ... }` for animated textures (such as those with `frames` and `fps` in the index).
+      Returns `null` if the type or key is invalid, or if the texture pack is not fully loaded.
 
 #### Example
 
@@ -1563,8 +1565,12 @@ if (tileData) {
 }
 
 const particleAnimationData = texturePack.get('hexagons', 'particle');
-if (particleAnimationData && Array.isArray(particleAnimationData.definition)) {
-  // Can use particleAnimationData.image and iterate over particleAnimationData.definition for animation frames
+if (
+  particleAnimationData &&
+  particleAnimationData.definition &&
+  particleAnimationData.definition.frames
+) {
+  // Use the particleAnimationData.image, particleAnimationData.definition.frames, and particleAnimationData.definition.fps to animate particles
 }
 ```
 
