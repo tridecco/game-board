@@ -117,6 +117,18 @@ class LayersManager {
       this.context.drawImage(layer.context.canvas, 0, 0);
     }
   }
+
+  /**
+   * @method resize - Resizes all layers to match the main canvas size.
+   */
+  resize() {
+    for (const layer of this.layers) {
+      layer.context.canvas.width = this.context.canvas.width;
+      layer.context.canvas.height = this.context.canvas.height;
+    }
+
+    this.render(true); // Force render after resizing
+  }
 }
 
 /**
