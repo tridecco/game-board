@@ -1495,33 +1495,35 @@ console.log(piece.equals(new Piece(['red', 'blue']))); // Output: true
 ### Constructor
 
 ```javascript
-constructor(texturesUrl, callback = () => {});
+constructor(indexUrl, atlasUrl, callback = () => {});
 ```
 
 **Description:**
 
-Creates a new `TexturePack` instance and immediately starts loading textures from the provided URL.
+Creates a new `TexturePack` instance and immediately starts loading the texture atlas and its corresponding index file.
 
 **Parameters:**
 
-- `texturesUrl` (string): The base URL where the texture pack's `index.json` and image files are located.
-- `callback` (Function, optional): A callback function executed after all textures are loaded. It receives the `TexturePack` instance as the first argument, or `null` and an error object as the second argument if loading fails.
+- `indexUrl` (string): The URL of the JSON file that defines the texture regions within the atlas (e.g., `index.json`).
+- `atlasUrl` (string): The URL of the combined image file (atlas) containing all textures.
+- `callback` (Function, optional): A callback function executed after the atlas image and index are loaded. It receives the `TexturePack` instance as the first argument, or `null` and an error object as the second argument if loading fails.
 
 > **Note**: Please refer to the [Available Assets documentation](ASSETS.md) for detailed information on the available texture packs.
-> **Note**: If the textures are not from the same origin, CORS headers must be set on the server to allow loading of the textures. Otherwise, there will be CORS issues and the textures will not load properly in the browser.
+> **Note**: If the assets are not from the same origin, CORS headers must be set on the server to allow loading. Otherwise, there will be CORS issues and the assets will not load properly in the browser.
 
 **Throws:**
 
-- `Error`: If `texturesUrl` is not a string, if `callback` is not a function, or if used outside a browser environment.
+- `Error`: If `indexUrl` or `atlasUrl` are not strings, if `callback` is not a function, or if used outside a browser environment.
 
 #### Example
 
 ```javascript
 const texturePack = new TexturePack(
-  '/assets/textures/classic/normal',
+  '/assets/textures-bundle/classic/normal/index.json',
+  '/assets/textures-bundle/classic/normal/atlas.png',
   (pack, error) => {
     if (error) {
-      console.error('Failed to load textures:', error);
+      console.error('Failed to load texture pack:', error);
       return;
     }
     console.log('Texture pack loaded:', pack);
@@ -1537,28 +1539,32 @@ get(type, key);
 
 **Description:**
 
-Retrieves a texture image element by its type ('tiles' or 'hexagons') and key.
+Retrieves the atlas image and the definition (coordinates, dimensions) for a specific texture by its type ('tiles' or 'hexagons') and key.
 
 **Parameters:**
 
 - `type` (string): The type of texture to retrieve, either `'tiles'` or `'hexagons'`.
-- `key` (string): The key of the texture as defined in the texture pack's `index.json`.
+- `key` (string): The key of the texture as defined in the `index.json`. For hexagons, this can be a nested key like `"glow.blue"` or `"particle"`.
 
 **Returns:**
 
-- `HTMLImageElement | null`: The loaded texture image element if found, or `null` if the type or key is invalid or the texture wasn't loaded.
+- `Object | null`: An object containing:
+  - `image` (HTMLImageElement): The loaded atlas image.
+  - `definition` (Object | Array\<Object>): The metadata for the texture. This can be an object with `x, y, w, h` properties for a single frame, or an array of such objects for animated/series textures.
+    Returns `null` if the type or key is invalid, or if the texture pack is not fully loaded.
 
 #### Example
 
 ```javascript
-const tileTexture = texturePack.get('tiles', 'red-blue');
-if (tileTexture) {
-  // Use the texture...
+// Assuming texturePack is loaded
+const tileData = texturePack.get('tiles', 'red-blue');
+if (tileData) {
+  // Use the tileData.image and tileData.definition to draw the texture
 }
 
-const hexagonTexture = texturePack.get('hexagons', 'red');
-if (hexagonTexture) {
-  // Use the texture...
+const particleAnimationData = texturePack.get('hexagons', 'particle');
+if (particleAnimationData && Array.isArray(particleAnimationData.definition)) {
+  // Can use particleAnimationData.image and iterate over particleAnimationData.definition for animation frames
 }
 ```
 
