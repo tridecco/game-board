@@ -87,7 +87,10 @@ class TexturePack {
    * @method get - Retrieve a texture definition and the atlas image.
    * @param {string} type - The type of texture to retrieve ('tiles' or 'hexagons').
    * @param {string} key - The key of the texture to retrieve (e.g., "blue-white" for tiles, or "glow.blue", "particle" for hexagons).
-   * @returns {{image: HTMLImageElement, definition: Object}|null} - An object containing the atlas image and the texture definition if found, otherwise null. (The definition can be an object {x,y,w,h} or an array of such objects.)
+   * @returns {{image: HTMLImageElement, definition: Object}|null} - An object containing the atlas image and the texture definition if found, otherwise null.
+   *   The definition can be:
+   *     - {x, y, w, h} for a single image,
+   *     - {frames: Array<{x, y, w, h}>, fps: number, ...} for an animation object.
    */
   get(type, key) {
     if (
