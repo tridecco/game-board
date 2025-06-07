@@ -22,7 +22,14 @@ const ATLAS_MAX_HEIGHT = 16384; // Max height for the atlas
 const ATLAS_PADDING = 1; // Padding between images in the atlas
 
 // Function to set a value in a nested object based on a path array
-function setValueInNestedObject(obj, pathParts, value, type, frameIndex) {
+function setValueInNestedObject(
+  obj,
+  pathParts,
+  valueCoords,
+  type,
+  frameIndex,
+  originalAnimationObject,
+) {
   let current = obj;
   for (let i = 0; i < pathParts.length - 1; i++) {
     const part = pathParts[i];
@@ -33,7 +40,9 @@ function setValueInNestedObject(obj, pathParts, value, type, frameIndex) {
   }
 
   const lastPart = pathParts[pathParts.length - 1];
-  if (type === 'sequence') {
+  if (type === 'single') {
+    current[lastPart] = valueCoords;
+  } else if (type === 'sequence') {
     if (!current[lastPart] || !Array.isArray(current[lastPart])) {
       current[lastPart] = []; // Initialize as an array for sequence frames
     }
@@ -41,9 +50,22 @@ function setValueInNestedObject(obj, pathParts, value, type, frameIndex) {
     while (current[lastPart].length <= frameIndex) {
       current[lastPart].push(null);
     }
-    current[lastPart][frameIndex] = value;
-  } else {
-    current[lastPart] = value;
+    current[lastPart][frameIndex] = valueCoords;
+  } else if (type === 'object_sequence') {
+    if (
+      !current[lastPart] ||
+      typeof current[lastPart] !== 'object' ||
+      current[lastPart].frames === undefined ||
+      !Array.isArray(current[lastPart].frames)
+    ) {
+      current[lastPart] = { ...originalAnimationObject };
+      current[lastPart].frames = [];
+    }
+
+    while (current[lastPart].frames.length <= frameIndex) {
+      current[lastPart].frames.push(null);
+    }
+    current[lastPart].frames[frameIndex] = valueCoords;
   }
 }
 
@@ -128,12 +150,78 @@ async function collectImagesAndMetadata(
           }
         }
       } else if (typeof value === 'object' && value !== null) {
-        await collectImagesAndMetadata(
-          value,
-          newJsonPath,
-          packBasePath,
-          imagesList,
-        );
+        if (
+          value.hasOwnProperty('frames') &&
+          typeof value.frames === 'string'
+        ) {
+          const framesString = value.frames;
+          const sequenceMatch = framesString.match(
+            /^(.*?)\[(\d+)-(\d+)\](\.\w+)$/,
+          );
+
+          if (sequenceMatch) {
+            const SEQUENCE_PREFIX_INDEX = 1;
+            const SEQUENCE_START_INDEX = 2;
+            const SEQUENCE_END_INDEX = 3;
+            const SEQUENCE_EXTENSION_INDEX = 4;
+
+            const filePathPrefix = sequenceMatch[SEQUENCE_PREFIX_INDEX];
+            const startFrame = parseInt(
+              sequenceMatch[SEQUENCE_START_INDEX],
+              10,
+            );
+            const endFrame = parseInt(sequenceMatch[SEQUENCE_END_INDEX], 10);
+            const extension = sequenceMatch[SEQUENCE_EXTENSION_INDEX];
+
+            for (let i = 0; i <= endFrame - startFrame; i++) {
+              const frameNumber = startFrame + i;
+              const imageName = `${filePathPrefix}${frameNumber}${extension}`;
+              const imageAbsPath = path.join(packBasePath, imageName);
+              try {
+                if (!(await fs.pathExists(imageAbsPath))) {
+                  console.warn(`Image not found, skipping: ${imageAbsPath}`);
+                  continue;
+                }
+                const metadata = await sharp(imageAbsPath, {
+                  limitInputPixels: false,
+                }).metadata();
+                imagesList.push({
+                  width: metadata.width,
+                  height: metadata.height,
+                  data: {
+                    jsonPath: newJsonPath,
+                    type: 'object_sequence',
+                    frameIndex: i,
+                    imageAbsPath: imageAbsPath,
+                    originalAnimationObject: value,
+                  },
+                });
+              } catch (err) {
+                console.error(
+                  `Error processing object sequence image ${imageAbsPath}:`,
+                  err.message,
+                );
+              }
+            }
+          } else {
+            console.warn(
+              `Object at '${newJsonPath.join('.')}' has a 'frames' property ('${framesString}') that is not a valid sequence string. Attempting to process as regular object.`,
+            );
+            await collectImagesAndMetadata(
+              value,
+              newJsonPath,
+              packBasePath,
+              imagesList,
+            );
+          }
+        } else {
+          await collectImagesAndMetadata(
+            value,
+            newJsonPath,
+            packBasePath,
+            imagesList,
+          );
+        }
       }
     }
   }
@@ -244,7 +332,13 @@ async function processTexturePack(packName) {
 
     for (const rect of bin.rects) {
       const { x, y, width: w, height: h, data } = rect;
-      const { jsonPath, type, frameIndex, imageAbsPath } = data;
+      const {
+        jsonPath,
+        type,
+        frameIndex,
+        imageAbsPath,
+        originalAnimationObject,
+      } = data;
 
       compositeOps.push({
         input: imageAbsPath,
@@ -253,7 +347,14 @@ async function processTexturePack(packName) {
       });
 
       const coords = { x, y, w, h };
-      setValueInNestedObject(newIndex, jsonPath, coords, type, frameIndex);
+      setValueInNestedObject(
+        newIndex,
+        jsonPath,
+        coords,
+        type,
+        frameIndex,
+        originalAnimationObject,
+      );
     }
 
     if (compositeOps.length > 0) {
