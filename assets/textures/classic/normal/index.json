@@ -20,18 +20,45 @@
             "red": "hexagons/glow/red.png",
             "yellow": "hexagons/glow/yellow.png"
         },
-        "particle": "hexagons/particle/[0-179].png",
+        "particle": {
+            "frames": "hexagons/particle/[0-179].png",
+            "fps": 60
+        },
         "flash": {
-            "blue": "hexagons/flash/blue/[0-59].png",
-            "white": "hexagons/flash/white/[0-59].png",
-            "red": "hexagons/flash/red/[0-59].png",
-            "yellow": "hexagons/flash/yellow/[0-59].png"
+            "blue": {
+                "frames": "hexagons/flash/blue/[0-59].png",
+                "fps": 60
+            },
+            "white": {
+                "frames": "hexagons/flash/white/[0-59].png",
+                "fps": 60
+            },
+            "red": {
+                "frames": "hexagons/flash/red/[0-59].png",
+                "fps": 60
+            },
+            "yellow": {
+                "frames": "hexagons/flash/yellow/[0-59].png",
+                "fps": 60
+            }
         },
         "loop": {
-            "blue": "hexagons/loop/blue/[0-179].png",
-            "white": "hexagons/loop/white/[0-179].png",
-            "red": "hexagons/loop/red/[0-179].png",
-            "yellow": "hexagons/loop/yellow/[0-179].png"
+            "blue": {
+                "frames": "hexagons/loop/blue/[0-179].png",
+                "fps": 60
+            },
+            "white": {
+                "frames": "hexagons/loop/white/[0-179].png",
+                "fps": 60
+            },
+            "red": {
+                "frames": "hexagons/loop/red/[0-179].png",
+                "fps": 60
+            },
+            "yellow": {
+                "frames": "hexagons/loop/yellow/[0-179].png",
+                "fps": 60
+            }
         }
     }
 }
