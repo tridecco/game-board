@@ -13,6 +13,11 @@ const defaultMap = require('../maps/renderer/default');
 
 const ONE_SECOND = 1000;
 
+const FPS_MAX_SAMPLES = 30;
+const FPS_BOX_HORIZONTAL_PADDING = 12;
+const FPS_TEXT_HORIZONTAL_OFFSET = 6;
+const FPS_TEXT_VERTICAL_OFFSET = 4;
+
 /**
  * @class LayersManager - A class to manage layers in the game board.
  */
@@ -26,6 +31,7 @@ class LayersManager {
     if (!(context instanceof CanvasRenderingContext2D)) {
       throw new Error('context must be a CanvasRenderingContext2D instance');
     }
+
     this.context = context;
     this.layers = [];
   }
@@ -79,6 +85,7 @@ class LayersManager {
     if (typeof layerName !== 'string') {
       throw new Error('layerName must be a string');
     }
+
     this.layers = this.layers.filter((layer) => layer.name !== layerName);
   }
 
@@ -190,5 +197,74 @@ class AssetsManager {
     });
 
     return Promise.all([texturePromise, backgroundPromise, gridPromise]);
+  }
+}
+
+/**
+ * @class FPSTracker - A class to track and display the frames per second (FPS) of the game.
+ */
+class FPSTracker {
+  /**
+   * @constructor
+   * @param {HTMLCanvasContext} context - The canvas context to draw the FPS on.
+   */
+  constructor(context) {
+    if (!(context instanceof CanvasRenderingContext2D)) {
+      throw new Error('context must be a CanvasRenderingContext2D instance');
+    }
+
+    this.context = context;
+    this.samples = [];
+    this.maxSamples = FPS_MAX_SAMPLES;
+    this.lastTick = null;
+    this.fps = 0;
+  }
+
+  /**
+   * @method tick - Call this method once per frame to record a tick.
+   */
+  tick() {
+    const now = performance.now();
+    if (this.lastTick !== null) {
+      const delta = now - this.lastTick;
+      this.samples.push(delta);
+      if (this.samples.length > this.maxSamples) {
+        this.samples.shift();
+      }
+      const avg = this.samples.reduce((a, b) => a + b, 0) / this.samples.length;
+      this.fps = avg > 0 ? ONE_SECOND / avg : 0;
+    }
+    this.lastTick = now;
+  }
+
+  /**
+   * @method render - Draws the FPS counter at the bottom right corner.
+   */
+  render() {
+    const ctx = this.context;
+    const text = `FPS: ${this.fps.toFixed(1)}`;
+    ctx.save();
+    ctx.font = '14px monospace';
+    ctx.textBaseline = 'bottom';
+    ctx.textAlign = 'right';
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    const padding = 8;
+    const x = ctx.canvas.width - padding;
+    const boxWidth = metrics.width + FPS_BOX_HORIZONTAL_PADDING;
+    ctx.fillRect(x - boxWidth, y - boxHeight, boxWidth, boxHeight);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(
+      text,
+      x - FPS_TEXT_HORIZONTAL_OFFSET,
+      y - FPS_TEXT_VERTICAL_OFFSET,
+    );
+    ctx.fillRect(x - boxWidth, y - boxHeight, boxWidth, boxHeight);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(
+      text,
+      x - FPS_TEXT_HORIZONTAL_OFFSET,
+      y - FPS_TEXT_VERTICAL_OFFSET,
+    );
+    ctx.restore();
   }
 }
