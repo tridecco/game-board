@@ -1506,7 +1506,7 @@ Creates a new `TexturePack` instance and immediately starts loading the texture 
 
 - `indexUrl` (string): The URL of the JSON file that defines the texture regions within the atlas (e.g., `index.json`).
 - `atlasUrl` (string): The URL of the combined image file (atlas) containing all textures.
-- `callback` (Function, optional): A callback function executed after the atlas image and index are loaded. It receives the `TexturePack` instance as the first argument, or `null` and an error object as the second argument if loading fails.
+- `callback` (Function, optional): A callback function executed after the atlas image and index are loaded. It receives an error as the first argument (or `null` if successful), and the `TexturePack` instance as the second argument (or `null` if failed).
 
 > **Note**: Please refer to the [Available Assets documentation](ASSETS.md) for detailed information on the available texture packs.
 > **Note**: If the assets are not from the same origin, CORS headers must be set on the server to allow loading. Otherwise, there will be CORS issues and the assets will not load properly in the browser.
@@ -1521,7 +1521,7 @@ Creates a new `TexturePack` instance and immediately starts loading the texture 
 const texturePack = new TexturePack(
   '/assets/textures-bundle/classic/normal/index.json',
   '/assets/textures-bundle/classic/normal/atlas.png',
-  (pack, error) => {
+  (error, pack) => {
     if (error) {
       console.error('Failed to load texture pack:', error);
       return;
