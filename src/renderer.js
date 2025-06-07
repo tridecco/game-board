@@ -136,6 +136,10 @@ class LayersManager {
     for (const layer of this.layers) {
       layer.context.canvas.width = this.context.canvas.width;
       layer.context.canvas.height = this.context.canvas.height;
+      layer.context.scale(
+        window.devicePixelRatio || 1,
+        window.devicePixelRatio || 1,
+      );
     }
 
     this.render(true); // Force render after resizing
