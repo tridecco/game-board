@@ -109,7 +109,7 @@ class LayersManager {
       const elapsed = now - (layer._lastRender || 0);
 
       if (force || elapsed >= layer._frameInterval) {
-        if (layer._frameInterval !== 0) {
+        if (force || layer._frameInterval !== 0) {
           layer.context.clearRect(
             0,
             0,
@@ -133,11 +133,11 @@ class LayersManager {
           }
         });
         this.frameRequested[layer.name]?.clear();
+
+        if (layer.zIndex < 0) continue;
+
+        this.context.drawImage(layer.context.canvas, 0, 0);
       }
-
-      if (layer.zIndex < 0) continue;
-
-      this.context.drawImage(layer.context.canvas, 0, 0);
     }
   }
 
