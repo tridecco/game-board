@@ -65,7 +65,7 @@ class TexturePack {
 
         img.onload = () => {
           this.atlasImage = img;
-          callback(this); // Execute the callback with the loaded TexturePack instance
+          callback(null, this); // Execute the callback with the loaded TexturePack instance
         };
 
         img.onerror = (err) => {
@@ -73,13 +73,13 @@ class TexturePack {
             `Failed to load atlas image from: ${atlasUrl}`,
           );
           console.error(error.message, err);
-          callback(null, error); // Pass null to callback in case of image load error
+          callback(error, null);
         };
       })
       .catch((error) => {
         // Handle fetch error or JSON parsing error
         console.error('Error loading texture definitions:', error);
-        callback(null, error); // Pass null to callback in case of error
+        callback(error, null);
       });
   }
 
