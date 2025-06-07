@@ -11,6 +11,8 @@ const TexturePack = require('./texturePack');
 
 const defaultMap = require('../maps/renderer/default');
 
+const ONE_SECOND = 1000;
+
 /**
  * @class LayersManager - A class to manage layers in the game board.
  */
@@ -32,19 +34,23 @@ class LayersManager {
    * @method addLayer - Adds a new layer to the layers manager.
    * @param {Object} layer - The layer to be added.
    * @param {string} layer.name - The name of the layer.
+   * @param {number} layer.fps - The desired frames per second for the layer's rendering.
    * @param {number} [layer.zIndex=0] - The z-index of the layer. (negative values will not be rendered)
    * @param {Function} layer.render - The render function for the layer.
-   * @throws {Error} - If the layer is not an object, or if the render function is not a function, or if the name is not a string.
+   * @throws {Error} - If the layer is not an object, or if the name is not a string, or if the fps is not a number, or if the render function is not a function.
    */
   addLayer(layer) {
     if (typeof layer !== 'object' || layer === null) {
       throw new Error('layer must be an object');
     }
-    if (typeof layer.render !== 'function') {
-      throw new Error('layer.render must be a function');
-    }
     if (typeof layer.name !== 'string') {
       throw new Error('layer.name must be a string');
+    }
+    if (typeof layer.fps !== 'number') {
+      throw new Error('layer.fps must be a number');
+    }
+    if (typeof layer.render !== 'function') {
+      throw new Error('layer.render must be a function');
     }
 
     layer.zIndex = layer.zIndex || 0;
@@ -52,6 +58,9 @@ class LayersManager {
     layer.context = new OffscreenCanvas(1, 1).getContext('2d');
     layer.context.canvas.width = this.context.canvas.width;
     layer.context.canvas.height = this.context.canvas.height;
+
+    layer._frameInterval = ONE_SECOND / layer.fps;
+    layer._lastRender = 0;
 
     this.layers.push(layer);
     this.layers.sort((a, b) => a.zIndex - b.zIndex);
@@ -71,13 +80,41 @@ class LayersManager {
 
   /**
    * @method render - Renders all layers in the correct order.
+   * @param {boolean} [force=false] - Whether to force rendering all layers. (use when resizing the canvas)
    */
-  render() {
-    this.layers.forEach((layer) => {
-      if (layer.zIndex >= 0) {
-        layer.render(layer.context);
-        this.context.drawImage(layer.context.canvas, 0, 0);
+  render(force = false) {
+    const now = performance.now();
+    this.context.clearRect(
+      0,
+      0,
+      this.context.canvas.width,
+      this.context.canvas.height,
+    );
+
+    for (const layer of this.layers) {
+      if (layer.zIndex < 0) continue;
+
+      const elapsed = now - (layer._lastRender || 0);
+
+      if (force || elapsed >= layer._frameInterval) {
+        layer.context.clearRect(
+          0,
+          0,
+          layer.context.canvas.width,
+          layer.context.canvas.height,
+        );
+
+        layer.render({
+          context: layer.context,
+          deltaTime: elapsed,
+          layer,
+          timestamp: now,
+        });
+
+        layer._lastRender = now;
       }
-    });
+
+      this.context.drawImage(layer.context.canvas, 0, 0);
+    }
   }
 }
