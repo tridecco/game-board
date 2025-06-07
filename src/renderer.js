@@ -118,3 +118,61 @@ class LayersManager {
     }
   }
 }
+
+/**
+ * @class AssetsManager - A class to manage game assets.
+ */
+class AssetsManager {
+  /**
+   * @constructor
+   * @param {string} texturesIndexUrl - The URL of the texture index JSON file.
+   * @param {string} texturesAtlasUrl - The URL of the atlas image file.
+   * @param {string} backgroundUrl - The URL of the background image file.
+   * @param {string} gridUrl - The URL of the grid image file.
+   */
+  constructor(texturesIndexUrl, texturesAtlasUrl, backgroundUrl, gridUrl) {
+    this.urls = {
+      texturesIndex: texturesIndexUrl,
+      texturesAtlas: texturesAtlasUrl,
+      background: backgroundUrl,
+      grid: gridUrl,
+    };
+
+    this.textures = null;
+    this.background = null;
+    this.grid = null;
+  }
+
+  /**
+   * @method load - Loads all assets required for the game.
+   * @returns {Promise} - A promise that resolves when all assets are loaded.
+   */
+  async load() {
+    const texturePromise = new Promise((resolve, reject) => {
+      this.textures = new TexturePack(
+        this.urls.texturesIndex,
+        this.urls.texturesAtlas,
+        (error) => {
+          if (error) reject(error);
+          else resolve();
+        },
+      );
+    });
+
+    const backgroundPromise = new Promise((resolve, reject) => {
+      this.background = new Image();
+      this.background.onload = () => resolve();
+      this.background.onerror = reject;
+      this.background.src = this.urls.background;
+    });
+
+    const gridPromise = new Promise((resolve, reject) => {
+      this.grid = new Image();
+      this.grid.onload = () => resolve();
+      this.grid.onerror = reject;
+      this.grid.src = this.urls.grid;
+    });
+
+    return Promise.all([texturePromise, backgroundPromise, gridPromise]);
+  }
+}
