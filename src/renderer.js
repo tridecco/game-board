@@ -73,6 +73,8 @@ class LayersManager {
     this.layers.push(layer);
     this.layers.sort((a, b) => a.zIndex - b.zIndex);
 
+    this.frameRequested = {};
+
     return layer.context;
   }
 
@@ -122,11 +124,47 @@ class LayersManager {
           timestamp: now,
         });
 
+        this.frameRequested[layer.name]?.forEach((callback) => {
+          if (typeof callback === 'function') {
+            callback({
+              context: layer.context,
+              deltaTime: elapsed,
+              layer,
+              timestamp: now,
+            });
+          }
+        });
+        this.frameRequested[layer.name]?.clear();
+
         layer._lastRender = now;
       }
 
       this.context.drawImage(layer.context.canvas, 0, 0);
     }
+  }
+
+  /**
+   * @method requestAnimationFrame - Requests the next animation frame for a specific layer.
+   * @param {string} layerName - The name of the layer to render.
+   * @param {Function} callback - The callback to be executed on the next frame.
+   * @throws {Error} - If the layer does not exist or if the callback is not a function.
+   */
+  requestAnimationFrame(layerName, callback) {
+    if (typeof layerName !== 'string') {
+      throw new Error('layerName must be a string');
+    }
+    if (typeof callback !== 'function') {
+      throw new Error('callback must be a function');
+    }
+    const layer = this.layers.find((l) => l.name === layerName);
+    if (!layer) {
+      throw new Error(`Layer "${layerName}" does not exist`);
+    }
+
+    if (!this.frameRequested[layerName]) {
+      this.frameRequested[layerName] = new Set();
+    }
+    this.frameRequested[layerName].add(callback);
   }
 
   /**
