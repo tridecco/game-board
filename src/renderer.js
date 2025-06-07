@@ -40,8 +40,8 @@ class LayersManager {
    * @method addLayer - Adds a new layer to the layers manager.
    * @param {Object} layer - The layer to be added.
    * @param {string} layer.name - The name of the layer.
-   * @param {number} layer.fps - The desired frames per second for the layer's rendering.
-   * @param {number} [layer.zIndex=0] - The z-index of the layer. (negative values will not be rendered)
+   * @param {number} layer.fps - The desired frames per second for the layer's rendering. (0 means only render when requested)
+   * @param {number} [layer.zIndex=0] - The z-index of the layer. (negative values will not be rendered in the main canvas)
    * @param {Function} layer.render - The render function for the layer.
    * @returns {HTMLCanvasContext} - The context of the layer.
    * @throws {Error} - If the layer is not an object, or if the name is not a string, or if the fps is not a number, or if the render function is not a function.
@@ -67,7 +67,7 @@ class LayersManager {
       this.context.canvas.height,
     ).getContext('2d');
 
-    layer._frameInterval = ONE_SECOND / layer.fps;
+    layer._frameInterval = layer.fps === 0 ? 0 : ONE_SECOND / layer.fps;
     layer._lastRender = 0;
 
     this.layers.push(layer);
@@ -89,6 +89,7 @@ class LayersManager {
     }
 
     this.layers = this.layers.filter((layer) => layer.name !== layerName);
+    delete this.frameRequested[layerName];
   }
 
   /**
@@ -105,39 +106,36 @@ class LayersManager {
     );
 
     for (const layer of this.layers) {
-      if (layer.zIndex < 0) continue;
-
       const elapsed = now - (layer._lastRender || 0);
 
       if (force || elapsed >= layer._frameInterval) {
-        layer.context.clearRect(
-          0,
-          0,
-          layer.context.canvas.width,
-          layer.context.canvas.height,
-        );
+        if (layer._frameInterval !== 0) {
+          layer.context.clearRect(
+            0,
+            0,
+            layer.context.canvas.width,
+            layer.context.canvas.height,
+          );
 
-        layer.render({
-          context: layer.context,
-          deltaTime: elapsed,
-          layer,
-          timestamp: now,
-        });
+          layer.render({
+            context: layer.context,
+            deltaTime: elapsed,
+            layer,
+            timestamp: now,
+          });
+
+          layer._lastRender = now;
+        }
 
         this.frameRequested[layer.name]?.forEach((callback) => {
           if (typeof callback === 'function') {
-            callback({
-              context: layer.context,
-              deltaTime: elapsed,
-              layer,
-              timestamp: now,
-            });
+            callback(context);
           }
         });
         this.frameRequested[layer.name]?.clear();
-
-        layer._lastRender = now;
       }
+
+      if (layer.zIndex < 0) continue;
 
       this.context.drawImage(layer.context.canvas, 0, 0);
     }
