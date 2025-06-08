@@ -167,6 +167,42 @@ class LayersManager {
   }
 
   /**
+   * @method clear - Clears a specific layer's context.
+   * @param {string} layerName - The name of the layer to clear.
+   * @throws {Error} - If the layerName is not a string or if the layer does not exist.
+   */
+  clear(layerName) {
+    if (typeof layerName !== 'string') {
+      throw new Error('layerName must be a string');
+    }
+    const layer = this.layers.find((l) => l.name === layerName);
+    if (!layer) {
+      throw new Error(`Layer "${layerName}" does not exist`);
+    }
+
+    layer.context.clearRect(
+      0,
+      0,
+      layer.context.canvas.width,
+      layer.context.canvas.height,
+    );
+  }
+
+  /**
+   * @method clearAll - Clears all layers' contexts.
+   */
+  clearAll() {
+    for (const layer of this.layers) {
+      layer.context.clearRect(
+        0,
+        0,
+        layer.context.canvas.width,
+        layer.context.canvas.height,
+      );
+    }
+  }
+
+  /**
    * @method resize - Resizes all layers to match the main canvas size.
    */
   resize() {
