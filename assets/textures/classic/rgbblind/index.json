@@ -1,63 +1,69 @@
 {
     "tiles": {
-        "blue-white": "tiles/blue-white.png",
-        "blue-white-flipped": "tiles/blue-white-flipped.png",
-        "red-blue": "tiles/red-blue.png",
-        "red-blue-flipped": "tiles/red-blue-flipped.png",
-        "red-yellow": "tiles/red-yellow.png",
-        "red-yellow-flipped": "tiles/red-yellow-flipped.png",
-        "white-red": "tiles/white-red.png",
-        "white-red-flipped": "tiles/white-red-flipped.png",
-        "yellow-blue": "tiles/yellow-blue.png",
-        "yellow-blue-flipped": "tiles/yellow-blue-flipped.png",
-        "empty": "tiles/empty.png",
-        "empty-flipped": "tiles/empty-flipped.png"
+        "type": "static",
+        "variants": {
+            "blue-white": "tiles/blue-white.png",
+            "blue-white-flipped": "tiles/blue-white-flipped.png",
+            "red-blue": "tiles/red-blue.png",
+            "red-blue-flipped": "tiles/red-blue-flipped.png",
+            "red-yellow": "tiles/red-yellow.png",
+            "red-yellow-flipped": "tiles/red-yellow-flipped.png",
+            "white-red": "tiles/white-red.png",
+            "white-red-flipped": "tiles/white-red-flipped.png",
+            "yellow-blue": "tiles/yellow-blue.png",
+            "yellow-blue-flipped": "tiles/yellow-blue-flipped.png",
+            "empty": "tiles/empty.png",
+            "empty-flipped": "tiles/empty-flipped.png"
+        }
     },
     "hexagons": {
         "glow": {
-            "blue": "hexagons/glow/blue.png",
-            "white": "hexagons/glow/white.png",
-            "red": "hexagons/glow/red.png",
-            "yellow": "hexagons/glow/yellow.png"
+            "type": "static",
+            "variants": {
+                "blue": "hexagons/glow/blue.png",
+                "white": "hexagons/glow/white.png",
+                "red": "hexagons/glow/red.png",
+                "yellow": "hexagons/glow/yellow.png"
+            }
         },
         "particle": {
-            "frames": "hexagons/particle/[0-179].png",
-            "fps": 60
+            "type": "animated",
+            "range": [
+                0,
+                179
+            ],
+            "fps": 60,
+            "ext": "png",
+            "base": "hexagons/particle/"
         },
         "flash": {
-            "blue": {
-                "frames": "hexagons/flash/blue/[0-59].png",
-                "fps": 60
-            },
-            "white": {
-                "frames": "hexagons/flash/white/[0-59].png",
-                "fps": 60
-            },
-            "red": {
-                "frames": "hexagons/flash/red/[0-59].png",
-                "fps": 60
-            },
-            "yellow": {
-                "frames": "hexagons/flash/yellow/[0-59].png",
-                "fps": 60
+            "type": "animated",
+            "range": [
+                0,
+                59
+            ],
+            "fps": 60,
+            "ext": "png",
+            "variants": {
+                "blue": "hexagons/flash/blue/",
+                "white": "hexagons/flash/white/",
+                "red": "hexagons/flash/red/",
+                "yellow": "hexagons/flash/yellow/"
             }
         },
         "loop": {
-            "blue": {
-                "frames": "hexagons/loop/blue/[0-179].png",
-                "fps": 60
-            },
-            "white": {
-                "frames": "hexagons/loop/white/[0-179].png",
-                "fps": 60
-            },
-            "red": {
-                "frames": "hexagons/loop/red/[0-179].png",
-                "fps": 60
-            },
-            "yellow": {
-                "frames": "hexagons/loop/yellow/[0-179].png",
-                "fps": 60
+            "type": "animated",
+            "range": [
+                0,
+                179
+            ],
+            "fps": 60,
+            "ext": "png",
+            "variants": {
+                "blue": "hexagons/loop/blue/",
+                "white": "hexagons/loop/white/",
+                "red": "hexagons/loop/red/",
+                "yellow": "hexagons/loop/yellow/"
             }
         }
     }
