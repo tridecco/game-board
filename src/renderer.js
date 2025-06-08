@@ -43,6 +43,7 @@ class LayersManager {
    * @param {number} layer.fps - The desired frames per second for the layer's rendering. (0 means only render when requested)
    * @param {number} [layer.zIndex=0] - The z-index of the layer. (negative values will not be rendered in the main canvas)
    * @param {Function} layer.render - The render function for the layer.
+   * @param {Object} [layer.options] - Additional options for the layer.
    * @returns {HTMLCanvasContext} - The context of the layer.
    * @throws {Error} - If the layer is not an object, or if the name is not a string, or if the fps is not a number, or if the render function is not a function.
    */
@@ -65,7 +66,7 @@ class LayersManager {
     layer.context = new OffscreenCanvas(
       this.context.canvas.width,
       this.context.canvas.height,
-    ).getContext('2d');
+    ).getContext('2d', layer.options || {});
 
     layer._frameInterval = layer.fps === 0 ? 0 : ONE_SECOND / layer.fps;
     layer._lastRender = 0;
