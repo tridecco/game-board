@@ -133,11 +133,11 @@ class LayersManager {
           }
         });
         this.frameRequested[layer.name]?.clear();
-
-        if (layer.zIndex < 0) continue;
-
-        this.context.drawImage(layer.context.canvas, 0, 0);
       }
+
+      if (layer.zIndex < 0) continue;
+
+      this.context.drawImage(layer.context.canvas, 0, 0);
     }
   }
 
