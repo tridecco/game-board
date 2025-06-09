@@ -1539,38 +1539,64 @@ get(type, key);
 
 **Description:**
 
-Retrieves the atlas image and the definition (coordinates, dimensions) for a specific texture by its type ('tiles' or 'hexagons') and key.
+Retrieves the atlas image and the definition for a specific texture or texture group by its category (`type`) and `key`.
 
 **Parameters:**
 
-- `type` (string): The type of texture to retrieve, either `'tiles'` or `'hexagons'`.
-- `key` (string): The key of the texture as defined in the `index.json`. For hexagons, this can be a nested key like `"glow.blue"` or `"particle"`.
+- `type` (string): The category of texture to retrieve (e.g., `'tiles'`, `'hexagons'`).
+- `key` (string): The specific key of the texture or group. For nested structures or variants, use dot notation (e.g., `"blue-white"` for a tile variant, `"glow"` for a static hexagon group, `"glow.blue"` for a static hexagon variant, `"particle"` for a base animation, `"flash"` for an animated hexagon group, `"flash.blue"` for an animated hexagon variant).
 
 **Returns:**
 
 - `Object | null`: An object containing:
   - `image` (HTMLImageElement): The loaded atlas image.
-  - `definition` (Object | Array\<Object>): The metadata for the texture. This can be:
-    - An object with `x, y, w, h` properties for a single frame,
-    - Or an animation object with `{ frames: Array<{x, y, w, h}>, fps: number, ... }` for animated textures (such as those with `frames` and `fps` in the index).
-      Returns `null` if the type or key is invalid, or if the texture pack is not fully loaded.
+  - `definition` (Object): The metadata for the texture or group. The structure of `definition` varies:
+    - For static texture leaves (e.g., a tile variant directly under `variants`): `{x, y, w, h}` (coordinates in the atlas).
+    - For animated textures (base animation or a fully resolved variant): An object containing `frames` (Array of `{x,y,w,h}` coordinate objects), `fps` (number), and `range` (Array<number>).
+    - For group nodes that have a `type` property (e.g., "static" or "animated"): The group object itself as defined in the bundled `index.json` (e.g., `{type: "static", variants: {...}}` or `{type: "animated", fps: ..., range: ..., variants: {...}}`). The `variants` object within will contain coordinate objects for static variants or `frames` arrays for animated variants.
+      Returns `null` if the key is invalid, does not resolve to a recognized structure, or if the texture pack is not fully loaded.
 
 #### Example
 
 ```javascript
 // Assuming texturePack is loaded
-const tileData = texturePack.get('tiles', 'red-blue');
-if (tileData) {
-  // Use the tileData.image and tileData.definition to draw the texture
+
+// Get a static tile variant
+const tileVariantData = texturePack.get('tiles', 'blue-white');
+if (tileVariantData) {
+  // tileVariantData.definition will be {x, y, w, h}
+  console.log('Tile Variant:', tileVariantData.definition);
 }
 
+// Get a static group
+const staticGroupData = texturePack.get('hexagons', 'glow');
+if (staticGroupData) {
+  // staticGroupData.definition will be { type: "static", variants: { blue: {x,y,w,h}, ... } }
+  console.log('Static Group:', staticGroupData.definition);
+  // To get a specific variant from the group:
+  const glowBlueData = texturePack.get('hexagons', 'glow.blue');
+  if (glowBlueData) console.log('Glow Blue Variant:', glowBlueData.definition); // {x,y,w,h}
+}
+
+// Get a base animation
 const particleAnimationData = texturePack.get('hexagons', 'particle');
-if (
-  particleAnimationData &&
-  particleAnimationData.definition &&
-  particleAnimationData.definition.frames
-) {
-  // Use the particleAnimationData.image, particleAnimationData.definition.frames, and particleAnimationData.definition.fps to animate particles
+if (particleAnimationData) {
+  // particleAnimationData.definition will be { type: "animated", fps: ..., range: ..., frames: [{x,y,w,h}, ...] }
+  console.log('Particle Animation:', particleAnimationData.definition);
+}
+
+// Get an animated group
+const animatedGroupData = texturePack.get('hexagons', 'flash');
+if (animatedGroupData) {
+  // animatedGroupData.definition will be { type: "animated", fps: ..., range: ..., variants: { blue: {frames:[...]}, ... } }
+  console.log('Animated Group:', animatedGroupData.definition);
+  // To get a specific animated variant from the group:
+  const flashBlueData = texturePack.get('hexagons', 'flash.blue');
+  if (flashBlueData) {
+    // flashBlueData.definition will be { frames: [{x,y,w,h}, ...], fps: ..., range: ... }
+    // fps and range are inherited from the parent 'flash' group.
+    console.log('Flash Blue Animation Variant:', flashBlueData.definition);
+  }
 }
 ```
 
