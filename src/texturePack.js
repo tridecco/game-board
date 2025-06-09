@@ -85,12 +85,19 @@ class TexturePack {
 
   /**
    * @method get - Retrieve a texture definition and the atlas image.
-   * @param {string} type - The type of texture to retrieve ('tiles' or 'hexagons').
-   * @param {string} key - The key of the texture to retrieve (e.g., "blue-white" for tiles, or "glow.blue", "particle" for hexagons).
-   * @returns {{image: HTMLImageElement, definition: Object}|null} - An object containing the atlas image and the texture definition if found, otherwise null.
-   *   The definition can be:
-   *     - {x, y, w, h} for a single image,
-   *     - {frames: Array<{x, y, w, h}>, fps: number, ...} for an animation object.
+   * @param {string} type - The category of texture to retrieve (e.g., 'tiles', 'hexagons').
+   * @param {string} key - The specific key of the texture. For nested structures or variants, use dot notation
+   *                       (e.g., "blue-white" for a tile variant, "glow" for a static group, "glow.blue" for a static variant,
+   *                       "particle" for a base animation, "flash" for an animated group, "flash.blue" for an animated variant).
+   * @returns {{image: HTMLImageElement, definition: Object}|null} - An object containing the atlas image and the texture definition.
+   *   The `definition` object structure varies:
+   *     - For static texture leaves (e.g., a tile variant directly under `variants`): `{x, y, w, h}`.
+   *     - For animated textures (base or variant): An object containing `frames` (Array of `{x,y,w,h}`),
+   *       `fps` (number), and `range` (Array<number>).
+   *     - For group nodes that have a `type` property (e.g., "static" or "animated"): The group object itself,
+   *       which might contain a `variants` object (e.g., `{type: "static", variants: {...}}` or
+   *       `{type: "animated", fps: ..., range: ..., variants: {...}}`).
+   *   Returns `null` if the key is invalid or does not resolve to one of the above structures.
    */
   get(type, key) {
     if (
@@ -104,39 +111,103 @@ class TexturePack {
       return null;
     }
 
-    let definition;
+    const parts = key.split('.');
+    let current = this.textureDefinitions[type];
 
-    if (type === 'tiles') {
-      definition = this.textureDefinitions.tiles[key];
-    } else if (type === 'hexagons') {
-      const parts = key.split('.');
-      let current = this.textureDefinitions.hexagons;
-      for (const part of parts) {
-        if (
-          current &&
-          typeof current === 'object' &&
-          current.hasOwnProperty(part)
-        ) {
-          current = current[part];
-        } else {
-          current = undefined;
-          break;
-        }
-      }
-      definition = current;
-    } else {
-      console.error(`Invalid texture type: ${type}`);
+    if (!current) {
+      console.error(`Invalid texture category: ${type}`);
       return null;
     }
 
-    if (definition !== undefined) {
-      return { image: this.atlasImage, definition: definition };
-    } else {
+    let parentAnimatedGroup = null;
+
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+
+      if (!current || typeof current !== 'object') {
+        current = undefined;
+        break;
+      }
+
+      if (
+        (current.type === 'static' || current.type === 'animated') &&
+        current.variants &&
+        current.variants.hasOwnProperty(part)
+      ) {
+        if (current.type === 'animated') {
+          parentAnimatedGroup = current;
+        } else {
+          parentAnimatedGroup = null;
+        }
+        current = current.variants[part];
+      } else if (current.hasOwnProperty(part)) {
+        current = current[part];
+        if (current && current.type === 'animated') {
+          if (current.variants && !current.frames) {
+            parentAnimatedGroup = current;
+          } else if (current.frames) {
+            parentAnimatedGroup = null;
+          }
+        } else {
+          parentAnimatedGroup = null;
+        }
+      } else {
+        current = undefined;
+        break;
+      }
+    }
+
+    let definition = current;
+
+    if (definition === undefined) {
       console.warn(
         `Texture definition not found for type: ${type}, key: ${key}`,
       );
       return null;
     }
+
+    if (
+      parentAnimatedGroup &&
+      definition &&
+      typeof definition === 'object' &&
+      definition.frames &&
+      (!definition.hasOwnProperty('fps') || !definition.hasOwnProperty('range'))
+    ) {
+      definition = {
+        ...definition,
+        fps: definition.hasOwnProperty('fps')
+          ? definition.fps
+          : parentAnimatedGroup.fps,
+        range: definition.hasOwnProperty('range')
+          ? definition.range
+          : parentAnimatedGroup.range,
+      };
+    }
+
+    if (typeof definition === 'object' && definition !== null) {
+      if (
+        definition.hasOwnProperty('x') &&
+        definition.hasOwnProperty('y') &&
+        definition.hasOwnProperty('w') &&
+        definition.hasOwnProperty('h')
+      ) {
+        return { image: this.atlasImage, definition: definition };
+      } else if (
+        definition.hasOwnProperty('frames') &&
+        definition.hasOwnProperty('fps') &&
+        definition.hasOwnProperty('range')
+      ) {
+        return { image: this.atlasImage, definition: definition };
+      } else if (definition.hasOwnProperty('type')) {
+        return { image: this.atlasImage, definition: definition };
+      }
+    }
+
+    console.warn(
+      `Final resolved definition for type '${type}', key '${key}' is not a recognized texture, typed group, or animation object:`,
+      definition,
+    );
+    return null;
   }
 }
 
