@@ -275,6 +275,60 @@ class AssetsManager {
 
     return Promise.all([texturePromise, backgroundPromise, gridPromise]);
   }
+
+  /**
+   * @method updateTextures - Updates the texture pack.
+   * @param {string} texturesIndexUrl - The new URL of the texture index JSON file.
+   * @param {string} texturesAtlasUrl - The new URL of the atlas image file.
+   * @returns {Promise} - A promise that resolves when the texture pack is updated.
+   */
+  async updateTextures(texturesIndexUrl, texturesAtlasUrl) {
+    this.urls.texturesIndex = texturesIndexUrl;
+    this.urls.texturesAtlas = texturesAtlasUrl;
+
+    return new Promise((resolve, reject) => {
+      this.textures = new TexturePack(
+        texturesIndexUrl,
+        texturesAtlasUrl,
+        (error) => {
+          if (error) reject(error);
+          else resolve();
+        },
+      );
+    });
+  }
+
+  /**
+   * @method updateBackground - Updates the background image.
+   * @param {string} backgroundUrl - The new URL of the background image file.
+   * @returns {Promise} - A promise that resolves when the background is updated.
+   */
+  async updateBackground(backgroundUrl) {
+    this.urls.background = backgroundUrl;
+
+    return new Promise((resolve, reject) => {
+      this.background = new Image();
+      this.background.onload = () => resolve();
+      this.background.onerror = reject;
+      this.background.src = backgroundUrl;
+    });
+  }
+
+  /**
+   * @method updateGrid - Updates the grid image.
+   * @param {string} gridUrl - The new URL of the grid image file.
+   * @returns {Promise} - A promise that resolves when the grid is updated.
+   */
+  async updateGrid(gridUrl) {
+    this.urls.grid = gridUrl;
+
+    return new Promise((resolve, reject) => {
+      this.grid = new Image();
+      this.grid.onload = () => resolve();
+      this.grid.onerror = reject;
+      this.grid.src = gridUrl;
+    });
+  }
 }
 
 /**
