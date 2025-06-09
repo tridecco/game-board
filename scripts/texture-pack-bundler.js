@@ -21,110 +21,103 @@ const ATLAS_MAX_WIDTH = 16384; // Max width for the atlas
 const ATLAS_MAX_HEIGHT = 16384; // Max height for the atlas
 const ATLAS_PADDING = 1; // Padding between images in the atlas
 
-// Function to set a value in a nested object based on a path array
-function setValueInNestedObject(
-  obj,
-  pathParts,
-  valueCoords,
-  type,
-  frameIndex,
-  originalAnimationObject,
-) {
-  let current = obj;
-  for (let i = 0; i < pathParts.length - 1; i++) {
-    const part = pathParts[i];
-    if (!current[part] || typeof current[part] !== 'object') {
-      current[part] = {};
-    }
-    current = current[part];
-  }
-
-  const lastPart = pathParts[pathParts.length - 1];
-  if (type === 'single') {
-    current[lastPart] = valueCoords;
-  } else if (type === 'sequence') {
-    if (!current[lastPart] || !Array.isArray(current[lastPart])) {
-      current[lastPart] = []; // Initialize as an array for sequence frames
-    }
-
-    while (current[lastPart].length <= frameIndex) {
-      current[lastPart].push(null);
-    }
-    current[lastPart][frameIndex] = valueCoords;
-  } else if (type === 'object_sequence') {
-    if (
-      !current[lastPart] ||
-      typeof current[lastPart] !== 'object' ||
-      current[lastPart].frames === undefined ||
-      !Array.isArray(current[lastPart].frames)
-    ) {
-      current[lastPart] = { ...originalAnimationObject };
-      current[lastPart].frames = [];
-    }
-
-    while (current[lastPart].frames.length <= frameIndex) {
-      current[lastPart].frames.push(null);
-    }
-    current[lastPart].frames[frameIndex] = valueCoords;
-  }
-}
+const PATH_SUFFIX_LENGTH = 2;
 
 // Function to recursively collect images and their metadata from the JSON structure
 async function collectImagesAndMetadata(
-  node,
-  currentJsonPath,
+  currentNode,
+  currentPathInOriginalJson,
   packBasePath,
   imagesList,
 ) {
-  for (const key in node) {
-    if (Object.prototype.hasOwnProperty.call(node, key)) {
-      const value = node[key];
-      const newJsonPath = [...currentJsonPath, key];
+  if (typeof currentNode === 'string') {
+    console.warn(
+      `Encountered string value at ${currentPathInOriginalJson.join('.')} directly. This structure is not fully supported by the new format. Please use object-based definitions.`,
+    );
+    if (currentPathInOriginalJson.length > 0) {
+      const imageAbsPath = path.join(packBasePath, currentNode);
+      try {
+        if (!(await fs.pathExists(imageAbsPath))) {
+          console.warn(`Image not found, skipping: ${imageAbsPath}`);
+          return;
+        }
+        const metadata = await sharp(imageAbsPath, {
+          limitInputPixels: false,
+        }).metadata();
+        imagesList.push({
+          width: metadata.width,
+          height: metadata.height,
+          data: {
+            outputPath: currentPathInOriginalJson,
+            type: 'legacy_single_leaf',
+            imageAbsPath: imageAbsPath,
+          },
+        });
+      } catch (err) {
+        console.error(
+          `Error processing legacy single image ${imageAbsPath}:`,
+          err.message,
+        );
+      }
+    }
+    return;
+  }
 
-      if (typeof value === 'string') {
-        const sequenceMatch = value.match(/^(.*?)\[(\d+)-(\d+)\](\.\w+)$/);
-        if (sequenceMatch) {
-          const SEQUENCE_PREFIX_INDEX = 1;
-          const SEQUENCE_START_INDEX = 2;
-          const SEQUENCE_END_INDEX = 3;
-          const SEQUENCE_EXTENSION_INDEX = 4;
-
-          const filePathPrefix = sequenceMatch[SEQUENCE_PREFIX_INDEX];
-          const startFrame = parseInt(sequenceMatch[SEQUENCE_START_INDEX], 10);
-          const endFrame = parseInt(sequenceMatch[SEQUENCE_END_INDEX], 10);
-          const extension = sequenceMatch[SEQUENCE_EXTENSION_INDEX];
-
-          for (let i = 0; i <= endFrame - startFrame; i++) {
-            const frameNumber = startFrame + i;
-            const imageName = `${filePathPrefix}${frameNumber}${extension}`;
-            const imageAbsPath = path.join(packBasePath, imageName);
-            try {
-              if (!(await fs.pathExists(imageAbsPath))) {
-                console.warn(`Image not found, skipping: ${imageAbsPath}`);
-                continue;
-              }
-              const metadata = await sharp(imageAbsPath, {
-                limitInputPixels: false,
-              }).metadata();
-              imagesList.push({
-                width: metadata.width,
-                height: metadata.height,
-                data: {
-                  jsonPath: newJsonPath,
-                  type: 'sequence',
-                  frameIndex: i,
-                  imageAbsPath: imageAbsPath,
-                },
-              });
-            } catch (err) {
-              console.error(
-                `Error processing sequence image ${imageAbsPath}:`,
-                err.message,
-              );
-            }
+  if (typeof currentNode === 'object' && currentNode !== null) {
+    if (currentNode.type === 'static' && currentNode.variants) {
+      for (const variantKey in currentNode.variants) {
+        const imagePathString = currentNode.variants[variantKey];
+        if (typeof imagePathString !== 'string') {
+          console.warn(
+            `Static variant ${variantKey} at ${currentPathInOriginalJson.join('.')} is not a string path.`,
+          );
+          continue;
+        }
+        const imageAbsPath = path.join(packBasePath, imagePathString);
+        try {
+          if (!(await fs.pathExists(imageAbsPath))) {
+            console.warn(`Image not found, skipping: ${imageAbsPath}`);
+            continue;
           }
-        } else {
-          const imageAbsPath = path.join(packBasePath, value);
+          const metadata = await sharp(imageAbsPath, {
+            limitInputPixels: false,
+          }).metadata();
+          imagesList.push({
+            width: metadata.width,
+            height: metadata.height,
+            data: {
+              outputPath: [
+                ...currentPathInOriginalJson,
+                'variants',
+                variantKey,
+              ],
+              type: 'static_leaf',
+              imageAbsPath: imageAbsPath,
+              originalNode: currentNode,
+            },
+          });
+        } catch (err) {
+          console.error(
+            `Error processing static image ${imageAbsPath}:`,
+            err.message,
+          );
+        }
+      }
+    } else if (currentNode.type === 'animated') {
+      const { range, fps, ext, base, variants } = currentNode;
+      if (!range || !fps || !ext || (!base && !variants)) {
+        console.warn(
+          `Malformed animated node at ${currentPathInOriginalJson.join('.')}: missing range, fps, ext, or base/variants.`,
+        );
+        return;
+      }
+      const [startFrame, endFrame] = range;
+
+      if (base) {
+        for (let i = 0; i <= endFrame - startFrame; i++) {
+          const frameNumber = startFrame + i;
+          const imageName = `${frameNumber}.${ext}`;
+          const imageAbsPath = path.join(packBasePath, base, imageName);
           try {
             if (!(await fs.pathExists(imageAbsPath))) {
               console.warn(`Image not found, skipping: ${imageAbsPath}`);
@@ -137,87 +130,75 @@ async function collectImagesAndMetadata(
               width: metadata.width,
               height: metadata.height,
               data: {
-                jsonPath: newJsonPath,
-                type: 'single',
+                outputPath: currentPathInOriginalJson,
+                type: 'animated_base_frame',
+                frameIndex: i,
                 imageAbsPath: imageAbsPath,
+                originalAnimationNode: currentNode,
               },
             });
           } catch (err) {
             console.error(
-              `Error processing single image ${imageAbsPath}:`,
+              `Error processing base animation image ${imageAbsPath}:`,
               err.message,
             );
           }
         }
-      } else if (typeof value === 'object' && value !== null) {
-        if (
-          value.hasOwnProperty('frames') &&
-          typeof value.frames === 'string'
-        ) {
-          const framesString = value.frames;
-          const sequenceMatch = framesString.match(
-            /^(.*?)\[(\d+)-(\d+)\](\.\w+)$/,
-          );
-
-          if (sequenceMatch) {
-            const SEQUENCE_PREFIX_INDEX = 1;
-            const SEQUENCE_START_INDEX = 2;
-            const SEQUENCE_END_INDEX = 3;
-            const SEQUENCE_EXTENSION_INDEX = 4;
-
-            const filePathPrefix = sequenceMatch[SEQUENCE_PREFIX_INDEX];
-            const startFrame = parseInt(
-              sequenceMatch[SEQUENCE_START_INDEX],
-              10,
-            );
-            const endFrame = parseInt(sequenceMatch[SEQUENCE_END_INDEX], 10);
-            const extension = sequenceMatch[SEQUENCE_EXTENSION_INDEX];
-
-            for (let i = 0; i <= endFrame - startFrame; i++) {
-              const frameNumber = startFrame + i;
-              const imageName = `${filePathPrefix}${frameNumber}${extension}`;
-              const imageAbsPath = path.join(packBasePath, imageName);
-              try {
-                if (!(await fs.pathExists(imageAbsPath))) {
-                  console.warn(`Image not found, skipping: ${imageAbsPath}`);
-                  continue;
-                }
-                const metadata = await sharp(imageAbsPath, {
-                  limitInputPixels: false,
-                }).metadata();
-                imagesList.push({
-                  width: metadata.width,
-                  height: metadata.height,
-                  data: {
-                    jsonPath: newJsonPath,
-                    type: 'object_sequence',
-                    frameIndex: i,
-                    imageAbsPath: imageAbsPath,
-                    originalAnimationObject: value,
-                  },
-                });
-              } catch (err) {
-                console.error(
-                  `Error processing object sequence image ${imageAbsPath}:`,
-                  err.message,
-                );
-              }
-            }
-          } else {
+      } else if (variants) {
+        for (const variantKey in variants) {
+          const variantBasePath = variants[variantKey];
+          if (typeof variantBasePath !== 'string') {
             console.warn(
-              `Object at '${newJsonPath.join('.')}' has a 'frames' property ('${framesString}') that is not a valid sequence string. Attempting to process as regular object.`,
+              `Animated variant ${variantKey} at ${currentPathInOriginalJson.join('.')} base path is not a string.`,
             );
-            await collectImagesAndMetadata(
-              value,
-              newJsonPath,
-              packBasePath,
-              imagesList,
-            );
+            continue;
           }
-        } else {
+          for (let i = 0; i <= endFrame - startFrame; i++) {
+            const frameNumber = startFrame + i;
+            const imageName = `${frameNumber}.${ext}`;
+            const imageAbsPath = path.join(
+              packBasePath,
+              variantBasePath,
+              imageName,
+            );
+            try {
+              if (!(await fs.pathExists(imageAbsPath))) {
+                console.warn(`Image not found, skipping: ${imageAbsPath}`);
+                continue;
+              }
+              const metadata = await sharp(imageAbsPath, {
+                limitInputPixels: false,
+              }).metadata();
+              imagesList.push({
+                width: metadata.width,
+                height: metadata.height,
+                data: {
+                  outputPath: [
+                    ...currentPathInOriginalJson,
+                    'variants',
+                    variantKey,
+                  ],
+                  type: 'animated_variant_frame',
+                  frameIndex: i,
+                  imageAbsPath: imageAbsPath,
+                  originalAnimationNode: currentNode,
+                },
+              });
+            } catch (err) {
+              console.error(
+                `Error processing variant animation image ${imageAbsPath}:`,
+                err.message,
+              );
+            }
+          }
+        }
+      }
+    } else {
+      for (const key in currentNode) {
+        if (Object.prototype.hasOwnProperty.call(currentNode, key)) {
           await collectImagesAndMetadata(
-            value,
-            newJsonPath,
+            currentNode[key],
+            [...currentPathInOriginalJson, key],
             packBasePath,
             imagesList,
           );
@@ -332,12 +313,15 @@ async function processTexturePack(packName) {
 
     for (const rect of bin.rects) {
       const { x, y, width: w, height: h, data } = rect;
+      const coords = { x, y, w, h };
+
       const {
-        jsonPath,
+        outputPath,
         type,
         frameIndex,
         imageAbsPath,
-        originalAnimationObject,
+        originalNode,
+        originalAnimationNode,
       } = data;
 
       compositeOps.push({
@@ -346,15 +330,78 @@ async function processTexturePack(packName) {
         top: y,
       });
 
-      const coords = { x, y, w, h };
-      setValueInNestedObject(
-        newIndex,
-        jsonPath,
-        coords,
-        type,
-        frameIndex,
-        originalAnimationObject,
-      );
+      let currentLevel = newIndex;
+      let nodeToModify;
+
+      if (type === 'legacy_single_leaf') {
+        for (let i = 0; i < outputPath.length - 1; i++) {
+          const part = outputPath[i];
+          if (!currentLevel[part]) currentLevel[part] = {};
+          currentLevel = currentLevel[part];
+        }
+        currentLevel[outputPath[outputPath.length - 1]] = coords;
+      } else if (type === 'static_leaf') {
+        let parentGroupNode = newIndex;
+        for (let i = 0; i < outputPath.length - PATH_SUFFIX_LENGTH; i++) {
+          const part = outputPath[i];
+          if (!parentGroupNode[part]) parentGroupNode[part] = {};
+          parentGroupNode = parentGroupNode[part];
+        }
+        if (!parentGroupNode.type) {
+          parentGroupNode.type = originalNode.type;
+          parentGroupNode.variants = {};
+        }
+        nodeToModify = parentGroupNode.variants;
+        const leafKey = outputPath[outputPath.length - 1];
+        nodeToModify[leafKey] = coords;
+      } else if (type === 'animated_base_frame') {
+        nodeToModify = newIndex;
+        for (const part of outputPath) {
+          if (!nodeToModify[part]) nodeToModify[part] = {};
+          nodeToModify = nodeToModify[part];
+        }
+        if (!nodeToModify.frames) {
+          nodeToModify.type = originalAnimationNode.type;
+          nodeToModify.fps = originalAnimationNode.fps;
+          nodeToModify.range = originalAnimationNode.range;
+          nodeToModify.frames = [];
+          delete nodeToModify.base;
+          delete nodeToModify.ext;
+          delete nodeToModify.variants;
+        }
+        while (nodeToModify.frames.length <= frameIndex) {
+          nodeToModify.frames.push(null);
+        }
+        nodeToModify.frames[frameIndex] = coords;
+      } else if (type === 'animated_variant_frame') {
+        let animObjectNode = newIndex;
+        const animObjectPath = outputPath.slice(
+          0,
+          outputPath.length - PATH_SUFFIX_LENGTH,
+        );
+        for (const part of animObjectPath) {
+          if (!animObjectNode[part]) animObjectNode[part] = {};
+          animObjectNode = animObjectNode[part];
+        }
+        if (!animObjectNode.type) {
+          animObjectNode.type = originalAnimationNode.type;
+          animObjectNode.fps = originalAnimationNode.fps;
+          animObjectNode.range = originalAnimationNode.range;
+          animObjectNode.variants = {};
+          delete animObjectNode.base;
+          delete animObjectNode.ext;
+        }
+
+        const variantKey = outputPath[outputPath.length - 1];
+        if (!animObjectNode.variants[variantKey]) {
+          animObjectNode.variants[variantKey] = { frames: [] };
+        }
+        nodeToModify = animObjectNode.variants[variantKey];
+        while (nodeToModify.frames.length <= frameIndex) {
+          nodeToModify.frames.push(null);
+        }
+        nodeToModify.frames[frameIndex] = coords;
+      }
     }
 
     if (compositeOps.length > 0) {
