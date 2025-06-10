@@ -830,7 +830,7 @@ class Renderer {
 
     this._layersManager.addLayer({
       name: 'hexagons',
-      fps: this._assetsManager.textures.get('hexagons', 'loop').fps,
+      fps: this._assetsManager.textures.get('hexagons', 'loop').definition.fps,
       zIndex: 4,
       render: ({ context, elapsed }) => {
         this._layersManager.clear('hexagons');
@@ -857,12 +857,13 @@ class Renderer {
     });
 
     this._layersManager.addLayer({
-      name: 'preview-hexagons-partial',
-      fps: this._assetsManager.textures.get('hexagons', 'partial').fps,
+      name: 'preview-hexagons-particle',
+      fps: this._assetsManager.textures.get('hexagons', 'particle').definition
+        .fps,
       zIndex: 7,
       render: ({ context, elapsed }) => {
-        this._layersManager.clear('preview-hexagons-partial');
-        this._renderPreviewingHexagonPartialPositionsFrame(context, elapsed);
+        this._layersManager.clear('preview-hexagons-particle');
+        this._renderPreviewingHexagonParticlePositionsFrame(context, elapsed);
       },
     });
 
@@ -1279,8 +1280,8 @@ class Renderer {
    * @param {CanvasRenderingContext2D} context - The canvas context to render the preview hexagon partial positions on.
    * @param {number} elapsed - The elapsed time since the last render, used for animation.
    */
-  _renderPreviewingHexagonPartialPositionsFrame(context, elapsed) {
-    const textures = this._assetsManager.textures.get('hexagons', 'partial');
+  _renderPreviewingHexagonParticlePositionsFrame(context, elapsed) {
+    const textures = this._assetsManager.textures.get('hexagons', 'particle');
     const frameCount =
       textures.definition.range[1] - textures.definition.range[0] + 1;
     const fps = textures.definition.fps;
