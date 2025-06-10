@@ -901,6 +901,7 @@ class Renderer {
       name: 'temporary',
       fps: 0,
       zIndex: -1, // Negative zIndex to not render in the main canvas,
+      render: () => {},
     });
   }
 
