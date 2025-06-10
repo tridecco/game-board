@@ -1304,10 +1304,8 @@ class Renderer {
    * @param {CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D} context - The canvas context to render the available positions on.
    */
   _renderShowingAvailablePositions(context) {
-    if (!Array.isArray(positions)) {
-      throw new Error(
-        'positions must be an array of available position indexes',
-      );
+    if (this._showingAvailablePositions.size === 0) {
+      return; // No available positions to render
     }
 
     context.fillStyle =
@@ -1315,7 +1313,7 @@ class Renderer {
       DEFAULT_AVAILABLE_POSITIONS_OVERLAY_FILL_COLOR;
     context.fillRect(0, 0, this._width, this._height);
 
-    for (const index of positions) {
+    for (const index of this._showingAvailablePositions) {
       const tile = this._map.tiles[index];
       if (!tile) {
         console.warn(
