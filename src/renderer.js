@@ -737,7 +737,7 @@ class Renderer {
 
     this._board.addEventListener('set', renderPiece);
     this._board.addEventListener('remove', reRenderPieces);
-    this.board.addEventListener('clear', clearBoard);
+    this._board.addEventListener('clear', clearBoard);
 
     this._eventHandlers.set('set', renderPiece);
     this._eventHandlers.set('remove', reRenderPieces);
