@@ -70,6 +70,7 @@ class LayersManager {
 
     layer._frameInterval = layer.fps === 0 ? 0 : ONE_SECOND / layer.fps;
     layer._lastRender = 0;
+    layer._firstRender = 0;
 
     this.layers.push(layer);
     this.layers.sort((a, b) => a.zIndex - b.zIndex);
@@ -77,6 +78,21 @@ class LayersManager {
     this.frameRequested = {};
 
     return layer.context;
+  }
+
+  /**
+   * @method getLayer - Retrieves a layer by its name.
+   * @param {string} layerName - The name of the layer to retrieve.
+   * @returns {Object|null} - The layer object if found, otherwise null.
+   * @throws {Error} - If the layerName is not a string.
+   */
+  getLayer(layerName) {
+    if (typeof layerName !== 'string') {
+      throw new Error('layerName must be a string');
+    }
+
+    const layer = this.layers.find((l) => l.name === layerName);
+    return layer || null;
   }
 
   /**
@@ -121,11 +137,15 @@ class LayersManager {
           layer.render({
             context: layer.context,
             deltaTime: elapsed,
+            elapsed: now - layer._firstRender,
             layer,
             timestamp: now,
           });
 
           layer._lastRender = now;
+          if (layer._firstRender === 0) {
+            layer._firstRender = now;
+          }
         }
 
         this.frameRequested[layer.name]?.forEach((callback) => {
