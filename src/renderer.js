@@ -373,10 +373,18 @@ class FPSTracker {
   /**
    * @constructor
    * @param {HTMLCanvasContext} context - The canvas context to draw the FPS on.
+   * @throws {Error} - If the context is not a CanvasRenderingContext2D or OffscreenCanvasRenderingContext2D instance.
    */
   constructor(context) {
-    if (!(context instanceof CanvasRenderingContext2D)) {
-      throw new Error('context must be a CanvasRenderingContext2D instance');
+    if (
+      !(
+        context instanceof CanvasRenderingContext2D ||
+        context instanceof OffscreenCanvasRenderingContext2D
+      )
+    ) {
+      throw new Error(
+        'context must be a CanvasRenderingContext2D or OffscreenCanvasRenderingContext2D instance',
+      );
     }
 
     this.context = context;
