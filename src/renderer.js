@@ -424,14 +424,10 @@ class FPSTracker {
     ctx.fillStyle = 'rgba(0,0,0,0.5)';
     const padding = 8;
     const x = ctx.canvas.width - padding;
+    const y = ctx.canvas.height - padding;
+    const metrics = ctx.measureText(text);
     const boxWidth = metrics.width + FPS_BOX_HORIZONTAL_PADDING;
-    ctx.fillRect(x - boxWidth, y - boxHeight, boxWidth, boxHeight);
-    ctx.fillStyle = '#fff';
-    ctx.fillText(
-      text,
-      x - FPS_TEXT_HORIZONTAL_OFFSET,
-      y - FPS_TEXT_VERTICAL_OFFSET,
-    );
+    const boxHeight = 24;
     ctx.fillRect(x - boxWidth, y - boxHeight, boxWidth, boxHeight);
     ctx.fillStyle = '#fff';
     ctx.fillText(
