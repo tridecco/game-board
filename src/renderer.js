@@ -165,7 +165,7 @@ class LayersManager {
 
         this.frameRequested[layer.name]?.forEach((callback) => {
           if (typeof callback === 'function') {
-            callback(context);
+            callback(layer.context);
           }
         });
         this.frameRequested[layer.name]?.clear();
