@@ -777,8 +777,8 @@ class Renderer {
 
     this._context.scale(dpr, dpr);
 
-    const leftOffset = (containerWidth - canvasWidth) / HALF;
-    const topOffset = (containerHeight - canvasHeight) / HALF;
+    const leftOffset = (containerWidth - canvasWidth) * HALF;
+    const topOffset = (containerHeight - canvasHeight) * HALF;
     this._canvas.style.position = 'absolute';
     this._canvas.style.left = `${leftOffset}px`;
     this._canvas.style.top = `${topOffset}px`;
@@ -986,13 +986,13 @@ class Renderer {
     if (this._width / this._height > gridRatio) {
       gridDrawHeight = this._height;
       gridDrawWidth = this._height * gridRatio;
-      gridOffsetX = (this._width - gridDrawWidth) / HALF;
+      gridOffsetX = (this._width - gridDrawWidth) * HALF;
       gridOffsetY = 0;
     } else {
       gridDrawWidth = this._width;
       gridDrawHeight = this._width / gridRatio;
       gridOffsetX = 0;
-      gridOffsetY = (this._height - gridDrawHeight) / HALF;
+      gridOffsetY = (this._height - gridDrawHeight) * HALF;
     }
 
     context.drawImage(
