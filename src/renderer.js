@@ -98,7 +98,7 @@ class LayersManager {
   /**
    * @method getLayer - Retrieves a layer by its name.
    * @param {string} layerName - The name of the layer to retrieve.
-   * @returns {Object|null} - The layer object if found, otherwise null.
+   * @returns {Object | null} - The layer object if found, otherwise null.
    * @throws {Error} - If the layerName is not a string.
    */
   getLayer(layerName) {
@@ -1013,7 +1013,7 @@ class Renderer {
    * @param {string} [fillColor] - Optional fill color to override texture colors, used for hitmap rendering.
    * @throws {Error} - If the index is out of bounds or if the texture for the piece is not found.
    */
-  _renderPiece(context, colorsKey, flipped, fillColor) {
+  _renderPiece(context, index, colorsKey, flipped, fillColor) {
     const tile = this._map.tiles[index];
     if (!tile) {
       throw new Error(`Tile index ${index} out of bounds`);
