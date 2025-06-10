@@ -588,7 +588,12 @@ class Renderer {
 
     this._isDestroyed = false;
 
-    this._init()
+    this._init({
+      texturesIndexUrl,
+      texturesAtlasUrl,
+      backgroundUrl,
+      gridUrl,
+    })
       .then(() => {
         callback(null, this);
       })
@@ -600,17 +605,16 @@ class Renderer {
 
   /**
    * @method _init - Initializes the renderer by setting up assets, event listeners, dimensions, layers, and FPS tracking.
+   * @param {Object} assetsUrls - An object containing the URLs of the assets to be loaded.
    * @returns {Promise} - A promise that resolves when all initialization steps are complete.
    */
-  async _init() {
-    await Promise.all([
-      await this._initAssets(),
-      this._initEventListeners(),
-      this._initEventHandlers(),
-      this._initDimensions(),
-      this._initLayers(),
-      this._initFPS(),
-    ]);
+  async _init(assetsUrls) {
+    await this._initAssets(assetsUrls);
+    this._initDimensions();
+    this._initEventListeners();
+    this._initEventHandlers();
+    this._initLayers();
+    this._initFPS();
 
     this._layersManager.render(true); // Force render all layers to initialize the canvas
     this._startRenderingLoop();
@@ -618,15 +622,16 @@ class Renderer {
 
   /**
    * @method _initAssets - Initializes the assets manager and loads all required assets.
+   * @param {Object} assetsUrls - An object containing the URLs of the assets to be loaded.
    * @returns {Promise} - A promise that resolves when all assets are loaded.
    * @throws {Error} - If there is an error loading the assets.
    */
-  async _initAssets() {
+  async _initAssets(assetsUrls) {
     this._assetsManager = new AssetsManager(
-      this._board.texturesIndexUrl,
-      this._board.texturesAtlasUrl,
-      this._board.backgroundUrl,
-      this._board.gridUrl,
+      assetsUrls.texturesIndexUrl,
+      assetsUrls.texturesAtlasUrl,
+      assetsUrls.backgroundUrl,
+      assetsUrls.gridUrl,
     );
 
     try {
