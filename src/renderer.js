@@ -942,7 +942,7 @@ class Renderer {
 
   /**
    * @method _renderBackground - Renders the background image on a canvas context.
-   * @param {CanvasRenderingContext2D} context - The canvas context to render the background on.
+   * @param {CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D} context - The canvas context to render the background on.
    */
   _renderBackground(context) {
     const bgWidth = this._assetsManager.background.width;
@@ -974,7 +974,7 @@ class Renderer {
 
   /**
    * @method _renderGrid - Renders the grid image on a canvas context.
-   * @param {CanvasRenderingContext2D} context - The canvas context to render the grid on.
+   * @param {CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D} context - The canvas context to render the grid on.
    */
   _renderGrid(context) {
     const gridWidth = this._assetsManager.grid.width;
@@ -1006,7 +1006,7 @@ class Renderer {
 
   /**
    * @method _renderPiece - Renders a piece on the canvas context.
-   * @param {CanvasRenderingContext2D} context - The canvas context to render the piece on.
+   * @param {CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D} context - The canvas context to render the piece on.
    * @param {number} index - The index of the piece to render, corresponding to its position in the board's index array.
    * @param {string} colorsKey - The color key of the piece, used to retrieve the correct texture.
    * @param {boolean} flipped - A boolean indicating if the piece should be rendered flipped.
@@ -1099,7 +1099,7 @@ class Renderer {
 
   /**
    * @method _renderHexagon - Renders a hexagon on the canvas context.
-   * @param {CanvasRenderingContext2D} context - The canvas context to render the hexagon on.
+   * @param {CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D} context - The canvas context to render the hexagon on.
    * @param {Array<number>} coordinate - The column and row coordinate of the hexagon to render.
    * @param {Object} texture - The texture object containing the hexagon texture image and its definition.
    * @param {number} [scale=1] - The scale factor for the hexagon size.
@@ -1140,7 +1140,7 @@ class Renderer {
 
   /**
    * @method _renderPreviewPiece - Renders a preview piece on the canvas context.
-   * @param {CanvasRenderingContext2D} context - The canvas context to render the preview piece on.
+   * @param {CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D} context - The canvas context to render the preview piece on.
    * @param {number} index - The index of the piece to render, corresponding to its position in the board's index array.
    * @param {Piece} piece - The Piece object to be previewed.
    * @param {string} [fillColor] - Optional fill color to override texture colors, used for preview rendering.
@@ -1167,7 +1167,7 @@ class Renderer {
 
   /**
    * @method _renderPlacedPieces - Renders all placed pieces on the canvas context.
-   * @param {CanvasRenderingContext2D} context - The canvas context to render the pieces on.
+   * @param {CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D} context - The canvas context to render the pieces on.
    */
   _renderPlacedPieces(context) {
     const pieces = this._board.indexes;
@@ -1183,7 +1183,7 @@ class Renderer {
 
   /**
    * @method _renderFormedHexagonsFrame - Renders the formed hexagons on the canvas context.
-   * @param {CanvasRenderingContext2D} context - The canvas context to render the hexagons on.
+   * @param {CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D} context - The canvas context to render the hexagons on.
    * @param {number} elapsed - The elapsed time since the last render, used for animation.
    */
   _renderFormedHexagonsFrame(context, elapsed) {
@@ -1252,7 +1252,7 @@ class Renderer {
 
   /**
    * @method _renderPreviewingPiecePositions - Renders all previewing piece positions on the canvas context.
-   * @param {CanvasRenderingContext2D} context - The canvas context to render the preview pieces on.
+   * @param {CanvasRenderingConCanvasRenderingContext2D | OffscreenCanvasRenderingContext2Dtext2D} context - The canvas context to render the preview pieces on.
    */
   _renderPreviewingPiecePositions(context) {
     for (const [index, piece, fillColor = DEFAULT_PREVIEW_FILL_COLOR] of this
@@ -1263,7 +1263,7 @@ class Renderer {
 
   /**
    * @method _renderPreviewingHexagonPositions - Renders all previewing hexagon positions on the canvas context.
-   * @param {CanvasRenderingContext2D} context - The canvas context to render the preview hexagons on.
+   * @param {CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D} context - The canvas context to render the preview hexagons on.
    */
   _renderPreviewingHexagonPositions(context) {
     for (const [coordinate, color] of this._previewingHexagonPositions) {
@@ -1277,8 +1277,8 @@ class Renderer {
   }
 
   /**
-   * @method _renderPreviewingHexagonPartialPositionsFrame - Renders the previewing hexagon partial positions frame on the canvas context.
-   * @param {CanvasRenderingContext2D} context - The canvas context to render the preview hexagon partial positions on.
+   * @method _renderPreviewingHexagonParticlePositionsFrame - Renders the previewing hexagon particle positions frame on the canvas context.
+   * @param {CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D} context - The canvas context to render the preview hexagon particle positions on.
    * @param {number} elapsed - The elapsed time since the last render, used for animation.
    */
   _renderPreviewingHexagonParticlePositionsFrame(context, elapsed) {
@@ -1301,8 +1301,7 @@ class Renderer {
 
   /**
    * @method _renderShowingAvailablePositions - Renders the available positions on the canvas context.
-   * @param {CanvasRenderingContext2D} context - The canvas context to render the available positions on.
-   * @throws {Error} - If positions is not an array or if any position index is out of bounds.
+   * @param {CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D} context - The canvas context to render the available positions on.
    */
   _renderShowingAvailablePositions(context) {
     if (!Array.isArray(positions)) {
@@ -1376,7 +1375,7 @@ class Renderer {
 
   /**
    * @method _renderHitmap - Renders the hitmap on the canvas context.
-   * @param {CanvasRenderingContext2D} context - The canvas context to render the hitmap on.
+   * @param {CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D} context - The canvas context to render the hitmap on.
    */
   _renderHitmap(context) {
     const pieceIndices = this._board.map.positions.map((_, index) => index);
@@ -1408,7 +1407,7 @@ class Renderer {
 
   /**
    * @method _getPositionFromHitmap - Retrieves the position index from the hitmap based on the pixel coordinates.
-   * @param {CanvasRenderingContext2D} context - The canvas context to retrieve the hitmap data from.
+   * @param {CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D} context - The canvas context to retrieve the hitmap data from.
    * @param {number} x - The x-coordinate of the pixel to check.
    * @param {number} y - The y-coordinate of the pixel to check.
    * @param {boolean} [onlyAvailable=false] - Whether to only return positions that are available.
