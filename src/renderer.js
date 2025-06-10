@@ -583,7 +583,8 @@ class Renderer {
 
     this._previewingPositions = new Map();
     this._previewingHexagonPositions = new Map();
-    this._showingAvailablePositions = new Map();
+    this._showingAvailablePositions = new Set();
+    this._showingAvailablePositionsOverlayFillColor;
 
     this._isDestroyed = false;
 
@@ -1303,13 +1304,10 @@ class Renderer {
       );
     }
 
-    const [
-      positions,
-      fillColor = DEFAULT_AVAILABLE_POSITIONS_OVERLAY_FILL_COLOR,
-    ] = this._showingAvailablePositions;
-
-    context.fillStyle = fillColor;
-    maskContext.fillRect(0, 0, this._width, this._height);
+    context.fillStyle =
+      this._showingAvailablePositionsOverlayFillColor ||
+      DEFAULT_AVAILABLE_POSITIONS_OVERLAY_FILL_COLOR;
+    context.fillRect(0, 0, this._width, this._height);
 
     for (const index of positions) {
       const tile = this._map.tiles[index];
