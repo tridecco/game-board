@@ -1124,7 +1124,7 @@ class Renderer {
       throw new Error(`Hexagon coordinate ${coordinate} not found in map`);
     }
 
-    const { textureImage: image, definition } = texture;
+    const { image: textureImage, definition } = texture;
 
     const x = hexagon.x * this._widthRatio;
     const y = hexagon.y * this._heightRatio;
@@ -1139,7 +1139,7 @@ class Renderer {
       : (hexagon.width * this._widthRatio * scale * imageHeight) / imageWidth;
 
     context.drawImage(
-      image,
+      textureImage,
       definition.x,
       definition.y,
       definition.w,
