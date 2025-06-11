@@ -723,6 +723,26 @@ class Renderer {
       });
     }.bind(this);
 
+    const addFlashingHexagonPositions = function addFlashingHexagonPositions(
+      hexagons,
+    ) {
+      hexagons.forEach((hexagon) => {
+        this._flashingHexagonPositions.set(
+          `${hexagon.coordinate[0]}-${hexagon.coordinate[1]}`,
+          Date.now(),
+        );
+      });
+    }.bind(this);
+
+    const removeFlashingHexagonPositions =
+      function removeFlashingHexagonPositions(hexagonsCoordinates) {
+        hexagonsCoordinates.forEach((coordinate) => {
+          this._flashingHexagonPositions.delete(
+            `${coordinate[0]}-${coordinate[1]}`,
+          );
+        });
+      }.bind(this);
+
     const clearBoard = function clearBoard() {
       this._layersManager.requestAnimationFrame('pieces', () => {
         this._layersManager.clear('pieces');
@@ -737,10 +757,14 @@ class Renderer {
 
     this._board.addEventListener('set', renderPiece);
     this._board.addEventListener('remove', reRenderPieces);
+    this._board.addEventListener('form', addFlashingHexagonPositions);
+    this._board.addEventListener('destroy', removeFlashingHexagonPositions);
     this._board.addEventListener('clear', clearBoard);
 
     this._eventHandlers.set('set', renderPiece);
     this._eventHandlers.set('remove', reRenderPieces);
+    this._eventHandlers.set('form', addFlashingHexagonPositions);
+    this._eventHandlers.set('destroy', removeFlashingHexagonPositions);
     this._eventHandlers.set('clear', clearBoard);
   }
 
