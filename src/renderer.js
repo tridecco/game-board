@@ -579,7 +579,7 @@ class Renderer {
 
     this._eventHandlers = new Map();
 
-    this._flashingPositions = new Map();
+    this._flashingHexagonPositions = new Map();
 
     this._previewingPositions = new Map();
     this._previewingHexagonPositions = new Map();
@@ -1219,6 +1219,13 @@ class Renderer {
       'flash',
     );
 
+    const flashingEffectDuration =
+      ((flashingHexagonTextures.definition.range[1] -
+        flashingHexagonTextures.definition.range[0] +
+        1) /
+        flashingHexagonTextures.definition.fps) *
+      ONE_SECOND;
+
     const formedHexagons = this._board.getCompleteHexagons();
     for (const hexagon of formedHexagons) {
       const coordinate = hexagon.coordinate;
@@ -1226,23 +1233,27 @@ class Renderer {
 
       let texture;
       if (
-        this._flashingPositions.has(`${coordinate[0]}-${coordinate[1]}`) &&
-        !(
-          date.now() >
-          this._flashingPositions.get(`${coordinate[0]}-${coordinate[1]}`) +
-            (flashingHexagonTextures.definition.range[1] -
-              flashingHexagonTextures.definition.range[0] +
-              1) /
-              flashingHexagonTextures.fps
-        )
+        this._flashingHexagonPositions.has(
+          `${coordinate[0]}-${coordinate[1]}`,
+        ) &&
+        Date.now() -
+          this._flashingHexagonPositions.get(
+            `${coordinate[0]}-${coordinate[1]}`,
+          ) <
+          flashingEffectDuration
       ) {
         const frameCount =
           flashingHexagonTextures.definition.range[1] -
           flashingHexagonTextures.definition.range[0] +
           1;
         const fps = flashingHexagonTextures.definition.fps;
+        const animationElapsed =
+          Date.now() -
+          this._flashingHexagonPositions.get(
+            `${coordinate[0]}-${coordinate[1]}`,
+          );
         const currentFrame = Math.floor(
-          ((elapsed * fps) / ONE_SECOND) % frameCount,
+          ((animationElapsed * fps) / ONE_SECOND) % frameCount,
         );
         texture = {
           image: flashingHexagonTextures.image,
@@ -1252,7 +1263,9 @@ class Renderer {
             ],
         };
       } else {
-        this._flashingPositions.delete(`${coordinate[0]}-${coordinate[1]}`);
+        this._flashingHexagonPositions.delete(
+          `${coordinate[0]}-${coordinate[1]}`,
+        );
 
         const frameCount =
           hexagonTextures.definition.range[1] -
