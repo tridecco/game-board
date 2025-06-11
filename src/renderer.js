@@ -895,6 +895,11 @@ class Renderer {
       render: ({ context }) => {
         this._renderHitmap(context);
       },
+      options: {
+        willReadFrequently: true,
+        initialImageSmoothingEnabled: false,
+        imageSmoothingEnabled: false,
+      },
     });
 
     this._layersManager.addLayer({
@@ -902,6 +907,11 @@ class Renderer {
       fps: 0,
       zIndex: -1, // Negative zIndex to not render in the main canvas,
       render: () => {},
+      options: {
+        willReadFrequently: true,
+        initialImageSmoothingEnabled: false,
+        imageSmoothingEnabled: false,
+      },
     });
   }
 
