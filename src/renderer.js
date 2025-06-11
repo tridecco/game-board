@@ -1034,9 +1034,10 @@ class Renderer {
     let width, height;
     if (tile.width !== undefined && tile.width !== null) {
       width = tile.width * this._widthRatio;
-      tile.height !== undefined && tile.height !== null
-        ? tile.height * this._heightRatio
-        : (width * imageHeight) / imageWidth;
+      height =
+        tile.height !== undefined && tile.height !== null
+          ? tile.height * this._heightRatio
+          : (width * imageHeight) / imageWidth;
     } else if (tile.height !== undefined && tile.height !== null) {
       height = tile.height * this._heightRatio;
       width = (height * imageWidth) / imageHeight;
