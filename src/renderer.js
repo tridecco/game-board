@@ -1056,6 +1056,12 @@ class Renderer {
     if (fillColor) {
       const tempContext = this._layersManager.getLayer('temporary').context;
 
+      tempContext.save();
+
+      tempContext.translate(
+        tempContext.canvas.width * HALF,
+        tempContext.canvas.height * HALF,
+      );
       tempContext.drawImage(
         textureImage,
         definition.x,
@@ -1072,15 +1078,21 @@ class Renderer {
       tempContext.fillStyle = fillColor;
       tempContext.fillRect(-width * HALF, -height * HALF, width, height);
 
-      tempContext.globalCompositeOperation = 'source-over';
+      tempContext.restore();
 
       context.drawImage(
         tempContext.canvas,
+        tempContext.canvas.width * HALF - width * HALF,
+        tempContext.canvas.height * HALF - height * HALF,
+        width,
+        height,
         -width * HALF,
         -height * HALF,
         width,
         height,
       );
+
+      this._layersManager.clear('temporary');
     } else {
       context.drawImage(
         textureImage,
