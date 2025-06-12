@@ -1,6 +1,7 @@
 {
     "tiles": {
         "type": "static",
+        "scale": 1,
         "variants": {
             "blue-white": "tiles/blue-white.png",
             "blue-white-flipped": "tiles/blue-white-flipped.png",
@@ -19,6 +20,7 @@
     "hexagons": {
         "glow": {
             "type": "static",
+            "scale": 1.24,
             "variants": {
                 "blue": "hexagons/glow/blue.png",
                 "white": "hexagons/glow/white.png",
@@ -28,6 +30,7 @@
         },
         "particle": {
             "type": "animated",
+            "scale": 1.24,
             "range": [
                 0,
                 179
@@ -38,6 +41,7 @@
         },
         "flash": {
             "type": "animated",
+            "scale": 1,
             "range": [
                 0,
                 59
@@ -53,6 +57,7 @@
         },
         "loop": {
             "type": "animated",
+            "scale": 1,
             "range": [
                 0,
                 179
