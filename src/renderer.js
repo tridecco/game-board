@@ -1683,6 +1683,7 @@ class Renderer {
         .updateBackground(backgroundUrl)
         .then(() => {
           this._layersManager.requestAnimationFrame('background', (context) => {
+            this._layersManager.clear('background');
             this._renderBackground(context);
           });
           resolve();
