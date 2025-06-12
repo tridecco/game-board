@@ -1639,8 +1639,19 @@ class Renderer {
     });
   }
 
-  // Texture methods
-  getTexture(type, key) {}
+  /**
+   * @method getTexture - Retrieves a texture from the assets manager.
+   * @param {string} type - The type of texture to retrieve (e.g., 'tiles', 'hexagons').
+   * @param {string} key - The key of the texture to retrieve.
+   * @returns {Object} - The texture object containing the image and its definition.
+   * @throws {Error} - If the assets manager is not initialized or if the texture is not found.
+   */
+  getTexture(type, key) {
+    if (!this._assetsManager || !this._assetsManager.textures) {
+      throw new Error('Assets manager not initialized');
+    }
+    return this._assetsManager.textures.get(type, key);
+  }
 
   // Update methods
   updateBackground(backgroundUrl) {}
