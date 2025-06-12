@@ -1317,8 +1317,8 @@ class Renderer {
    * @param {CanvasRenderingConCanvasRenderingContext2D | OffscreenCanvasRenderingContext2Dtext2D} context - The canvas context to render the preview pieces on.
    */
   _renderPreviewingPiecePositions(context) {
-    for (const [index, piece, fillColor = DEFAULT_PREVIEW_FILL_COLOR] of this
-      ._previewingPositions) {
+    for (const [index, value] of this._previewingPositions) {
+      const [_, piece, fillColor = DEFAULT_PREVIEW_FILL_COLOR] = value;
       this._renderPreviewPiece(context, index, piece, fillColor);
     }
   }
