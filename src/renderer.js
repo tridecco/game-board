@@ -1741,6 +1741,7 @@ class Renderer {
         .updateTextures(texturesIndexUrl, texturesAtlasUrl)
         .then(() => {
           this._layersManager.requestAnimationFrame('pieces', (context) => {
+            this._layersManager.clear('pieces');
             this._renderPlacedPieces(context);
           });
           this._layersManager.removeLayer('hexagons');
@@ -1757,13 +1758,19 @@ class Renderer {
           this._layersManager.requestAnimationFrame(
             'preview-pieces',
             (context) => {
+              this._layersManager.clear('preview-pieces');
               this._renderPreviewingPiecePositions(context);
             },
           );
           this._layersManager.requestAnimationFrame(
             'preview-hexagons',
             (context) => {
-              this._renderPreviewingHexagonPositions(context);
+              if (this._previewingHexagonPositions.size === 0) {
+                this._renderPreviewingHexagonPositions(context);
+              } else {
+                this._layersManager.clear('preview-hexagons');
+                this._renderPreviewingHexagonPositions(context);
+              }
             },
           );
           this._layersManager.removeLayer('preview-hexagons-particle');
@@ -1783,10 +1790,12 @@ class Renderer {
           this._layersManager.requestAnimationFrame(
             'available-positions',
             (context) => {
+              this._layersManager.clear('available-positions');
               this._renderShowingAvailablePositions(context);
             },
           );
           this._layersManager.requestAnimationFrame('hitmap', (context) => {
+            this._layersManager.clear('hitmap');
             this._renderHitmap(context);
           });
           resolve();
