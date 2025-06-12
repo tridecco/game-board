@@ -1693,7 +1693,32 @@ class Renderer {
     });
   }
 
-  updateGrid(gridUrl) {}
+  /**
+   * @method updateGrid - Updates the grid image of the game.
+   * @param {string} gridUrl - The URL of the new grid image.
+   * @returns {Promise<void>} - A promise that resolves when the grid is updated.
+   * @throws {Error} - If the gridUrl is not a string.
+   */
+  updateGrid(gridUrl) {
+    if (typeof gridUrl !== 'string') {
+      throw new Error('gridUrl must be a string');
+    }
+
+    return new Promise(async (resolve, reject) => {
+      await this._assetsManager
+        .updateGrid(gridUrl)
+        .then(() => {
+          this._layersManager.requestAnimationFrame('grid', (context) => {
+            this._renderGrid(context);
+          });
+          resolve();
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  }
+
   updateTextures(texturesIndexUrl, texturesAtlasUrl) {}
   updateMap(newMap) {}
   updateBoard(newBoard) {}
