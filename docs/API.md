@@ -73,75 +73,77 @@ This document provides a comprehensive guide to the API of the Tridecco Game Boa
       - [Example](#example-27)
     - [`getHexagonPositions(piece)`](#gethexagonpositionspiece)
       - [Example](#example-28)
-    - [`countHexagonsFormed(index, piece)`](#counthexagonsformedindex-piece)
+    - [`getHexagonsFormed(index, piece)`](#gethexagonsformedindex-piece)
       - [Example](#example-29)
-    - [`isEmpty(index)`](#isemptyindex)
+    - [`countHexagonsFormed(index, piece)`](#counthexagonsformedindex-piece)
       - [Example](#example-30)
-    - [`isCompleteHexagon(col, row)`](#iscompletehexagoncol-row)
+    - [`isEmpty(index)`](#isemptyindex)
       - [Example](#example-31)
-    - [`getCompleteHexagons()`](#getcompletehexagons)
+    - [`isCompleteHexagon(col, row)`](#iscompletehexagoncol-row)
       - [Example](#example-32)
-    - [`addEventListener(event, callback)`](#addeventlistenerevent-callback)
+    - [`getCompleteHexagons()`](#getcompletehexagons)
       - [Example](#example-33)
-    - [`removeEventListener(event, callback)`](#removeeventlistenerevent-callback)
+    - [`addEventListener(event, callback)`](#addeventlistenerevent-callback)
       - [Example](#example-34)
-    - [`back(steps)`](#backsteps)
+    - [`removeEventListener(event, callback)`](#removeeventlistenerevent-callback)
       - [Example](#example-35)
-    - [`clone(options)`](#cloneoptions)
+    - [`back(steps)`](#backsteps)
       - [Example](#example-36)
-    - [`clear()`](#clear-1)
+    - [`clone(options)`](#cloneoptions)
       - [Example](#example-37)
-    - [`toJSON(options)`](#tojsonoptions)
+    - [`clear()`](#clear-1)
       - [Example](#example-38)
-    - [`fromJSON(json)` (static)](#fromjsonjson-static)
+    - [`toJSON(options)`](#tojsonoptions)
       - [Example](#example-39)
+    - [`fromJSON(json)` (static)](#fromjsonjson-static)
+      - [Example](#example-40)
   - [Game Piece](#game-piece)
     - [Constructor](#constructor-3)
-      - [Example](#example-40)
-    - [`equals(other)`](#equalsother)
       - [Example](#example-41)
-    - [`clone()`](#clone-2)
+    - [`equals(other)`](#equalsother)
       - [Example](#example-42)
-    - [`toJSON()`](#tojson)
+    - [`clone()`](#clone-2)
       - [Example](#example-43)
-    - [`fromJSON(json)` (static)](#fromjsonjson-static-1)
+    - [`toJSON()`](#tojson)
       - [Example](#example-44)
+    - [`fromJSON(json)` (static)](#fromjsonjson-static-1)
+      - [Example](#example-45)
   - [Texture Pack](#texture-pack)
     - [Constructor](#constructor-4)
-      - [Example](#example-45)
-    - [`get(type, key)`](#gettype-key)
       - [Example](#example-46)
+    - [`get(type, key)`](#gettype-key)
+      - [Example](#example-47)
   - [Renderer](#renderer)
     - [Constructor](#constructor-5)
-      - [Example](#example-47)
-    - [`previewPiece(index, piece, fillColor)`](#previewpieceindex-piece-fillcolor)
       - [Example](#example-48)
-    - [`clearPreview()`](#clearpreview)
+    - [`previewPiece(index, piece, fillColor)`](#previewpieceindex-piece-fillcolor)
       - [Example](#example-49)
-    - [`showAvailablePositions(positions, fillColor)`](#showavailablepositionspositions-fillcolor)
+    - [`clearPreview()`](#clearpreview)
       - [Example](#example-50)
-    - [`clearAvailablePositions()`](#clearavailablepositions)
+    - [`showAvailablePositions(positions, fillColor)`](#showavailablepositionspositions-fillcolor)
       - [Example](#example-51)
-    - [`getTexture(type, key)`](#gettexturetype-key)
+    - [`clearAvailablePositions()`](#clearavailablepositions)
       - [Example](#example-52)
-    - [`updateBoard(newBoard)`](#updateboardnewboard)
+    - [`getTexture(type, key)`](#gettexturetype-key)
       - [Example](#example-53)
-    - [`updateMap(newMap)`](#updatemapnewmap)
+    - [`updateBoard(newBoard)`](#updateboardnewboard)
       - [Example](#example-54)
-    - [`updateTextures(texturesUrl)`](#updatetexturestexturesurl)
+    - [`updateMap(newMap)`](#updatemapnewmap)
       - [Example](#example-55)
-    - [`updateBackground(backgroundUrl)`](#updatebackgroundbackgroundurl)
+    - [`updateTextures(texturesUrl)`](#updatetexturestexturesurl)
       - [Example](#example-56)
-    - [`updateGrid(gridUrl)`](#updategridgridurl)
+    - [`updateBackground(backgroundUrl)`](#updatebackgroundbackgroundurl)
       - [Example](#example-57)
-    - [`addEventListener(eventType, listener, options)`](#addeventlistenereventtype-listener-options)
+    - [`updateGrid(gridUrl)`](#updategridgridurl)
       - [Example](#example-58)
-    - [`removeEventListener(eventType, listener)`](#removeeventlistenereventtype-listener)
+    - [`addEventListener(eventType, listener, options)`](#addeventlistenereventtype-listener-options)
       - [Example](#example-59)
-    - [`getFPS()`](#getfps)
+    - [`removeEventListener(eventType, listener)`](#removeeventlistenereventtype-listener)
       - [Example](#example-60)
-    - [`destroy()`](#destroy)
+    - [`getFPS()`](#getfps)
       - [Example](#example-61)
+    - [`destroy()`](#destroy)
+      - [Example](#example-62)
 
 ## Import the Library
 
@@ -1003,6 +1005,51 @@ const hexagonFormingPositions = board.getHexagonPositions(pieceToPlace);
 hexagonFormingPositions.forEach(([index, hexagonsFormed]) => {
   console.log(`Position ${index} can form ${hexagonsFormed} hexagons.`);
 });
+```
+
+### `getHexagonsFormed(index, piece)`
+
+```javascript
+getHexagonsFormed(index, piece);
+```
+
+**Description:**
+
+Gets the hexagons formed by placing a given `Piece` at the specified position `index`. This method simulates the placement to determine the outcome and then reverts the board to its original state, ensuring no permanent modifications to the board.
+
+**Parameters:**
+
+- `index` (number): The 0-based index of the position on the board where the piece is to be hypothetically placed.
+- `piece` (Piece): The `Piece` object to test.
+
+**Returns:**
+
+- `Array<Object>`: An array of objects representing the hexagons that would be formed. Each object has the following properties:
+  - `coordinate` (Array\<number>): The coordinates `[col, row]` of the formed hexagon.
+  - `color` (string): The color of the formed hexagon.
+
+**Throws:**
+
+- `Error`: If `index` is out of bounds or if `piece` is not an instance of `Piece`.
+
+#### Example
+
+```javascript
+const pieceToTest = new Piece(['yellow', 'green']);
+const potentialHexagons = board.getHexagonsFormed(4, pieceToTest);
+
+if (potentialHexagons.length > 0) {
+  console.log(
+    `Placing the piece at index 4 would form ${potentialHexagons.length} hexagon(s):`,
+  );
+  potentialHexagons.forEach((hex) => {
+    console.log(
+      `- Hexagon at [${hex.coordinate.join(', ')}] with color ${hex.color}`,
+    );
+  });
+} else {
+  console.log('Placing the piece at index 4 would form no hexagons.');
+}
 ```
 
 ### `countHexagonsFormed(index, piece)`
