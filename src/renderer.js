@@ -583,6 +583,8 @@ class Renderer {
       },
     );
 
+    this._canvasEventHandlers = [];
+
     this._eventListeners = {
       dragover: new Set(), // Listeners for dragover events
       dragoverAvailable: new Set(), // Listeners for dragover events with available positions
@@ -672,7 +674,7 @@ class Renderer {
     ];
 
     eventConfigs.forEach(({ type, preventDefault }) => {
-      this._canvas.addEventListener(type, (event) => {
+      const handler = (event) => {
         const dpr = this._dpr;
         const coords = {
           x: event.offsetX * dpr,
@@ -702,7 +704,11 @@ class Renderer {
             availablePositionIndex,
           );
         }
-      });
+      };
+
+      this._canvas.addEventListener(type, handler);
+
+      this._canvasEventHandlers.push({ type, handler });
     });
   }
 
