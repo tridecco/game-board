@@ -1628,7 +1628,16 @@ class Renderer {
     );
   }
 
-  clearAvailablePositions() {}
+  /**
+   * @method clearAvailablePositions - Clears all highlighted available positions from the board.
+   */
+  clearAvailablePositions() {
+    this._showingAvailablePositions.clear();
+    this._showingAvailablePositionsOverlayFillColor = null;
+    this._layersManager.requestAnimationFrame('available-positions', () => {
+      this._layersManager.clear('available-positions');
+    });
+  }
 
   // Texture methods
   getTexture(type, key) {}
