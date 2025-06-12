@@ -523,6 +523,7 @@ class Renderer {
     this._heightRatio;
     this._dpr;
 
+    this._isResizeRequested = false;
     this._resizeObserverInitialized = false;
     this._resizeObserver = new ResizeObserver(() => {
       if (!this._resizeObserverInitialized) {
@@ -541,7 +542,13 @@ class Renderer {
         },
       });
 
-      this._initDimensions(true); // Reinitialize dimensions on resize
+      if (this._isResizeRequested) return; // Prevent multiple resize requests
+
+      requestAnimationFrame(() => {
+        this._initDimensions(true); // Reinitialize dimensions on resize
+        this._isResizeRequested = false;
+      });
+      this._isResizeRequested = true;
     });
     this._resizeObserver.observe(this._container);
 
