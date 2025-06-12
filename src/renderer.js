@@ -1696,8 +1696,13 @@ class Renderer {
     }
   }
 
-  // FPS methods
-  getFPS() {}
+  /**
+   * @method getFPS - Returns the current FPS of the rendering loop.
+   * @returns {number | null} - The current FPS if the FPS tracker is initialized, otherwise null.
+   */
+  getFPS() {
+    return this._fpsTracker ? this._fpsTracker.getFPS() : null;
+  }
 
   // Cleanup methods
   destroy() {}
