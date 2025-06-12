@@ -1522,10 +1522,64 @@ class Renderer {
     return pieceIndex;
   }
 
-  // Public methods
+  /**
+   * @method previewPiece - Previews a piece at a specific index on the board.
+   * @param {number} index - The index of the tile where the piece should be previewed.
+   * @param {Piece} piece - The Piece object to be previewed.
+   * @param {string} [fillColor] - Optional fill color for the preview overlay, default is semi-transparent white.
+   * @param {boolean} [clearPrevious=true] - Whether to clear previous previews before rendering the new one.
+   * @throws {Error} - If the piece object is invalid or if the tile index is out of bounds.
+   */
+  previewPiece(
+    index,
+    piece,
+    fillColor = DEFAULT_PREVIEW_FILL_COLOR,
+    clearPrevious = true,
+  ) {
+    if (!piece || !piece.colorsKey) {
+      throw new Error('Invalid piece object for preview');
+    }
 
-  // Preview methods
-  previewPiece(index, piece, fillColor, clearPrevious = true) {}
+    const tile = this._map.tiles[index];
+    if (!tile) {
+      throw new Error('Tile index out of bounds for preview');
+    }
+
+    if (clearPrevious) {
+      this._previewingPositions.clear();
+      this._previewingHexagonPositions.clear();
+    }
+
+    const noPreviewingPositions = this._previewingPositions.size === 0;
+    const noPreviewingHexagonPositions =
+      this._previewingHexagonPositions.size === 0;
+
+    this._previewingPositions.set(index, [index, piece, fillColor]);
+    this._board
+      .getHexagonsFormed(index, piece)
+      .forEach(({ coordinate, color }) => {
+        this._previewingHexagonPositions.set(coordinate, color);
+      });
+
+    this._layersManager.requestAnimationFrame('preview-pieces', (context) => {
+      if (noPreviewingPositions) {
+        this._renderPreviewPiece(context, index, piece, fillColor);
+      } else {
+        this._layersManager.clear('preview-pieces');
+        this._renderPreviewingPiecePositions(context);
+      }
+    });
+
+    this._layersManager.requestAnimationFrame('preview-hexagons', (context) => {
+      if (noPreviewingHexagonPositions) {
+        this._renderPreviewingHexagonPositions(context);
+      } else {
+        this._layersManager.clear('preview-hexagons');
+        this._renderPreviewingHexagonPositions(context);
+      }
+    });
+  }
+
   clearPreview() {}
 
   // Available positions methods
