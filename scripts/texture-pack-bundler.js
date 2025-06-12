@@ -349,6 +349,11 @@ async function processTexturePack(packName) {
         }
         if (!parentGroupNode.type) {
           parentGroupNode.type = originalNode.type;
+        }
+        if (originalNode.scale !== undefined) {
+          parentGroupNode.scale = originalNode.scale;
+        }
+        if (!parentGroupNode.variants) {
           parentGroupNode.variants = {};
         }
         nodeToModify = parentGroupNode.variants;
@@ -364,6 +369,9 @@ async function processTexturePack(packName) {
           nodeToModify.type = originalAnimationNode.type;
           nodeToModify.fps = originalAnimationNode.fps;
           nodeToModify.range = originalAnimationNode.range;
+          if (originalAnimationNode.scale !== undefined) {
+            nodeToModify.scale = originalAnimationNode.scale;
+          }
           nodeToModify.frames = [];
           delete nodeToModify.base;
           delete nodeToModify.ext;
@@ -387,6 +395,9 @@ async function processTexturePack(packName) {
           animObjectNode.type = originalAnimationNode.type;
           animObjectNode.fps = originalAnimationNode.fps;
           animObjectNode.range = originalAnimationNode.range;
+          if (originalAnimationNode.scale !== undefined) {
+            animObjectNode.scale = originalAnimationNode.scale;
+          }
           animObjectNode.variants = {};
           delete animObjectNode.base;
           delete animObjectNode.ext;
