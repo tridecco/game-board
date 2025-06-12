@@ -1795,7 +1795,25 @@ class Renderer {
     });
   }
 
-  updateMap(newMap) {}
+  /**
+   * @method updateMap - Updates the map used in the game.
+   * @param {Object} newMap - The new map object to be set.
+   * @throws {Error} - If newMap is not a valid map object.
+   */
+  updateMap(newMap) {
+    if (!newMap || typeof newMap !== 'object') {
+      throw new Error('newMap must be a valid map object');
+    }
+
+    this._map = newMap;
+
+    this._previewingPositions.clear();
+    this._previewingHexagonPositions.clear();
+    this._showingAvailablePositions.clear();
+
+    this._initDimensions(true);
+  }
+
   updateBoard(newBoard) {}
 
   /**
