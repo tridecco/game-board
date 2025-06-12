@@ -1718,8 +1718,106 @@ class Renderer {
     return this._fpsTracker ? this._fpsTracker.getFPS() : null;
   }
 
-  // Cleanup methods
-  destroy() {}
+  /**
+   * @method destroy - Cleans up the renderer, removing all event listeners, stopping the rendering loop, and clearing resources.
+   */
+  destroy() {
+    if (this._isDestroyed) return;
+    this._isDestroyed = true;
+
+    this._stopRenderingLoop();
+
+    if (this._canvas) {
+      this._canvasEventHandlers.forEach((handler) => {
+        this._canvas.removeEventListener(handler.event, handler.callback);
+      });
+      this._canvasEventHandlers = [];
+    }
+
+    if (this._resizeObserver) {
+      try {
+        this._resizeObserver.disconnect();
+      } catch (e) {}
+      this._resizeObserver = null;
+    }
+
+    if (this._mutationObserver) {
+      try {
+        this._mutationObserver.disconnect();
+      } catch (e) {}
+      this._mutationObserver = null;
+    }
+
+    if (this._eventListeners) {
+      Object.values(this._eventListeners).forEach(
+        (set) => set.clear && set.clear(),
+      );
+      this._eventListeners = null;
+    }
+
+    if (this._board && this._eventHandlers) {
+      for (const [event, handler] of this._eventHandlers.entries()) {
+        this._board.removeEventListener(event, handler);
+      }
+      this._eventHandlers.clear();
+      this._eventHandlers = null;
+    }
+
+    if (this._layersManager) {
+      if (typeof this._layersManager.clearAll === 'function') {
+        this._layersManager.clearAll();
+      }
+      this._layersManager.layers = [];
+      this._layersManager.layerMap = new Map();
+      this._layersManager.frameRequested = {};
+      this._layersManager = null;
+    }
+
+    if (this._assetsManager) {
+      this._assetsManager.textures = null;
+      this._assetsManager.background = null;
+      this._assetsManager.grid = null;
+      this._assetsManager = null;
+    }
+
+    this._fpsTracker = null;
+
+    if (this._flashingHexagonPositions) {
+      this._flashingHexagonPositions.clear();
+    }
+    if (this._previewingPositions) {
+      this._previewingPositions.clear();
+    }
+    if (this._previewingHexagonPositions) {
+      this._previewingHexagonPositions.clear();
+    }
+    if (this._showingAvailablePositions) {
+      this._showingAvailablePositions.clear();
+    }
+
+    if (
+      this._canvas &&
+      this._container &&
+      this._container.contains(this._canvas)
+    ) {
+      try {
+        this._container.removeChild(this._canvas);
+      } catch (e) {}
+    }
+    this._canvas = null;
+    this._context = null;
+    this._container = null;
+
+    this._board = null;
+    this._map = null;
+    this._width = null;
+    this._height = null;
+    this._ratio = null;
+    this._widthRatio = null;
+    this._heightRatio = null;
+    this._dpr = null;
+    this._showingAvailablePositionsOverlayFillColor = null;
+  }
 }
 
 module.exports = Renderer;
