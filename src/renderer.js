@@ -554,15 +554,16 @@ class Renderer {
 
     this._mutationObserver = new MutationObserver((mutationsList) => {
       for (const mutation of mutationsList) {
-        if (mutation.removedNodes) {
-          mutation.removedNodes.forEach((removedNode) => {
-            if (
-              removedNode === this._canvas ||
-              removedNode === this._container
-            ) {
-              this.destroy();
-            }
-          });
+        for (const node of mutation.removedNodes) {
+          if (
+            node === this._canvas ||
+            node === this._container ||
+            (node.contains &&
+              (node.contains(this._canvas) || node.contains(this._container)))
+          ) {
+            this.destroy();
+            break;
+          }
         }
       }
     });
