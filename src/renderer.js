@@ -1816,7 +1816,39 @@ class Renderer {
     this._initDimensions(true);
   }
 
-  updateBoard(newBoard) {}
+  /**
+   * @method updateBoard - Updates the board used in the game.
+   * @param {Object} newBoard - The new board object to be set.
+   * @throws {Error} - If newBoard is not an instance of Board.
+   */
+  updateBoard(newBoard) {
+    if (!(newBoard instanceof Board)) {
+      throw new Error('newBoard must be an instance of Board');
+    }
+
+    this._previewingPositions.clear();
+    this._previewingHexagonPositions.clear();
+
+    for (const [event, handler] of this._eventHandlers.entries()) {
+      this._board.removeEventListener(event, handler);
+    }
+    this._eventHandlers.clear();
+
+    this._board = newBoard;
+
+    this._initEventHandlers();
+
+    this._layersManager.requestAnimationFrame('pieces', (context) => {
+      this._layersManager.clear('pieces');
+      this._renderPlacedPieces(context);
+    });
+    this._layersManager.requestAnimationFrame('preview-pieces', (context) => {
+      this._layersManager.clear('preview-pieces');
+    });
+    this._layersManager.requestAnimationFrame('preview-hexagons', (context) => {
+      this._layersManager.clear('preview-hexagons');
+    });
+  }
 
   /**
    * @method addEventListener - Adds an event listener for a specific event type.
