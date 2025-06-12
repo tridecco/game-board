@@ -1719,7 +1719,82 @@ class Renderer {
     });
   }
 
-  updateTextures(texturesIndexUrl, texturesAtlasUrl) {}
+  /**
+   * @method updateTextures - Updates the textures used in the game.
+   * @param {string} texturesIndexUrl - The URL of the textures index file.
+   * @param {string} texturesAtlasUrl - The URL of the textures atlas file.
+   * @returns {Promise<void>} - A promise that resolves when the textures are updated.
+   * @throws {Error} - If either texturesIndexUrl or texturesAtlasUrl is not a string.
+   */
+  updateTextures(texturesIndexUrl, texturesAtlasUrl) {
+    if (typeof texturesIndexUrl !== 'string') {
+      throw new Error('texturesIndexUrl must be a string');
+    }
+    if (typeof texturesAtlasUrl !== 'string') {
+      throw new Error('texturesAtlasUrl must be a string');
+    }
+
+    return new Promise(async (resolve, reject) => {
+      await this._assetsManager
+        .updateTextures(texturesIndexUrl, texturesAtlasUrl)
+        .then(() => {
+          this._layersManager.requestAnimationFrame('pieces', (context) => {
+            this._renderPlacedPieces(context);
+          });
+          this._layersManager.removeLayer('hexagons');
+          this._layersManager.addLayer({
+            name: 'hexagons',
+            fps: this._assetsManager.textures.get('hexagons', 'loop').definition
+              .fps,
+            zIndex: 4,
+            render: ({ context, elapsed }) => {
+              this._layersManager.clear('hexagons');
+              this._renderFormedHexagonsFrame(context, elapsed);
+            },
+          });
+          this._layersManager.requestAnimationFrame(
+            'preview-pieces',
+            (context) => {
+              this._renderPreviewingPiecePositions(context);
+            },
+          );
+          this._layersManager.requestAnimationFrame(
+            'preview-hexagons',
+            (context) => {
+              this._renderPreviewingHexagonPositions(context);
+            },
+          );
+          this._layersManager.removeLayer('preview-hexagons-particle');
+          this._layersManager.addLayer({
+            name: 'preview-hexagons-particle',
+            fps: this._assetsManager.textures.get('hexagons', 'particle')
+              .definition.fps,
+            zIndex: 7,
+            render: ({ context, elapsed }) => {
+              this._layersManager.clear('preview-hexagons-particle');
+              this._renderPreviewingHexagonParticlePositionsFrame(
+                context,
+                elapsed,
+              );
+            },
+          });
+          this._layersManager.requestAnimationFrame(
+            'available-positions',
+            (context) => {
+              this._renderShowingAvailablePositions(context);
+            },
+          );
+          this._layersManager.requestAnimationFrame('hitmap', (context) => {
+            this._renderHitmap(context);
+          });
+          resolve();
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  }
+
   updateMap(newMap) {}
   updateBoard(newBoard) {}
 
