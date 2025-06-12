@@ -89,7 +89,7 @@ class TexturePack {
    * @param {string} key - The specific key of the texture. For nested structures or variants, use dot notation
    *                       (e.g., "blue-white" for a tile variant, "glow" for a static group, "glow.blue" for a static variant,
    *                       "particle" for a base animation, "flash" for an animated group, "flash.blue" for an animated variant).
-   * @returns {{image: HTMLImageElement, definition: Object}|null} - An object containing the atlas image and the texture definition.
+   * @returns {{image: HTMLImageElement, definition: Object, scale?: number} | null} - An object containing the atlas image and the texture definition.
    *   The `definition` object structure varies:
    *     - For static texture leaves (e.g., a tile variant directly under `variants`): `{x, y, w, h}`.
    *     - For animated textures (base or variant): An object containing `frames` (Array of `{x,y,w,h}`),
@@ -97,6 +97,7 @@ class TexturePack {
    *     - For group nodes that have a `type` property (e.g., "static" or "animated"): The group object itself,
    *       which might contain a `variants` object (e.g., `{type: "static", variants: {...}}` or
    *       `{type: "animated", fps: ..., range: ..., variants: {...}}`).
+   *   If a `scale` property is present on the resolved group or animation, it will also be included in the returned object.
    *   Returns `null` if the key is invalid or does not resolve to one of the above structures.
    */
   get(type, key) {

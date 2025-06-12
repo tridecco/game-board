@@ -784,8 +784,8 @@ Places a `Piece` object at the specified position index on the board. This metho
 **Returns:**
 
 - `Array<Object>`: An array of objects representing the hexagons formed. Each object contains the following properties:
-  - `coordinate` (Array\<number>): The coordinates of the completed hexagon in the format `[col, row]`.
-  - `color` (string): The color of the completed hexagon.
+  - `coordinate` (Array\<number>): The coordinates of the formed hexagon in the format `[col, row]`.
+  - `color` (string): The color of the formed hexagon.
 
 **Throws:**
 
@@ -1553,8 +1553,9 @@ Retrieves the atlas image and the definition for a specific texture or texture g
   - `definition` (Object): The metadata for the texture or group. The structure of `definition` varies:
     - For static texture leaves (e.g., a tile variant directly under `variants`): `{x, y, w, h}` (coordinates in the atlas).
     - For animated textures (base animation or a fully resolved variant): An object containing `frames` (Array of `{x,y,w,h}` coordinate objects), `fps` (number), and `range` (Array<number>).
-    - For group nodes that have a `type` property (e.g., "static" or "animated"): The group object itself as defined in the bundled `index.json` (e.g., `{type: "static", variants: {...}}` or `{type: "animated", fps: ..., range: ..., variants: {...}}`). The `variants` object within will contain coordinate objects for static variants or `frames` arrays for animated variants.
-      Returns `null` if the key is invalid, does not resolve to a recognized structure, or if the texture pack is not fully loaded.
+    - For group nodes that have a `type` property (e.g., "static" or "animated"): The group object itself as defined in the bundled `index.json` (e.g., `{type: "static", scale: 1.24, variants: {...}}` or `{type: "animated", fps: ..., range: ..., scale: 1.0, variants: {...}}`). The `variants` object within will contain coordinate objects for static variants or `frames` arrays for animated variants.
+  - `scale` (number, optional): The scale factor for the texture or group, if present in the texture pack definition. This property appears at the top level of the returned object for easy access.
+    Returns `null` if the key is invalid, does not resolve to a recognized structure, or if the texture pack is not fully loaded.
 
 #### Example
 
@@ -1568,34 +1569,41 @@ if (tileVariantData) {
   console.log('Tile Variant:', tileVariantData.definition);
 }
 
-// Get a static group
+// Get a static group with scale
 const staticGroupData = texturePack.get('hexagons', 'glow');
 if (staticGroupData) {
-  // staticGroupData.definition will be { type: "static", variants: { blue: {x,y,w,h}, ... } }
+  // staticGroupData.definition will be { type: "static", scale: 1.24, variants: { blue: {x,y,w,h}, ... } }
   console.log('Static Group:', staticGroupData.definition);
+  console.log('Scale factor:', staticGroupData.scale); // 1.24
+
   // To get a specific variant from the group:
   const glowBlueData = texturePack.get('hexagons', 'glow.blue');
   if (glowBlueData) console.log('Glow Blue Variant:', glowBlueData.definition); // {x,y,w,h}
 }
 
-// Get a base animation
+// Get a base animation with scale
 const particleAnimationData = texturePack.get('hexagons', 'particle');
 if (particleAnimationData) {
-  // particleAnimationData.definition will be { type: "animated", fps: ..., range: ..., frames: [{x,y,w,h}, ...] }
+  // particleAnimationData.definition will be { type: "animated", scale: 1.24, fps: ..., range: ..., frames: [{x,y,w,h}, ...] }
   console.log('Particle Animation:', particleAnimationData.definition);
+  console.log('Animation scale:', particleAnimationData.scale); // 1.24
 }
 
-// Get an animated group
+// Get an animated group with scale
 const animatedGroupData = texturePack.get('hexagons', 'flash');
 if (animatedGroupData) {
-  // animatedGroupData.definition will be { type: "animated", fps: ..., range: ..., variants: { blue: {frames:[...]}, ... } }
+  // animatedGroupData.definition will be { type: "animated", scale: 1.0, fps: ..., range: ..., variants: { blue: {frames:[...]}, ... } }
   console.log('Animated Group:', animatedGroupData.definition);
+  console.log('Group scale:', animatedGroupData.scale);
+
   // To get a specific animated variant from the group:
   const flashBlueData = texturePack.get('hexagons', 'flash.blue');
   if (flashBlueData) {
     // flashBlueData.definition will be { frames: [{x,y,w,h}, ...], fps: ..., range: ... }
+    // flashBlueData.scale will be 1.0 (inherited from parent 'flash' group)
     // fps and range are inherited from the parent 'flash' group.
     console.log('Flash Blue Animation Variant:', flashBlueData.definition);
+    console.log('Variant scale:', flashBlueData.scale);
   }
 }
 ```
