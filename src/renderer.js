@@ -774,7 +774,7 @@ class Renderer {
       this._layersManager.requestAnimationFrame('hexagons', () => {
         this._layersManager.clear('hexagons');
       });
-      this._layersManager.requestAnimationFrame('preview-pieces', () => {
+      this._layersManager.requestAnimationFrame('available-positions', () => {
         this._layersManager.clear('available-positions');
       });
     }.bind(this);
