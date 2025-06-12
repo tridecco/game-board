@@ -1064,20 +1064,21 @@ class Renderer {
     const y = tile.y * this._heightRatio;
     const imageWidth = definition.w;
     const imageHeight = definition.h;
+    const scale = texture.definition.scale || 1;
 
     let width, height;
     if (tile.width !== undefined && tile.width !== null) {
-      width = tile.width * this._widthRatio;
+      width = tile.width * this._widthRatio * scale;
       height =
         tile.height !== undefined && tile.height !== null
-          ? tile.height * this._heightRatio
+          ? tile.height * this._heightRatio * scale
           : (width * imageHeight) / imageWidth;
     } else if (tile.height !== undefined && tile.height !== null) {
-      height = tile.height * this._heightRatio;
+      height = tile.height * this._heightRatio * scale;
       width = (height * imageWidth) / imageHeight;
     } else {
-      width = imageWidth * this._widthRatio;
-      height = imageHeight * this._heightRatio;
+      width = imageWidth * this._widthRatio * scale;
+      height = imageHeight * this._heightRatio * scale;
     }
 
     const rotation = tile.rotation || 0;
@@ -1149,16 +1150,15 @@ class Renderer {
    * @param {CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D} context - The canvas context to render the hexagon on.
    * @param {Array<number>} coordinate - The column and row coordinate of the hexagon to render.
    * @param {Object} texture - The texture object containing the hexagon texture image and its definition.
-   * @param {number} [scale=1] - The scale factor for the hexagon size.
    * @throws {Error} - If the hexagon coordinate is not found in the map.
    */
-  _renderHexagon(context, coordinate, texture, scale = 1) {
+  _renderHexagon(context, coordinate, texture) {
     const hexagon = this._map.hexagons[`${coordinate[0]}-${coordinate[1]}`];
     if (!hexagon) {
       throw new Error(`Hexagon coordinate ${coordinate} not found in map`);
     }
 
-    const { image: textureImage, definition } = texture;
+    const { image: textureImage, definition, scale = 1 } = texture;
 
     const x = hexagon.x * this._widthRatio;
     const y = hexagon.y * this._heightRatio;
@@ -1281,6 +1281,7 @@ class Renderer {
         );
         texture = {
           image: flashingHexagonTextures.image,
+          scale: flashingHexagonTextures.definition.scale,
           definition:
             flashingHexagonTextures.definition.variants[color].frames[
               currentFrame
@@ -1301,6 +1302,7 @@ class Renderer {
         );
         texture = {
           image: hexagonTextures.image,
+          scale: hexagonTextures.definition.scale,
           definition:
             hexagonTextures.definition.variants[color].frames[currentFrame],
         };
@@ -1330,6 +1332,7 @@ class Renderer {
       const textures = this._assetsManager.textures.get('hexagons', 'glow');
       const texture = {
         image: textures.image,
+        scale: textures.definition.scale,
         definition: textures.definition.variants[color],
       };
       this._renderHexagon(context, coordinate, texture);
@@ -1353,6 +1356,7 @@ class Renderer {
     for (const [coordinate] of this._previewingHexagonPositions) {
       const texture = {
         image: textures.image,
+        scale: textures.definition.scale,
         definition: textures.definition.frames[currentFrame],
       };
       this._renderHexagon(context, coordinate, texture);
