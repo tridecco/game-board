@@ -1667,8 +1667,32 @@ class Renderer {
     return this._assetsManager.textures.get(type, key);
   }
 
-  // Update methods
-  updateBackground(backgroundUrl) {}
+  /**
+   * @method updateBackground - Updates the background image of the game.
+   * @param {string} backgroundUrl - The URL of the new background image.
+   * @returns {Promise<void>} - A promise that resolves when the background is updated.
+   * @throws {Error} - If the backgroundUrl is not a string.
+   */
+  async updateBackground(backgroundUrl) {
+    if (typeof backgroundUrl !== 'string') {
+      throw new Error('backgroundUrl must be a string');
+    }
+
+    return new Promise(async (resolve, reject) => {
+      await this._assetsManager
+        .updateBackground(backgroundUrl)
+        .then(() => {
+          this._layersManager.requestAnimationFrame('background', (context) => {
+            this._renderBackground(context);
+          });
+          resolve();
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  }
+
   updateGrid(gridUrl) {}
   updateTextures(texturesIndexUrl, texturesAtlasUrl) {}
   updateMap(newMap) {}
