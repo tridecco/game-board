@@ -439,6 +439,14 @@ class FPSTracker {
     );
     ctx.restore();
   }
+
+  /**
+   * @method getFPS - Returns the current FPS value.
+   * @returns {number} - The current FPS value.
+   */
+  getFPS() {
+    return this.fps;
+  }
 }
 
 /**
