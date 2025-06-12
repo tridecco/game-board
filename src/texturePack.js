@@ -182,25 +182,39 @@ class TexturePack {
         range: definition.hasOwnProperty('range')
           ? definition.range
           : parentAnimatedGroup.range,
+        scale: definition.hasOwnProperty('scale')
+          ? definition.scale
+          : parentAnimatedGroup.scale,
       };
     }
 
     if (typeof definition === 'object' && definition !== null) {
+      const result = { image: this.atlasImage, definition };
+
+      if (definition.hasOwnProperty('scale')) {
+        result.scale = definition.scale;
+      } else if (
+        parentAnimatedGroup &&
+        parentAnimatedGroup.hasOwnProperty('scale')
+      ) {
+        result.scale = parentAnimatedGroup.scale;
+      }
+
       if (
         definition.hasOwnProperty('x') &&
         definition.hasOwnProperty('y') &&
         definition.hasOwnProperty('w') &&
         definition.hasOwnProperty('h')
       ) {
-        return { image: this.atlasImage, definition: definition };
+        return result;
       } else if (
         definition.hasOwnProperty('frames') &&
         definition.hasOwnProperty('fps') &&
         definition.hasOwnProperty('range')
       ) {
-        return { image: this.atlasImage, definition: definition };
+        return result;
       } else if (definition.hasOwnProperty('type')) {
-        return { image: this.atlasImage, definition: definition };
+        return result;
       }
     }
 
