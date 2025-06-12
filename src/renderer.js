@@ -1594,8 +1594,40 @@ class Renderer {
     });
   }
 
-  // Available positions methods
-  showAvailablePositions(positions, fillColor, clearPrevious = true) {}
+  /**
+   * @method showAvailablePositions - Highlights available positions on the board using a mask.
+   * @param {Array<number>} [positions] - An array of available position indexes to highlight.
+   * @param {string} [fillColor] - Optional fill color for the available positions overlay, default is semi-transparent black.
+   * @param {boolean} [clearPrevious=true] - Whether to clear previous available positions before rendering the new ones.
+   * @throws {Error} - If positions is not an array or if any position index is out of bounds.
+   */
+  showAvailablePositions(
+    positions = this._board.getAvailablePositions(),
+    fillColor = DEFAULT_AVAILABLE_POSITIONS_OVERLAY_FILL_COLOR,
+    clearPrevious = true,
+  ) {
+    if (!Array.isArray(positions)) {
+      throw new Error(
+        'positions must be an array of available position indexes',
+      );
+    }
+
+    if (clearPrevious) {
+      this._showingAvailablePositions.clear();
+    }
+
+    positions.forEach((pos) => this._showingAvailablePositions.add(pos));
+    this._showingAvailablePositionsOverlayFillColor = fillColor;
+
+    this._layersManager.requestAnimationFrame(
+      'available-positions',
+      (context) => {
+        this._layersManager.clear('available-positions');
+        this._renderShowingAvailablePositions(context);
+      },
+    );
+  }
+
   clearAvailablePositions() {}
 
   // Texture methods
