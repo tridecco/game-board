@@ -1660,8 +1660,25 @@ class Renderer {
   updateMap(newMap) {}
   updateBoard(newBoard) {}
 
-  // Event listeners methods
-  addEventListener(eventType, listener, options) {}
+  /**
+   * @method addEventListener - Adds an event listener for a specific event type.
+   * @param {string} eventType - The event type to listen for (dragover, drop, mousemove, click, resize).
+   * @param {Function} listener - The callback function to be executed when the event is triggered.
+   * @param {Object} [options] - Optional parameters, including `onlyAvailable: true` to filter events to available positions only.
+   * @throws {Error} - If the event type is invalid.
+   */
+  addEventListener(eventType, listener, options) {
+    if (!this._eventListeners[eventType] || eventType.endsWith('Available')) {
+      throw new Error('Invalid event type');
+    }
+
+    if (eventType !== 'resize' && options.onlyAvailable) {
+      this._eventListeners[`${eventType}Available`].add(listener);
+    } else {
+      this._eventListeners[eventType].add(listener);
+    }
+  }
+
   removeEventListener(eventType, listener) {}
 
   // FPS methods
