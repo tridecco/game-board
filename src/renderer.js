@@ -49,6 +49,7 @@ class LayersManager {
 
     this.context = context;
     this.layers = [];
+    this.layerMap = new Map();
   }
 
   /**
@@ -88,6 +89,7 @@ class LayersManager {
     layer._firstRender = 0;
 
     this.layers.push(layer);
+    this.layerMap.set(layer.name, layer);
     this.layers.sort((a, b) => a.zIndex - b.zIndex);
 
     this.frameRequested = {};
@@ -106,8 +108,7 @@ class LayersManager {
       throw new Error('layerName must be a string');
     }
 
-    const layer = this.layers.find((l) => l.name === layerName);
-    return layer || null;
+    return this.layerMap.get(layerName) || null;
   }
 
   /**
@@ -121,6 +122,7 @@ class LayersManager {
     }
 
     this.layers = this.layers.filter((layer) => layer.name !== layerName);
+    this.layerMap.delete(layerName);
     delete this.frameRequested[layerName];
   }
 
@@ -210,7 +212,7 @@ class LayersManager {
     if (typeof layerName !== 'string') {
       throw new Error('layerName must be a string');
     }
-    const layer = this.layers.find((l) => l.name === layerName);
+    const layer = this.layerMap.get(layerName);
     if (!layer) {
       throw new Error(`Layer "${layerName}" does not exist`);
     }
