@@ -1580,7 +1580,19 @@ class Renderer {
     });
   }
 
-  clearPreview() {}
+  /**
+   * @method clearPreview - Clears all previewed pieces from the board.
+   */
+  clearPreview() {
+    this._previewingPositions.clear();
+    this._previewingHexagonPositions.clear();
+    this._layersManager.requestAnimationFrame('preview-pieces', () => {
+      this._layersManager.clear('preview-pieces');
+    });
+    this._layersManager.requestAnimationFrame('preview-hexagons', () => {
+      this._layersManager.clear('preview-hexagons');
+    });
+  }
 
   // Available positions methods
   showAvailablePositions(positions, fillColor, clearPrevious = true) {}
