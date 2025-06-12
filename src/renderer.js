@@ -1710,6 +1710,7 @@ class Renderer {
         .updateGrid(gridUrl)
         .then(() => {
           this._layersManager.requestAnimationFrame('grid', (context) => {
+            this._layersManager.clear('grid');
             this._renderGrid(context);
           });
           resolve();
