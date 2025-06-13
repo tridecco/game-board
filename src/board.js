@@ -391,6 +391,33 @@ class Board {
   }
 
   /**
+   * @method getHexagonsFormed - Get the hexagons formed by placing a piece at the specified position.
+   * @param {number} index - The index of the position in the map. (0-based index)
+   * @param {Piece} piece - The piece to place at the specified position.
+   * @returns {Array<Object>} - An array of objects representing the hexagons formed, each with coordinate and color.
+   * @throws {Error} - Throws an error if the index is out of bounds or if the piece is not an instance of Piece.
+   */
+  getHexagonsFormed(index, piece) {
+    if (index < 0 || index >= this.map.positions.length) {
+      throw new Error('Index out of bounds');
+    }
+
+    if (!(piece instanceof Piece)) {
+      throw new Error('Value must be an instance of Piece');
+    }
+
+    this._isCountingHexagons = true; // Set a flag to indicate we are counting hexagons to avoid triggering events
+
+    const hexagonsFormed = this.place(index, piece);
+
+    this.back(1); // Undo the placement to avoid side effects
+
+    this._isCountingHexagons = false; // Reset the flag
+
+    return hexagonsFormed;
+  }
+
+  /**
    * @method countHexagonsFormed - Count how many hexagons can be formed with a piece at the specified position.
    * @param {number} index - The index of the position in the map. (0-based index)
    * @param {Piece} piece - The piece to place at the specified position.

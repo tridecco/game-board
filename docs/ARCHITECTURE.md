@@ -104,7 +104,7 @@ This layer is responsible for the visual representation of the game board in a b
 
 ### Game Renderer (`Renderer`)
 
-![Game Renderer](./img/renderer.png)
+![Game Renderer](./img/renderer.gif)
 
 - **Purpose:** The `Renderer` class handles the visual rendering of the `Board` on an HTML5 canvas. It listens for events from the `Board` to update the visual representation in real-time.
 - **Responsibilities:**

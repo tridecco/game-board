@@ -1,22 +1,75 @@
 {
     "tiles": {
-        "blue-white": "tiles/blue-white.png",
-        "blue-white-flipped": "tiles/blue-white-flipped.png",
-        "red-blue": "tiles/red-blue.png",
-        "red-blue-flipped": "tiles/red-blue-flipped.png",
-        "red-yellow": "tiles/red-yellow.png",
-        "red-yellow-flipped": "tiles/red-yellow-flipped.png",
-        "white-red": "tiles/white-red.png",
-        "white-red-flipped": "tiles/white-red-flipped.png",
-        "yellow-blue": "tiles/yellow-blue.png",
-        "yellow-blue-flipped": "tiles/yellow-blue-flipped.png",
-        "empty": "tiles/empty.png",
-        "empty-flipped": "tiles/empty-flipped.png"
+        "type": "static",
+        "scale": 1,
+        "variants": {
+            "blue-white": "tiles/blue-white.png",
+            "blue-white-flipped": "tiles/blue-white-flipped.png",
+            "red-blue": "tiles/red-blue.png",
+            "red-blue-flipped": "tiles/red-blue-flipped.png",
+            "red-yellow": "tiles/red-yellow.png",
+            "red-yellow-flipped": "tiles/red-yellow-flipped.png",
+            "white-red": "tiles/white-red.png",
+            "white-red-flipped": "tiles/white-red-flipped.png",
+            "yellow-blue": "tiles/yellow-blue.png",
+            "yellow-blue-flipped": "tiles/yellow-blue-flipped.png",
+            "empty": "tiles/empty.png",
+            "empty-flipped": "tiles/empty-flipped.png"
+        }
     },
     "hexagons": {
-        "blue": "hexagons/blue.png",
-        "white": "hexagons/white.png",
-        "red": "hexagons/red.png",
-        "yellow": "hexagons/yellow.png"
+        "glow": {
+            "type": "static",
+            "scale": 1.24,
+            "variants": {
+                "blue": "hexagons/glow/blue.png",
+                "white": "hexagons/glow/white.png",
+                "red": "hexagons/glow/red.png",
+                "yellow": "hexagons/glow/yellow.png"
+            }
+        },
+        "particle": {
+            "type": "animated",
+            "scale": 1.24,
+            "range": [
+                0,
+                179
+            ],
+            "fps": 60,
+            "ext": "png",
+            "base": "hexagons/particle/"
+        },
+        "flash": {
+            "type": "animated",
+            "scale": 1,
+            "range": [
+                0,
+                59
+            ],
+            "fps": 60,
+            "ext": "png",
+            "variants": {
+                "blue": "hexagons/flash/blue/",
+                "white": "hexagons/flash/white/",
+                "red": "hexagons/flash/red/",
+                "yellow": "hexagons/flash/yellow/"
+            }
+        },
+        "loop": {
+            "type": "animated",
+            "scale": 1,
+            "range": [
+                0,
+                179
+            ],
+            "fps": 60,
+            "ext": "png",
+            "variants": {
+                "blue": "hexagons/loop/blue/",
+                "white": "hexagons/loop/white/",
+                "red": "hexagons/loop/red/",
+                "yellow": "hexagons/loop/yellow/"
+            }
+        }
     }
 }

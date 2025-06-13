@@ -73,75 +73,77 @@ This document provides a comprehensive guide to the API of the Tridecco Game Boa
       - [Example](#example-27)
     - [`getHexagonPositions(piece)`](#gethexagonpositionspiece)
       - [Example](#example-28)
-    - [`countHexagonsFormed(index, piece)`](#counthexagonsformedindex-piece)
+    - [`getHexagonsFormed(index, piece)`](#gethexagonsformedindex-piece)
       - [Example](#example-29)
-    - [`isEmpty(index)`](#isemptyindex)
+    - [`countHexagonsFormed(index, piece)`](#counthexagonsformedindex-piece)
       - [Example](#example-30)
-    - [`isCompleteHexagon(col, row)`](#iscompletehexagoncol-row)
+    - [`isEmpty(index)`](#isemptyindex)
       - [Example](#example-31)
-    - [`getCompleteHexagons()`](#getcompletehexagons)
+    - [`isCompleteHexagon(col, row)`](#iscompletehexagoncol-row)
       - [Example](#example-32)
-    - [`addEventListener(event, callback)`](#addeventlistenerevent-callback)
+    - [`getCompleteHexagons()`](#getcompletehexagons)
       - [Example](#example-33)
-    - [`removeEventListener(event, callback)`](#removeeventlistenerevent-callback)
+    - [`addEventListener(event, callback)`](#addeventlistenerevent-callback)
       - [Example](#example-34)
-    - [`back(steps)`](#backsteps)
+    - [`removeEventListener(event, callback)`](#removeeventlistenerevent-callback)
       - [Example](#example-35)
-    - [`clone(options)`](#cloneoptions)
+    - [`back(steps)`](#backsteps)
       - [Example](#example-36)
-    - [`clear()`](#clear-1)
+    - [`clone(options)`](#cloneoptions)
       - [Example](#example-37)
-    - [`toJSON(options)`](#tojsonoptions)
+    - [`clear()`](#clear-1)
       - [Example](#example-38)
-    - [`fromJSON(json)` (static)](#fromjsonjson-static)
+    - [`toJSON(options)`](#tojsonoptions)
       - [Example](#example-39)
+    - [`fromJSON(json)` (static)](#fromjsonjson-static)
+      - [Example](#example-40)
   - [Game Piece](#game-piece)
     - [Constructor](#constructor-3)
-      - [Example](#example-40)
-    - [`equals(other)`](#equalsother)
       - [Example](#example-41)
-    - [`clone()`](#clone-2)
+    - [`equals(other)`](#equalsother)
       - [Example](#example-42)
-    - [`toJSON()`](#tojson)
+    - [`clone()`](#clone-2)
       - [Example](#example-43)
-    - [`fromJSON(json)` (static)](#fromjsonjson-static-1)
+    - [`toJSON()`](#tojson)
       - [Example](#example-44)
+    - [`fromJSON(json)` (static)](#fromjsonjson-static-1)
+      - [Example](#example-45)
   - [Texture Pack](#texture-pack)
     - [Constructor](#constructor-4)
-      - [Example](#example-45)
-    - [`get(type, key)`](#gettype-key)
       - [Example](#example-46)
+    - [`get(type, key)`](#gettype-key)
+      - [Example](#example-47)
   - [Renderer](#renderer)
     - [Constructor](#constructor-5)
-      - [Example](#example-47)
-    - [`previewPiece(index, piece, fillColor)`](#previewpieceindex-piece-fillcolor)
       - [Example](#example-48)
-    - [`clearPreview()`](#clearpreview)
+    - [`previewPiece(index, piece, fillColor, clearPrevious)`](#previewpieceindex-piece-fillcolor-clearprevious)
       - [Example](#example-49)
-    - [`showAvailablePositions(positions, fillColor)`](#showavailablepositionspositions-fillcolor)
+    - [`clearPreview()`](#clearpreview)
       - [Example](#example-50)
-    - [`clearAvailablePositions()`](#clearavailablepositions)
+    - [`showAvailablePositions(positions, fillColor, clearPrevious)`](#showavailablepositionspositions-fillcolor-clearprevious)
       - [Example](#example-51)
-    - [`getTexture(type, key)`](#gettexturetype-key)
+    - [`clearAvailablePositions()`](#clearavailablepositions)
       - [Example](#example-52)
-    - [`updateBoard(newBoard)`](#updateboardnewboard)
+    - [`getTexture(type, key)`](#gettexturetype-key)
       - [Example](#example-53)
-    - [`updateMap(newMap)`](#updatemapnewmap)
-      - [Example](#example-54)
-    - [`updateTextures(texturesUrl)`](#updatetexturestexturesurl)
-      - [Example](#example-55)
     - [`updateBackground(backgroundUrl)`](#updatebackgroundbackgroundurl)
-      - [Example](#example-56)
+      - [Example](#example-54)
     - [`updateGrid(gridUrl)`](#updategridgridurl)
+      - [Example](#example-55)
+    - [`updateTextures(texturesIndexUrl, texturesAtlasUrl)`](#updatetexturestexturesindexurl-texturesatlasurl)
+      - [Example](#example-56)
+    - [`updateMap(newMap)`](#updatemapnewmap)
       - [Example](#example-57)
-    - [`addEventListener(eventType, listener, options)`](#addeventlistenereventtype-listener-options)
+    - [`updateBoard(newBoard)`](#updateboardnewboard)
       - [Example](#example-58)
-    - [`removeEventListener(eventType, listener)`](#removeeventlistenereventtype-listener)
+    - [`addEventListener(eventType, listener, options)`](#addeventlistenereventtype-listener-options)
       - [Example](#example-59)
-    - [`getFPS()`](#getfps)
+    - [`removeEventListener(eventType, listener)`](#removeeventlistenereventtype-listener)
       - [Example](#example-60)
-    - [`destroy()`](#destroy)
+    - [`getFPS()`](#getfps)
       - [Example](#example-61)
+    - [`destroy()`](#destroy)
+      - [Example](#example-62)
 
 ## Import the Library
 
@@ -784,8 +786,8 @@ Places a `Piece` object at the specified position index on the board. This metho
 **Returns:**
 
 - `Array<Object>`: An array of objects representing the hexagons formed. Each object contains the following properties:
-  - `coordinate` (Array\<number>): The coordinates of the completed hexagon in the format `[col, row]`.
-  - `color` (string): The color of the completed hexagon.
+  - `coordinate` (Array\<number>): The coordinates of the formed hexagon in the format `[col, row]`.
+  - `color` (string): The color of the formed hexagon.
 
 **Throws:**
 
@@ -1003,6 +1005,51 @@ const hexagonFormingPositions = board.getHexagonPositions(pieceToPlace);
 hexagonFormingPositions.forEach(([index, hexagonsFormed]) => {
   console.log(`Position ${index} can form ${hexagonsFormed} hexagons.`);
 });
+```
+
+### `getHexagonsFormed(index, piece)`
+
+```javascript
+getHexagonsFormed(index, piece);
+```
+
+**Description:**
+
+Gets the hexagons formed by placing a given `Piece` at the specified position `index`. This method simulates the placement to determine the outcome and then reverts the board to its original state, ensuring no permanent modifications to the board.
+
+**Parameters:**
+
+- `index` (number): The 0-based index of the position on the board where the piece is to be hypothetically placed.
+- `piece` (Piece): The `Piece` object to test.
+
+**Returns:**
+
+- `Array<Object>`: An array of objects representing the hexagons that would be formed. Each object has the following properties:
+  - `coordinate` (Array\<number>): The coordinates `[col, row]` of the formed hexagon.
+  - `color` (string): The color of the formed hexagon.
+
+**Throws:**
+
+- `Error`: If `index` is out of bounds or if `piece` is not an instance of `Piece`.
+
+#### Example
+
+```javascript
+const pieceToTest = new Piece(['yellow', 'green']);
+const potentialHexagons = board.getHexagonsFormed(4, pieceToTest);
+
+if (potentialHexagons.length > 0) {
+  console.log(
+    `Placing the piece at index 4 would form ${potentialHexagons.length} hexagon(s):`,
+  );
+  potentialHexagons.forEach((hex) => {
+    console.log(
+      `- Hexagon at [${hex.coordinate.join(', ')}] with color ${hex.color}`,
+    );
+  });
+} else {
+  console.log('Placing the piece at index 4 would form no hexagons.');
+}
 ```
 
 ### `countHexagonsFormed(index, piece)`
@@ -1495,33 +1542,35 @@ console.log(piece.equals(new Piece(['red', 'blue']))); // Output: true
 ### Constructor
 
 ```javascript
-constructor(texturesUrl, callback = () => {});
+constructor(indexUrl, atlasUrl, callback = () => {});
 ```
 
 **Description:**
 
-Creates a new `TexturePack` instance and immediately starts loading textures from the provided URL.
+Creates a new `TexturePack` instance and immediately starts loading the texture atlas and its corresponding index file.
 
 **Parameters:**
 
-- `texturesUrl` (string): The base URL where the texture pack's `index.json` and image files are located.
-- `callback` (Function, optional): A callback function executed after all textures are loaded. It receives the `TexturePack` instance as the first argument, or `null` and an error object as the second argument if loading fails.
+- `indexUrl` (string): The URL of the JSON file that defines the texture regions within the atlas (e.g., `index.json`).
+- `atlasUrl` (string): The URL of the combined image file (atlas) containing all textures.
+- `callback` (Function, optional): A callback function executed after the atlas image and index are loaded. It receives an error as the first argument (or `null` if successful), and the `TexturePack` instance as the second argument (or `null` if failed).
 
 > **Note**: Please refer to the [Available Assets documentation](ASSETS.md) for detailed information on the available texture packs.
-> **Note**: If the textures are not from the same origin, CORS headers must be set on the server to allow loading of the textures. Otherwise, there will be CORS issues and the textures will not load properly in the browser.
+> **Note**: If the assets are not from the same origin, CORS headers must be set on the server to allow loading. Otherwise, there will be CORS issues and the assets will not load properly in the browser.
 
 **Throws:**
 
-- `Error`: If `texturesUrl` is not a string, if `callback` is not a function, or if used outside a browser environment.
+- `Error`: If `indexUrl` or `atlasUrl` are not strings, if `callback` is not a function, or if used outside a browser environment.
 
 #### Example
 
 ```javascript
 const texturePack = new TexturePack(
-  '/assets/textures/classic/normal',
-  (pack, error) => {
+  '/assets/textures-bundle/classic/normal/index.json',
+  '/assets/textures-bundle/classic/normal/atlas.png',
+  (error, pack) => {
     if (error) {
-      console.error('Failed to load textures:', error);
+      console.error('Failed to load texture pack:', error);
       return;
     }
     console.log('Texture pack loaded:', pack);
@@ -1537,34 +1586,78 @@ get(type, key);
 
 **Description:**
 
-Retrieves a texture image element by its type ('tiles' or 'hexagons') and key.
+Retrieves the atlas image and the definition for a specific texture or texture group by its category (`type`) and `key`.
 
 **Parameters:**
 
-- `type` (string): The type of texture to retrieve, either `'tiles'` or `'hexagons'`.
-- `key` (string): The key of the texture as defined in the texture pack's `index.json`.
+- `type` (string): The category of texture to retrieve (e.g., `'tiles'`, `'hexagons'`).
+- `key` (string): The specific key of the texture or group. For nested structures or variants, use dot notation (e.g., `"blue-white"` for a tile variant, `"glow"` for a static hexagon group, `"glow.blue"` for a static hexagon variant, `"particle"` for a base animation, `"flash"` for an animated hexagon group, `"flash.blue"` for an animated hexagon variant).
 
 **Returns:**
 
-- `HTMLImageElement | null`: The loaded texture image element if found, or `null` if the type or key is invalid or the texture wasn't loaded.
+- `Object | null`: An object containing:
+  - `image` (HTMLImageElement): The loaded atlas image.
+  - `definition` (Object): The metadata for the texture or group. The structure of `definition` varies:
+    - For static texture leaves (e.g., a tile variant directly under `variants`): `{x, y, w, h}` (coordinates in the atlas).
+    - For animated textures (base animation or a fully resolved variant): An object containing `frames` (Array of `{x,y,w,h}` coordinate objects), `fps` (number), and `range` (Array<number>).
+    - For group nodes that have a `type` property (e.g., "static" or "animated"): The group object itself as defined in the bundled `index.json` (e.g., `{type: "static", scale: 1.24, variants: {...}}` or `{type: "animated", fps: ..., range: ..., scale: 1.0, variants: {...}}`). The `variants` object within will contain coordinate objects for static variants or `frames` arrays for animated variants.
+  - `scale` (number, optional): The scale factor for the texture or group, if present in the texture pack definition. This property appears at the top level of the returned object for easy access.
+    Returns `null` if the key is invalid, does not resolve to a recognized structure, or if the texture pack is not fully loaded.
 
 #### Example
 
 ```javascript
-const tileTexture = texturePack.get('tiles', 'red-blue');
-if (tileTexture) {
-  // Use the texture...
+// Assuming texturePack is loaded
+
+// Get a static tile variant
+const tileVariantData = texturePack.get('tiles', 'blue-white');
+if (tileVariantData) {
+  // tileVariantData.definition will be {x, y, w, h}
+  console.log('Tile Variant:', tileVariantData.definition);
 }
 
-const hexagonTexture = texturePack.get('hexagons', 'red');
-if (hexagonTexture) {
-  // Use the texture...
+// Get a static group with scale
+const staticGroupData = texturePack.get('hexagons', 'glow');
+if (staticGroupData) {
+  // staticGroupData.definition will be { type: "static", scale: 1.24, variants: { blue: {x,y,w,h}, ... } }
+  console.log('Static Group:', staticGroupData.definition);
+  console.log('Scale factor:', staticGroupData.scale); // 1.24
+
+  // To get a specific variant from the group:
+  const glowBlueData = texturePack.get('hexagons', 'glow.blue');
+  if (glowBlueData) console.log('Glow Blue Variant:', glowBlueData.definition); // {x,y,w,h}
+}
+
+// Get a base animation with scale
+const particleAnimationData = texturePack.get('hexagons', 'particle');
+if (particleAnimationData) {
+  // particleAnimationData.definition will be { type: "animated", scale: 1.24, fps: ..., range: ..., frames: [{x,y,w,h}, ...] }
+  console.log('Particle Animation:', particleAnimationData.definition);
+  console.log('Animation scale:', particleAnimationData.scale); // 1.24
+}
+
+// Get an animated group with scale
+const animatedGroupData = texturePack.get('hexagons', 'flash');
+if (animatedGroupData) {
+  // animatedGroupData.definition will be { type: "animated", scale: 1.0, fps: ..., range: ..., variants: { blue: {frames:[...]}, ... } }
+  console.log('Animated Group:', animatedGroupData.definition);
+  console.log('Group scale:', animatedGroupData.scale);
+
+  // To get a specific animated variant from the group:
+  const flashBlueData = texturePack.get('hexagons', 'flash.blue');
+  if (flashBlueData) {
+    // flashBlueData.definition will be { frames: [{x,y,w,h}, ...], fps: ..., range: ... }
+    // flashBlueData.scale will be 1.0 (inherited from parent 'flash' group)
+    // fps and range are inherited from the parent 'flash' group.
+    console.log('Flash Blue Animation Variant:', flashBlueData.definition);
+    console.log('Variant scale:', flashBlueData.scale);
+  }
 }
 ```
 
 ## Renderer
 
-![Renderer](./img/renderer.png)
+![Renderer](./img/renderer.gif)
 
 ### Constructor
 
@@ -1581,12 +1674,13 @@ Creates a new `Renderer` instance to visualize a `Board` object on an HTML canva
 - `options` (Object): An object containing the configuration options for the renderer.
   - `board` (Board): The `Board` instance to be rendered.
   - `container` (HTMLElement): The DOM element that will contain the rendering canvas.
-  - `map` (Object, optional): The map configuration object defining rendering coordinates and dimensions. Defaults to `defaultRendererMap`.
-  - `texturesUrl` (string, optional): The base URL for the texture pack to use. Defaults to a predefined path.
+  - `map` (Object, optional): The map configuration object defining rendering coordinates and dimensions. Defaults to `defaultMap` (a predefined map object).
+  - `texturesIndexUrl` (string, optional): The URL of the texture index JSON file. Defaults to a predefined path.
+  - `texturesAtlasUrl` (string, optional): The URL of the atlas image file. Defaults to a predefined path.
   - `backgroundUrl` (string, optional): The URL for the background image. Defaults to a predefined path.
   - `gridUrl` (string, optional): The URL for the grid overlay image. Defaults to a predefined path.
   - `showFPS` (boolean, optional): If `true`, displays the frames per second (FPS) in the bottom right corner of the canvas. Defaults to `false`.
-- `callback` (Function, optional): A callback function executed after the renderer is initialized and initial assets are loaded. Receives the `Renderer` instance as an argument.
+- `callback` (Function, optional): A callback function executed after the renderer is initialized and initial assets are loaded. Receives two arguments: `error` (an Error object if initialization failed, otherwise `null`) and `rendererInstance` (the `Renderer` instance upon success, otherwise `null`).
 
 > **Note**: Please refer to the [Available Assets documentation](ASSETS.md) for detailed information on the available texture packs, background images, and grid overlays.
 > **Note**: If the textures are not from the same origin, CORS headers must be set on the server to allow loading of the textures. Otherwise, there will be CORS issues and the textures will not load properly in the browser.
@@ -1606,36 +1700,51 @@ const renderer = new Renderer(
     board: myBoard,
     container: containerElement,
     // Optional: map: maps.renderer.default,
-    // Optional: texturesUrl: '/path/to/my/textures',
+    // Optional: texturesIndexUrl: '/path/to/my/textures/index.json',
+    // Optional: texturesAtlasUrl: '/path/to/my/textures/atlas.webp',
     // (more options...)
   },
-  (rendererInstance) => {
+  (error, rendererInstance) => {
+    if (error) {
+      console.error('Renderer initialization failed:', error);
+      return;
+    }
     console.log('Renderer initialized!', rendererInstance);
   },
 );
 ```
 
-### `previewPiece(index, piece, fillColor)`
+### `previewPiece(index, piece, fillColor, clearPrevious)`
 
 ```javascript
-previewPiece(index, piece, fillColor = 'rgba(255, 255, 255, 0.5)');
+previewPiece(
+  index,
+  piece,
+  fillColor = 'rgba(255, 255, 255, 0.5)',
+  clearPrevious = true
+);
 ```
 
 **Description:**
 
-Renders a semi-transparent preview of a given `Piece` at a specified board position index. Useful for showing potential placements during drag-and-drop or hover actions.
+Renders a semi-transparent preview of a given `Piece` at a specified board position index. Also previews any hexagons that would be formed by this placement. Useful for showing potential placements during drag-and-drop or hover actions.
 
 **Parameters:**
 
 - `index` (number): The 0-based index of the board position where the preview should be rendered.
 - `piece` (Piece): The `Piece` object to preview.
-- `fillColor` (string, optional): The CSS color string for the semi-transparent overlay applied to the preview. Defaults to `'rgba(255, 255, 255, 0.5)'`.
+- `fillColor` (string, optional): The CSS color string for the semi-transparent overlay applied to the piece preview. Defaults to `'rgba(255, 255, 255, 0.5)'`.
+- `clearPrevious` (boolean, optional): If `true` (default), clears any existing previews before rendering the new one. Set to `false` to add multiple previews.
+
+**Throws:**
+
+- `Error`: If the `piece` object is invalid or if the `index` is out of bounds for the current map.
 
 #### Example
 
 ```javascript
 const pieceToPreview = new Piece(['blue', 'yellow']);
-renderer.previewPiece(10, pieceToPreview); // Show preview at index 10
+renderer.previewPiece(10, pieceToPreview); // Show preview at index 10, clearing others
 ```
 
 ### `clearPreview()`
@@ -1646,7 +1755,7 @@ clearPreview();
 
 **Description:**
 
-Clears any currently displayed piece previews from the renderer.
+Clears any currently displayed piece and hexagon previews from the renderer.
 
 #### Example
 
@@ -1654,20 +1763,25 @@ Clears any currently displayed piece previews from the renderer.
 renderer.clearPreview(); // Remove any active previews
 ```
 
-### `showAvailablePositions(positions, fillColor)`
+### `showAvailablePositions(positions, fillColor, clearPrevious)`
 
 ```javascript
-showAvailablePositions(positions = this.board.getAvailablePositions(), fillColor = 'rgba(0, 0, 0, 0.5)');
+showAvailablePositions(
+  positions = this._board.getAvailablePositions(),
+  fillColor = 'rgba(0, 0, 0, 0.5)',
+  clearPrevious = true
+);
 ```
 
 **Description:**
 
-Highlights the specified available positions on the board by overlaying a semi-transparent mask, making non-available positions appear dimmer.
+Highlights the specified available positions on the board by overlaying a semi-transparent mask, making non-available positions appear dimmer and cutting out the shapes of available positions.
 
 **Parameters:**
 
 - `positions` (Array\<number>, optional): An array of 0-based position indexes to highlight. Defaults to the result of `board.getAvailablePositions()`.
 - `fillColor` (string, optional): The CSS color string for the mask overlay. Defaults to `'rgba(0, 0, 0, 0.5)'`.
+- `clearPrevious` (boolean, optional): If `true` (default), clears any existing highlighted available positions before showing the new ones. Set to `false` to add to existing highlights.
 
 **Throws:**
 
@@ -1705,7 +1819,7 @@ getTexture(type, key);
 
 **Description:**
 
-Retrieves a loaded texture image element from the `TexturePack` used by the renderer.
+Retrieves a loaded texture object from the `TexturePack` used by the renderer. The object contains the texture atlas image and the definition (coordinates, dimensions) for the specific texture.
 
 **Parameters:**
 
@@ -1714,42 +1828,121 @@ Retrieves a loaded texture image element from the `TexturePack` used by the rend
 
 **Returns:**
 
-- `HTMLImageElement`: The requested texture image element.
+- `Object`: The texture object containing `{ image: HTMLImageElement, definition: Object, ... }`.
 
 **Throws:**
 
-- `Error`: If textures are not loaded yet.
+- `Error`: If the assets manager or textures are not initialized, or if the texture is not found.
 
 #### Example
 
 ```javascript
-const pieceTexture = renderer.getTexture('tiles', 'red-blue');
-const hexagonTexture = renderer.getTexture('hexagons', 'blue');
+const pieceTextureInfo = renderer.getTexture('tiles', 'red-blue');
+const hexagonTextureInfo = renderer.getTexture('hexagons', 'blue');
 ```
 
-### `updateBoard(newBoard)`
+### `updateBackground(backgroundUrl)`
 
 ```javascript
-updateBoard(newBoard);
+async updateBackground(backgroundUrl);
 ```
 
 **Description:**
 
-Updates the renderer to use a new `Board` instance. This involves recalculating ratios, re-rendering the background/grid/pieces based on the new board's state, and potentially re-attaching event listeners if necessary.
+Loads and applies a new background image from the specified URL. This is an asynchronous operation.
 
 **Parameters:**
 
-- `newBoard` (Board): The new `Board` instance to render.
+- `backgroundUrl` (string): The URL of the new background image.
+
+> **Note**: Please refer to the [Available Assets documentation](ASSETS.md) for detailed information on the available background images.
+
+**Returns:**
+
+- `Promise<void>`: A promise that resolves when the new background is loaded and the background layer is scheduled for re-render.
 
 **Throws:**
 
-- `Error`: If `newBoard` is not a `Board` instance.
+- `Error`: If `backgroundUrl` is not a string, if the AssetsManager is not initialized, or if loading fails.
 
 #### Example
 
 ```javascript
-const newBoard = new Board();
-renderer.updateBoard(newBoard);
+renderer
+  .updateBackground('/assets/backgrounds/space-nebula.png')
+  .then(() => console.log('Background updated!'))
+  .catch((err) => console.error('Background update failed:', err));
+```
+
+### `updateGrid(gridUrl)`
+
+```javascript
+async updateGrid(gridUrl);
+```
+
+**Description:**
+
+Loads and applies a new grid overlay image from the specified URL. This is an asynchronous operation.
+
+**Parameters:**
+
+- `gridUrl` (string): The URL of the new grid image.
+
+> **Note**: Please refer to the [Available Assets documentation](ASSETS.md) for detailed information on the available grid overlays.
+
+**Returns:**
+
+- `Promise<void>`: A promise that resolves when the new grid is loaded and the grid layer is scheduled for re-render.
+
+**Throws:**
+
+- `Error`: If `gridUrl` is not a string, if the AssetsManager is not initialized, or if loading fails.
+
+#### Example
+
+```javascript
+renderer
+  .updateGrid('/assets/grids/golden.png')
+  .then(() => console.log('Grid updated!'))
+  .catch((err) => console.error('Grid update failed:', err));
+```
+
+### `updateTextures(texturesIndexUrl, texturesAtlasUrl)`
+
+```javascript
+async updateTextures(texturesIndexUrl, texturesAtlasUrl);
+```
+
+**Description:**
+
+Loads and applies a new texture pack from the specified index and atlas URLs. This is an asynchronous operation. It will:
+
+1. Load the new texture index and atlas.
+2. Update FPS and internal intervals for animated layers (`'hexagons'`, `'preview-hexagons-particle'`) if their definitions changed in the new texture pack.
+3. Force a re-render of all layers to apply the new textures. This includes pieces, hexagons, previews, available positions, and the hitmap.
+
+**Parameters:**
+
+- `texturesIndexUrl` (string): The URL for the new texture index JSON file.
+- `texturesAtlasUrl` (string): The URL for the new texture atlas image file.
+
+> **Note**: Please refer to the [Available Assets documentation](ASSETS.md) for detailed information on the available texture packs.
+
+**Returns:**
+
+- `Promise<void>`: A promise that resolves when the new textures are loaded, applied, and all layers are forced to re-render.
+
+**Throws:**
+
+- `Error`: If `texturesIndexUrl` or `texturesAtlasUrl` are not strings, if the AssetsManager is not initialized, or if loading fails.
+
+#### Example
+
+```javascript
+renderer
+  .updateTextures('/assets/textures/futuristic/index.json', '/assets/textures/futuristic/atlas.webp')
+  .then(() => console.log('Textures updated!'))
+  .catch((err) => console.error('Texture update failed:', err));
 ```
 
 ### `updateMap(newMap)`
@@ -1760,7 +1953,11 @@ updateMap(newMap);
 
 **Description:**
 
-Updates the renderer to use a new map configuration. This involves recalculating ratios, re-rendering the background/grid/pieces based on the new map's coordinates and dimensions, and potentially re-attaching board event listeners if necessary.
+Updates the renderer to use a new map configuration. This is an operation that will trigger a full re-initialization of dimensions and a re-render of all layers. It involves:
+
+1. Updating the internal map reference to `newMap`.
+2. Clearing previews and available positions as they might be invalid for the new map.
+3. Re-initializing dimensions (canvas size, scaling ratios) based on the `newMap`. This will also resize all layers and force a re-render of all layers, including the hitmap.
 
 **Parameters:**
 
@@ -1779,103 +1976,35 @@ const newRendererMap = {
 renderer.updateMap(newRendererMap);
 ```
 
-### `updateTextures(texturesUrl)`
+### `updateBoard(newBoard)`
 
 ```javascript
-updateTextures(texturesUrl);
+updateBoard(newBoard);
 ```
 
 **Description:**
 
-Loads and applies a new texture pack from the specified URL. Re-renders pieces, hexagons, and the hitmap using the new textures.
+Updates the renderer to use a new `Board` instance. It involves:
+
+1. Clearing current previews and available positions highlights.
+2. Removing event listeners from the old board.
+3. Updating the internal board reference to `newBoard`.
+4. Initializing and attaching event listeners to the `newBoard`.
+5. Re-rendering layers directly dependent on the board state (like pieces and formed hexagons).
 
 **Parameters:**
 
-- `texturesUrl` (string): The base URL for the new texture pack.
-
-> **Note**: Please refer to the [Available Assets documentation](ASSETS.md) for detailed information on the available texture packs.
-
-**Returns:**
-
-- `Promise<void>`: A promise that resolves when the new textures are loaded and applied.
+- `newBoard` (Board): The new `Board` instance to render.
 
 **Throws:**
 
-- `Error`: If `texturesUrl` is not a string or if loading fails.
+- `Error`: If `newBoard` is not a `Board` instance.
 
 #### Example
 
 ```javascript
-renderer
-  .updateTextures('/assets/textures/futuristic/highres')
-  .then(() => console.log('Textures updated!'))
-  .catch((err) => console.error('Texture update failed:', err));
-```
-
-### `updateBackground(backgroundUrl)`
-
-```javascript
-updateBackground(backgroundUrl);
-```
-
-**Description:**
-
-Loads and applies a new background image from the specified URL.
-
-**Parameters:**
-
-- `backgroundUrl` (string): The URL of the new background image.
-
-> **Note**: Please refer to the [Available Assets documentation](ASSETS.md) for detailed information on the available background images.
-
-**Returns:**
-
-- `Promise<void>`: A promise that resolves when the new background is loaded and applied.
-
-**Throws:**
-
-- `Error`: If `backgroundUrl` is not a string or if loading fails.
-
-#### Example
-
-```javascript
-renderer
-  .updateBackground('/assets/backgrounds/space-nebula.png')
-  .then(() => console.log('Background updated!'))
-  .catch((err) => console.error('Background update failed:', err));
-```
-
-### `updateGrid(gridUrl)`
-
-```javascript
-updateGrid(gridUrl);
-```
-
-**Description:**
-
-Loads and applies a new grid overlay image from the specified URL.
-
-**Parameters:**
-
-- `gridUrl` (string): The URL of the new grid image.
-
-> **Note**: Please refer to the [Available Assets documentation](ASSETS.md) for detailed information on the available grid overlays.
-
-**Returns:**
-
-- `Promise<void>`: A promise that resolves when the new grid is loaded and applied.
-
-**Throws:**
-
-- `Error`: If `gridUrl` is not a string or if loading fails.
-
-#### Example
-
-```javascript
-renderer
-  .updateGrid('/assets/grids/golden.png')
-  .then(() => console.log('Grid updated!'))
-  .catch((err) => console.error('Grid update failed:', err));
+const newBoard = new Board();
+renderer.updateBoard(newBoard);
 ```
 
 ### `addEventListener(eventType, listener, options)`
@@ -1971,13 +2100,15 @@ Retrieves the current frames per second (FPS), which indicates how many frames a
 
 **Returns:**
 
-- `number`: The current FPS value.
+- `number | null`: The current FPS value, or `null` if the `FPSTracker` is not initialized.
 
 #### Example
 
 ```javascript
 const currentFPS = renderer.getFPS();
-console.log(`Current FPS: ${currentFPS}`);
+if (currentFPS !== null) {
+  console.log(`Current FPS: ${currentFPS.toFixed(1)}`);
+}
 ```
 
 ### `destroy()`
@@ -1988,7 +2119,7 @@ destroy();
 
 **Description:**
 
-Cleans up the renderer instance, removes event listeners, disconnects the `ResizeObserver`, removes the canvas from the DOM, and nullifies internal references to potentially free up memory and prevent memory leaks. Should be called when the renderer is no longer needed.
+Cleans up the renderer instance. This includes stopping the rendering loop, removing all canvas event handlers, disconnecting `ResizeObserver` and `MutationObserver`, clearing all registered event listeners, removing board event handlers, clearing all layers and assets, and removing the canvas from the DOM. This method should be called when the renderer is no longer needed to prevent memory leaks and performance issues.
 
 #### Example
 

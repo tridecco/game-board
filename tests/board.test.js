@@ -454,6 +454,58 @@ describe('Board', () => {
     });
   });
 
+  describe('getHexagonsFormed', () => {
+    let board;
+    let piece;
+
+    beforeEach(() => {
+      board = new Board();
+      piece = new Piece(['red', 'blue']);
+    });
+
+    it('should return an array of formed hexagons when placing a piece', () => {
+      const piece1 = new Piece(['red', 'green']);
+      board.place(0, piece1);
+
+      const pieceForHexagon = new Piece(['green', 'blue']);
+      const hexagons = board.getHexagonsFormed(8, pieceForHexagon);
+
+      expect(hexagons).toBeInstanceOf(Array);
+      expect(hexagons.length).toEqual(1);
+      if (hexagons.length > 0) {
+        hexagons.forEach((hexagon) => {
+          expect(hexagon).toBeInstanceOf(Object);
+          expect(hexagon.coordinate.length).toBe(2);
+          expect(hexagon.color).toBe('green');
+        });
+      }
+    });
+
+    it('should return an empty array if no hexagons are formed', () => {
+      const hexagons = board.getHexagonsFormed(0, piece);
+      expect(hexagons).toBeInstanceOf(Array);
+      expect(hexagons).toEqual([]);
+    });
+
+    it('should throw an error if index is out of bounds', () => {
+      expect(() => board.getHexagonsFormed(-1, piece)).toThrowError(
+        'Index out of bounds',
+      );
+      expect(() =>
+        board.getHexagonsFormed(board.map.positions.length, piece),
+      ).toThrowError('Index out of bounds');
+    });
+
+    it('should throw an error if value is not a Piece instance', () => {
+      expect(() => board.getHexagonsFormed(0, {})).toThrowError(
+        'Value must be an instance of Piece',
+      );
+      expect(() => board.getHexagonsFormed(0, 'not a piece')).toThrowError(
+        'Value must be an instance of Piece',
+      );
+    });
+  });
+
   describe('countHexagonsFormed', () => {
     let board;
     let piece;

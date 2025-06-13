@@ -9,14 +9,20 @@
 class TexturePack {
   /**
    * @constructor
-   * @param {string} texturesUrl - The URL of the texture pack.
+   * @param {string} indexUrl - The URL of the texture index JSON file.
+   * @param {string} atlasUrl - The URL of the atlas image file.
    * @param {Function} callback - A callback function to be executed after loading the textures.
-   * @throws {Error} - If textures is not an string or if the callback is not a function or if the environment is not a browser.
+   * @throws {Error} - If urls are not strings, callback is not a function, or if not in a browser environment.
    */
-  constructor(texturesUrl, callback = () => {}) {
-    if (typeof texturesUrl !== 'string') {
+  constructor(indexUrl, atlasUrl, callback = () => {}) {
+    if (typeof indexUrl !== 'string') {
       throw new Error(
-        'texturesUrl must be a string representing the URL of the texture pack',
+        'indexUrl must be a string representing the URL of the texture index file',
+      );
+    }
+    if (typeof atlasUrl !== 'string') {
+      throw new Error(
+        'atlasUrl must be a string representing the URL of the atlas image file',
       );
     }
     if (typeof callback !== 'function') {
@@ -26,99 +32,197 @@ class TexturePack {
       throw new Error('TexturePack can only be used in a browser environment');
     }
 
-    this.textures = {
-      tiles: new Map(),
-      hexagons: new Map(),
+    this.atlasImage = null;
+    this.textureDefinitions = {
+      tiles: null,
+      hexagons: null,
     };
 
-    this.loadTextures(texturesUrl, callback);
+    this.loadTextures(indexUrl, atlasUrl, callback);
   }
 
   /**
-   * @method loadTextures - Loads textures from the provided paths and stores them in the textures map.
-   * @param {string} texturesUrl - The URL of the texture pack.
-   * @param {Function} callback - The callback to execute after loading textures.
+   * @method loadTextures - Loads texture definitions from the index file and the atlas image.
+   * @param {string} indexUrl - The URL of the texture index JSON file.
+   * @param {string} atlasUrl - The URL of the atlas image file.
+   * @param {Function} callback - The callback to execute after loading.
    */
-  loadTextures(texturesUrl, callback) {
-    fetch(`${texturesUrl}/index.json`)
+  loadTextures(indexUrl, atlasUrl, callback) {
+    fetch(indexUrl)
       .then((response) => {
         if (!response.ok) {
-          throw new Error(`Failed to fetch texture index from ${texturesUrl}`);
+          throw new Error(`Failed to fetch texture index from ${indexUrl}`);
         }
         return response.json(); // Parse the JSON response
       })
-      .then((textures) => {
-        const tiles = textures.tiles || {};
-        const hexagons = textures.hexagons || {};
+      .then((textureIndexData) => {
+        this.textureDefinitions.tiles = textureIndexData.tiles || {};
+        this.textureDefinitions.hexagons = textureIndexData.hexagons || {};
 
-        const loadTilePromises = Object.entries(tiles).map(([key, path]) => {
-          return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.crossOrigin = 'anonymous'; // Set crossorigin attribute
-            img.src = `${texturesUrl}/${path}`;
-            img.onload = () => {
-              this.textures.tiles.set(key, img); // Store tile texture
-              resolve();
-            };
-            img.onerror = () => {
-              reject(new Error(`Failed to load tile texture: ${path}`));
-            };
-          });
-        });
+        const img = new Image();
+        img.crossOrigin = 'anonymous'; // Set crossorigin attribute
+        img.src = atlasUrl;
 
-        const loadHexPromises = Object.entries(hexagons).map(([key, path]) => {
-          return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.crossOrigin = 'anonymous'; // Set crossorigin attribute
-            img.src = `${texturesUrl}/${path}`;
-            img.onload = () => {
-              this.textures.hexagons.set(key, img); // Store hexagon texture
-              resolve();
-            };
-            img.onerror = () => {
-              reject(new Error(`Failed to load hexagon texture: ${path}`));
-            };
-          });
-        });
+        img.onload = () => {
+          this.atlasImage = img;
+          callback(null, this); // Execute the callback with the loaded TexturePack instance
+        };
 
-        // Wait for all tile and hexagon textures to load
-        Promise.all([...loadTilePromises, ...loadHexPromises])
-          .then(() => {
-            // All textures loaded successfully
-            callback(this); // Execute the callback with the loaded TexturePack instance
-          })
-          .catch((error) => {
-            // Handle any error that occurred during loading
-            console.error('Error loading textures:', error);
-            callback(null, error); // Pass null to callback in case of error
-          });
+        img.onerror = (err) => {
+          const error = new Error(
+            `Failed to load atlas image from: ${atlasUrl}`,
+          );
+          console.error(error.message, err);
+          callback(error, null);
+        };
       })
       .catch((error) => {
-        // Handle fetch error
-        console.error('Error fetching texture index:', error);
-        callback(null, error); // Pass null to callback in case of fetch error
+        // Handle fetch error or JSON parsing error
+        console.error('Error loading texture definitions:', error);
+        callback(error, null);
       });
   }
 
   /**
-   * @method get - Retrieve a texture by its type and key.
-   * @param {string} type - The type of texture to retrieve ('tiles' or 'hexagons').
-   * @param {string} key - The key of the texture to retrieve.
-   * @returns {HTMLImageElement|null} - The texture image if found, otherwise null.
+   * @method get - Retrieve a texture definition and the atlas image.
+   * @param {string} type - The category of texture to retrieve (e.g., 'tiles', 'hexagons').
+   * @param {string} key - The specific key of the texture. For nested structures or variants, use dot notation
+   *                       (e.g., "blue-white" for a tile variant, "glow" for a static group, "glow.blue" for a static variant,
+   *                       "particle" for a base animation, "flash" for an animated group, "flash.blue" for an animated variant).
+   * @returns {{image: HTMLImageElement, definition: Object, scale?: number} | null} - An object containing the atlas image and the texture definition.
+   *   The `definition` object structure varies:
+   *     - For static texture leaves (e.g., a tile variant directly under `variants`): `{x, y, w, h}`.
+   *     - For animated textures (base or variant): An object containing `frames` (Array of `{x,y,w,h}`),
+   *       `fps` (number), and `range` (Array<number>).
+   *     - For group nodes that have a `type` property (e.g., "static" or "animated"): The group object itself,
+   *       which might contain a `variants` object (e.g., `{type: "static", variants: {...}}` or
+   *       `{type: "animated", fps: ..., range: ..., variants: {...}}`).
+   *   If a `scale` property is present on the resolved group or animation, it will also be included in the returned object.
+   *   Returns `null` if the key is invalid or does not resolve to one of the above structures.
    */
   get(type, key) {
-    // Retrieve a texture by its key
-    if (type === 'tiles') {
-      // Return tile texture
-      return this.textures.tiles.get(key) || null;
-    } else if (type === 'hexagons') {
-      // Return hexagon texture
-      return this.textures.hexagons.get(key) || null;
-    } else {
-      // Invalid type
-      console.error(`Invalid texture type: ${type}`);
+    if (
+      !this.atlasImage ||
+      !this.textureDefinitions.tiles ||
+      !this.textureDefinitions.hexagons
+    ) {
+      console.warn(
+        'TexturePack not fully loaded. Atlas image or definitions are missing.',
+      );
       return null;
     }
+
+    const parts = key.split('.');
+    let current = this.textureDefinitions[type];
+
+    if (!current) {
+      console.error(`Invalid texture category: ${type}`);
+      return null;
+    }
+
+    let parentAnimatedGroup = null;
+
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+
+      if (!current || typeof current !== 'object') {
+        current = undefined;
+        break;
+      }
+
+      if (
+        (current.type === 'static' || current.type === 'animated') &&
+        current.variants &&
+        current.variants.hasOwnProperty(part)
+      ) {
+        if (current.type === 'animated') {
+          parentAnimatedGroup = current;
+        } else {
+          parentAnimatedGroup = null;
+        }
+        current = current.variants[part];
+      } else if (current.hasOwnProperty(part)) {
+        current = current[part];
+        if (current && current.type === 'animated') {
+          if (current.variants && !current.frames) {
+            parentAnimatedGroup = current;
+          } else if (current.frames) {
+            parentAnimatedGroup = null;
+          }
+        } else {
+          parentAnimatedGroup = null;
+        }
+      } else {
+        current = undefined;
+        break;
+      }
+    }
+
+    let definition = current;
+
+    if (definition === undefined) {
+      console.warn(
+        `Texture definition not found for type: ${type}, key: ${key}`,
+      );
+      return null;
+    }
+
+    if (
+      parentAnimatedGroup &&
+      definition &&
+      typeof definition === 'object' &&
+      definition.frames &&
+      (!definition.hasOwnProperty('fps') || !definition.hasOwnProperty('range'))
+    ) {
+      definition = {
+        ...definition,
+        fps: definition.hasOwnProperty('fps')
+          ? definition.fps
+          : parentAnimatedGroup.fps,
+        range: definition.hasOwnProperty('range')
+          ? definition.range
+          : parentAnimatedGroup.range,
+        scale: definition.hasOwnProperty('scale')
+          ? definition.scale
+          : parentAnimatedGroup.scale,
+      };
+    }
+
+    if (typeof definition === 'object' && definition !== null) {
+      const result = { image: this.atlasImage, definition };
+
+      if (definition.hasOwnProperty('scale')) {
+        result.scale = definition.scale;
+      } else if (
+        parentAnimatedGroup &&
+        parentAnimatedGroup.hasOwnProperty('scale')
+      ) {
+        result.scale = parentAnimatedGroup.scale;
+      }
+
+      if (
+        definition.hasOwnProperty('x') &&
+        definition.hasOwnProperty('y') &&
+        definition.hasOwnProperty('w') &&
+        definition.hasOwnProperty('h')
+      ) {
+        return result;
+      } else if (
+        definition.hasOwnProperty('frames') &&
+        definition.hasOwnProperty('fps') &&
+        definition.hasOwnProperty('range')
+      ) {
+        return result;
+      } else if (definition.hasOwnProperty('type')) {
+        return result;
+      }
+    }
+
+    console.warn(
+      `Final resolved definition for type '${type}', key '${key}' is not a recognized texture, typed group, or animation object:`,
+      definition,
+    );
+    return null;
   }
 }
 
