@@ -24,3 +24,6 @@ webpack.config.js
 
 # Assets
 assets/
+
+# Build scripts
+scripts/
