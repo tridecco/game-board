@@ -1700,7 +1700,7 @@ class Renderer {
    * @returns {Promise<void>} - A promise that resolves when the grid is updated.
    * @throws {Error} - If the gridUrl is not a string.
    */
-  updateGrid(gridUrl) {
+  async updateGrid(gridUrl) {
     if (typeof gridUrl !== 'string') {
       throw new Error('gridUrl must be a string');
     }
@@ -1728,7 +1728,7 @@ class Renderer {
    * @returns {Promise<void>} - A promise that resolves when the textures are updated.
    * @throws {Error} - If either texturesIndexUrl or texturesAtlasUrl is not a string.
    */
-  updateTextures(texturesIndexUrl, texturesAtlasUrl) {
+  async updateTextures(texturesIndexUrl, texturesAtlasUrl) {
     if (typeof texturesIndexUrl !== 'string') {
       throw new Error('texturesIndexUrl must be a string');
     }
