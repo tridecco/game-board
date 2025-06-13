@@ -1657,7 +1657,7 @@ if (animatedGroupData) {
 
 ## Renderer
 
-![Renderer](./img/renderer.png)
+![Renderer](./img/renderer.gif)
 
 ### Constructor
 
