@@ -285,32 +285,11 @@ class AssetsManager {
    * @returns {Promise} - A promise that resolves when all assets are loaded.
    */
   async load() {
-    const texturePromise = new Promise((resolve, reject) => {
-      this.textures = new TexturePack(
-        this.urls.texturesIndex,
-        this.urls.texturesAtlas,
-        (error) => {
-          if (error) reject(error);
-          else resolve();
-        },
-      );
-    });
-
-    const backgroundPromise = new Promise((resolve, reject) => {
-      this.background = new Image();
-      this.background.onload = () => resolve();
-      this.background.onerror = reject;
-      this.background.src = this.urls.background;
-    });
-
-    const gridPromise = new Promise((resolve, reject) => {
-      this.grid = new Image();
-      this.grid.onload = () => resolve();
-      this.grid.onerror = reject;
-      this.grid.src = this.urls.grid;
-    });
-
-    return Promise.all([texturePromise, backgroundPromise, gridPromise]);
+    return Promise.all([
+      this.updateTextures(this.urls.texturesIndex, this.urls.texturesAtlas),
+      this.updateBackground(this.urls.background),
+      this.updateGrid(this.urls.grid),
+    ]);
   }
 
   /**
