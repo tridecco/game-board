@@ -1559,14 +1559,14 @@ class Renderer {
       throw new Error('Tile index out of bounds for preview');
     }
 
+    const noPreviewingPositions = this._previewingPositions.size === 0;
+    const noPreviewingHexagonPositions =
+      this._previewingHexagonPositions.size === 0;
+
     if (clearPrevious) {
       this._previewingPositions.clear();
       this._previewingHexagonPositions.clear();
     }
-
-    const noPreviewingPositions = this._previewingPositions.size === 0;
-    const noPreviewingHexagonPositions =
-      this._previewingHexagonPositions.size === 0;
 
     this._previewingPositions.set(index, [index, piece, fillColor]);
     this._board
