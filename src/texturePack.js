@@ -61,7 +61,6 @@ class TexturePack {
 
         const img = new Image();
         img.crossOrigin = 'anonymous'; // Set crossorigin attribute
-        img.src = atlasUrl;
 
         img.onload = () => {
           this.atlasImage = img;
@@ -75,6 +74,8 @@ class TexturePack {
           console.error(error.message, err);
           callback(error, null);
         };
+
+        img.src = atlasUrl;
       })
       .catch((error) => {
         // Handle fetch error or JSON parsing error
