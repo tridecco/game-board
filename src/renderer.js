@@ -1664,6 +1664,26 @@ class Renderer {
   }
 
   /**
+   * @method getHexagonCoordinates - Retrieves the coordinates of a hexagon on the board.
+   * @param {number} col - The column index of the hexagon.
+   * @param {number} row - The row index of the hexagon.
+   * @returns {Array<number>} - An array containing the x and y coordinates of the hexagon.
+   * @throws {Error} - If the hexagon is not found.
+   */
+  getHexagonCoordinates(col, row) {
+    const hexagon = this._map.hexagons.find(
+      (h) => h.col === col && h.row === row,
+    );
+    if (!hexagon) {
+      throw new Error('Hexagon not found');
+    }
+
+    const x = hexagon.x * this._widthRatio * this._dpr;
+    const y = hexagon.y * this._heightRatio * this._dpr;
+    return [x, y];
+  }
+
+  /**
    * @method updateBackground - Updates the background image of the game.
    * @param {string} backgroundUrl - The URL of the new background image.
    * @returns {Promise<void>} - A promise that resolves when the background is updated.
