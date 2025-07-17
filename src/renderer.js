@@ -1845,7 +1845,7 @@ class Renderer {
    * @param {Object} [options] - Optional parameters, including `onlyAvailable: true` to filter events to available positions only.
    * @throws {Error} - If the event type is invalid.
    */
-  addEventListener(eventType, listener, options) {
+  addEventListener(eventType, listener, options = {}) {
     if (!this._eventListeners[eventType] || eventType.endsWith('Available')) {
       throw new Error('Invalid event type');
     }
