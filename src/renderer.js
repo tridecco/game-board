@@ -1647,6 +1647,23 @@ class Renderer {
   }
 
   /**
+   * @method getPieceCoordinates - Retrieves the coordinates of a piece on the board. (centered on the piece).
+   * @param {number} index - The index of the piece on the board.
+   * @returns {Array<number>} - An array containing the x and y coordinates of the piece.
+   * @throws {Error} - If the index is out of bounds.
+   */
+  getPieceCoordinates(index) {
+    if (index < 0 || index >= this._map.tiles.length) {
+      throw new Error('Tile index out of bounds');
+    }
+
+    const tile = this._map.tiles[index];
+    const x = tile.x * this._widthRatio * this._dpr;
+    const y = tile.y * this._heightRatio * this._dpr;
+    return [x, y];
+  }
+
+  /**
    * @method updateBackground - Updates the background image of the game.
    * @param {string} backgroundUrl - The URL of the new background image.
    * @returns {Promise<void>} - A promise that resolves when the background is updated.
