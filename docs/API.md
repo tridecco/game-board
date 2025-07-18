@@ -181,7 +181,7 @@ const defaultRendererMap = Tridecco.maps.renderer.default;
 
 ```html
 <!-- Import the library -->
-<script src="https://cdn.jsdelivr.net/npm/tridecco-board@0.6.1/dist/tridecco-board.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tridecco-board@0.6.2/dist/tridecco-board.min.js"></script>
 ```
 
 ```javascript
