@@ -42,7 +42,7 @@ describe('Board', () => {
         rows: 4,
         positions: [],
       };
-      expect(() => new Board(invalidMap)).toThrowError('Invalid map provided');
+      expect(() => new Board(invalidMap)).toThrow('Invalid map provided');
     });
 
     it('should throw an error if map is invalid (missing columns)', () => {
@@ -51,7 +51,7 @@ describe('Board', () => {
         rows: 4,
         positions: [],
       };
-      expect(() => new Board(invalidMap)).toThrowError('Invalid map provided');
+      expect(() => new Board(invalidMap)).toThrow('Invalid map provided');
     });
 
     it('should throw an error if map is invalid (missing rows)', () => {
@@ -60,7 +60,7 @@ describe('Board', () => {
         columns: 4,
         positions: [],
       };
-      expect(() => new Board(invalidMap)).toThrowError('Invalid map provided');
+      expect(() => new Board(invalidMap)).toThrow('Invalid map provided');
     });
 
     it('should throw an error if map is invalid (missing positions)', () => {
@@ -69,7 +69,7 @@ describe('Board', () => {
         columns: 4,
         rows: 4,
       };
-      expect(() => new Board(invalidMap)).toThrowError('Invalid map provided');
+      expect(() => new Board(invalidMap)).toThrow('Invalid map provided');
     });
   });
 
@@ -92,8 +92,8 @@ describe('Board', () => {
     });
 
     it('should throw an error if index is out of bounds', () => {
-      expect(() => board.get(-1)).toThrowError('Index out of bounds');
-      expect(() => board.get(board.map.positions.length)).toThrowError(
+      expect(() => board.get(-1)).toThrow('Index out of bounds');
+      expect(() => board.get(board.map.positions.length)).toThrow(
         'Index out of bounds',
       );
     });
@@ -114,17 +114,17 @@ describe('Board', () => {
     });
 
     it('should throw an error if index is out of bounds', () => {
-      expect(() => board.set(-1, piece)).toThrowError('Index out of bounds');
-      expect(() => board.set(board.map.positions.length, piece)).toThrowError(
+      expect(() => board.set(-1, piece)).toThrow('Index out of bounds');
+      expect(() => board.set(board.map.positions.length, piece)).toThrow(
         'Index out of bounds',
       );
     });
 
     it('should throw an error if value is not a Piece instance', () => {
-      expect(() => board.set(0, {})).toThrowError(
+      expect(() => board.set(0, {})).toThrow(
         'Value must be an instance of Piece',
       );
-      expect(() => board.set(0, 'not a piece')).toThrowError(
+      expect(() => board.set(0, 'not a piece')).toThrow(
         'Value must be an instance of Piece',
       );
     });
@@ -183,8 +183,8 @@ describe('Board', () => {
     });
 
     it('should throw an error if index is out of bounds', () => {
-      expect(() => board.place(-1, piece)).toThrowError('Index out of bounds');
-      expect(() => board.place(board.map.positions.length, piece)).toThrowError(
+      expect(() => board.place(-1, piece)).toThrow('Index out of bounds');
+      expect(() => board.place(board.map.positions.length, piece)).toThrow(
         'Index out of bounds',
       );
     });
@@ -192,16 +192,16 @@ describe('Board', () => {
     it('should throw an error if position is already occupied', () => {
       board.place(0, piece);
       const anotherPiece = new Piece(['green', 'yellow']);
-      expect(() => board.place(0, anotherPiece)).toThrowError(
+      expect(() => board.place(0, anotherPiece)).toThrow(
         'Position already occupied',
       );
     });
 
     it('should throw an error if value is not a Piece instance', () => {
-      expect(() => board.place(0, {})).toThrowError(
+      expect(() => board.place(0, {})).toThrow(
         'Value must be an instance of Piece',
       );
-      expect(() => board.place(0, 'not a piece')).toThrowError(
+      expect(() => board.place(0, 'not a piece')).toThrow(
         'Value must be an instance of Piece',
       );
     });
@@ -228,8 +228,8 @@ describe('Board', () => {
     });
 
     it('should throw an error if index is out of bounds', () => {
-      expect(() => board.remove(-1)).toThrowError('Index out of bounds');
-      expect(() => board.remove(board.map.positions.length)).toThrowError(
+      expect(() => board.remove(-1)).toThrow('Index out of bounds');
+      expect(() => board.remove(board.map.positions.length)).toThrow(
         'Index out of bounds',
       );
     });
@@ -276,12 +276,12 @@ describe('Board', () => {
     });
 
     it('should throw an error if index is out of bounds', () => {
-      expect(() => board.getRelatedHexagons(-1)).toThrowError(
+      expect(() => board.getRelatedHexagons(-1)).toThrow(
         'Index out of bounds',
       );
       expect(() =>
         board.getRelatedHexagons(board.map.positions.length),
-      ).toThrowError('Index out of bounds');
+      ).toThrow('Index out of bounds');
     });
   });
 
@@ -445,10 +445,10 @@ describe('Board', () => {
     });
 
     it('should throw an error if value is not a Piece instance', () => {
-      expect(() => board.getHexagonPositions({})).toThrowError(
+      expect(() => board.getHexagonPositions({})).toThrow(
         'Value must be an instance of Piece',
       );
-      expect(() => board.getHexagonPositions('not a piece')).toThrowError(
+      expect(() => board.getHexagonPositions('not a piece')).toThrow(
         'Value must be an instance of Piece',
       );
     });
@@ -488,19 +488,19 @@ describe('Board', () => {
     });
 
     it('should throw an error if index is out of bounds', () => {
-      expect(() => board.getHexagonsFormed(-1, piece)).toThrowError(
+      expect(() => board.getHexagonsFormed(-1, piece)).toThrow(
         'Index out of bounds',
       );
       expect(() =>
         board.getHexagonsFormed(board.map.positions.length, piece),
-      ).toThrowError('Index out of bounds');
+      ).toThrow('Index out of bounds');
     });
 
     it('should throw an error if value is not a Piece instance', () => {
-      expect(() => board.getHexagonsFormed(0, {})).toThrowError(
+      expect(() => board.getHexagonsFormed(0, {})).toThrow(
         'Value must be an instance of Piece',
       );
-      expect(() => board.getHexagonsFormed(0, 'not a piece')).toThrowError(
+      expect(() => board.getHexagonsFormed(0, 'not a piece')).toThrow(
         'Value must be an instance of Piece',
       );
     });
@@ -522,19 +522,19 @@ describe('Board', () => {
     });
 
     it('should throw an error if index is out of bounds', () => {
-      expect(() => board.countHexagonsFormed(-1, piece)).toThrowError(
+      expect(() => board.countHexagonsFormed(-1, piece)).toThrow(
         'Index out of bounds',
       );
       expect(() =>
         board.countHexagonsFormed(board.map.positions.length, piece),
-      ).toThrowError('Index out of bounds');
+      ).toThrow('Index out of bounds');
     });
 
     it('should throw an error if value is not a Piece instance', () => {
-      expect(() => board.countHexagonsFormed(0, {})).toThrowError(
+      expect(() => board.countHexagonsFormed(0, {})).toThrow(
         'Value must be an instance of Piece',
       );
-      expect(() => board.countHexagonsFormed(0, 'not a piece')).toThrowError(
+      expect(() => board.countHexagonsFormed(0, 'not a piece')).toThrow(
         'Value must be an instance of Piece',
       );
     });
@@ -559,8 +559,8 @@ describe('Board', () => {
     });
 
     it('should throw an error if index is out of bounds', () => {
-      expect(() => board.isEmpty(-1)).toThrowError('Index out of bounds');
-      expect(() => board.isEmpty(board.map.positions.length)).toThrowError(
+      expect(() => board.isEmpty(-1)).toThrow('Index out of bounds');
+      expect(() => board.isEmpty(board.map.positions.length)).toThrow(
         'Index out of bounds',
       );
     });
@@ -596,16 +596,16 @@ describe('Board', () => {
     });
 
     it('should throw an error if column or row is out of bounds', () => {
-      expect(() => board.isCompleteHexagon(-1, 0)).toThrowError(
+      expect(() => board.isCompleteHexagon(-1, 0)).toThrow(
         'Column or row out of bounds',
       );
-      expect(() => board.isCompleteHexagon(0, -1)).toThrowError(
+      expect(() => board.isCompleteHexagon(0, -1)).toThrow(
         'Column or row out of bounds',
       );
-      expect(() => board.isCompleteHexagon(board.map.columns, 0)).toThrowError(
+      expect(() => board.isCompleteHexagon(board.map.columns, 0)).toThrow(
         'Column or row out of bounds',
       );
-      expect(() => board.isCompleteHexagon(0, board.map.rows)).toThrowError(
+      expect(() => board.isCompleteHexagon(0, board.map.rows)).toThrow(
         'Column or row out of bounds',
       );
     });
@@ -777,7 +777,7 @@ describe('Board', () => {
 
       it('should throw an error for an invalid event type', () => {
         const listener = jest.fn();
-        expect(() => board.addEventListener('invalid', listener)).toThrowError(
+        expect(() => board.addEventListener('invalid', listener)).toThrow(
           'Invalid event type',
         );
       });
@@ -796,7 +796,7 @@ describe('Board', () => {
         const listener = jest.fn();
         expect(() =>
           board.removeEventListener('invalid', listener),
-        ).toThrowError('Invalid event type');
+        ).toThrow('Invalid event type');
       });
     });
 
