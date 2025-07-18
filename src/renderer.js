@@ -1063,8 +1063,7 @@ class Renderer {
     }
     const { image: textureImage, definition } = texture;
 
-    const x = tile.x * this._widthRatio;
-    const y = tile.y * this._heightRatio;
+    const [x, y] = this._getPieceCoordinates(index);
     const imageWidth = definition.w;
     const imageHeight = definition.h;
     const scale = texture.definition.scale || 1;
@@ -1088,7 +1087,7 @@ class Renderer {
     const angle = (rotation * Math.PI) / PI_DEGREES;
 
     context.save();
-    context.translate(x + width * HALF, y + height * HALF);
+    context.translate(x, y);
     context.rotate(angle);
 
     if (fillColor) {
@@ -1163,8 +1162,7 @@ class Renderer {
 
     const { image: textureImage, definition, scale = 1 } = texture;
 
-    const x = hexagon.x * this._widthRatio;
-    const y = hexagon.y * this._heightRatio;
+    const [x, y] = this._getHexagonCoordinates(coordinate);
     const imageWidth = definition.w;
     const imageHeight = definition.h;
 
@@ -1394,8 +1392,7 @@ class Renderer {
         tile.flipped ? 'empty-flipped' : 'empty',
       );
 
-      const x = tile.x * this._widthRatio;
-      const y = tile.y * this._heightRatio;
+      const [x, y] = this._getPieceCoordinates(index);
       const imageWidth = texture.definition.w;
       const imageHeight = texture.definition.h;
 
@@ -1418,7 +1415,7 @@ class Renderer {
       const angle = (rotation * Math.PI) / PI_DEGREES;
 
       context.save();
-      context.translate(x + width * HALF, y + height * HALF);
+      context.translate(x, y);
       context.rotate(angle);
 
       context.globalCompositeOperation = 'destination-out';
@@ -1513,6 +1510,41 @@ class Renderer {
     }
 
     return pieceIndex;
+  }
+
+  /**
+   * @method _getPieceCoordinates - Retrieves the coordinates of a piece on the board.
+   * @param {number} index - The index of the piece on the board.
+   * @returns {Array<number>} - An array containing the x and y coordinates of the piece.
+   * @throws {Error} - If the index is out of bounds.
+   */
+  _getPieceCoordinates(index) {
+    if (index < 0 || index >= this._map.tiles.length) {
+      throw new Error('Tile index out of bounds');
+    }
+
+    const tile = this._map.tiles[index];
+    const x = tile.x * this._widthRatio;
+    const y = tile.y * this._heightRatio;
+    return [x, y];
+  }
+
+  /**
+   * @method _getHexagonCoordinates - Retrieves the coordinates of a hexagon on the board.
+   * @param {number} col - The column index of the hexagon.
+   * @param {number} row - The row index of the hexagon.
+   * @returns {Array<number>} - An array containing the x and y coordinates of the hexagon.
+   * @throws {Error} - If the hexagon is not found.
+   */
+  _getHexagonCoordinates(col, row) {
+    const hexagon = this._map.hexagons[`${col}-${row}`];
+    if (!hexagon) {
+      throw new Error('Hexagon not found');
+    }
+
+    const x = hexagon.x * this._widthRatio;
+    const y = hexagon.y * this._heightRatio;
+    return [x, y];
   }
 
   /**
@@ -1630,6 +1662,27 @@ class Renderer {
     this._layersManager.requestAnimationFrame('available-positions', () => {
       this._layersManager.clear('available-positions');
     });
+  }
+
+  /**
+   * @method getPieceCoordinates - Retrieves the coordinates of a piece on the board.
+   * @param {number} index - The index of the piece on the board.
+   * @returns {Array<number>} - An array containing the x and y coordinates of the piece.
+   * @throws {Error} - If the index is out of bounds.
+   */
+  getPieceCoordinates(index) {
+    return this._getPieceCoordinates(index);
+  }
+
+  /**
+   * @method getHexagonCoordinates - Retrieves the coordinates of a hexagon on the board.
+   * @param {number} col - The column index of the hexagon.
+   * @param {number} row - The row index of the hexagon.
+   * @returns {Array<number>} - An array containing the x and y coordinates of the hexagon.
+   * @throws {Error} - If the hexagon is not found.
+   */
+  getHexagonCoordinates(col, row) {
+    return this._getHexagonCoordinates(col, row);
   }
 
   /**

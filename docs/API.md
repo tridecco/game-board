@@ -124,26 +124,30 @@ This document provides a comprehensive guide to the API of the Tridecco Game Boa
       - [Example](#example-51)
     - [`clearAvailablePositions()`](#clearavailablepositions)
       - [Example](#example-52)
-    - [`getTexture(type, key)`](#gettexturetype-key)
+    - [`getPieceCoordinates(index)`](#getpiececoordinatesindex)
       - [Example](#example-53)
-    - [`updateBackground(backgroundUrl)`](#updatebackgroundbackgroundurl)
+    - [`getHexagonCoordinates(col, row)`](#gethexagoncoordinatescol-row)
       - [Example](#example-54)
-    - [`updateGrid(gridUrl)`](#updategridgridurl)
+    - [`getTexture(type, key)`](#gettexturetype-key)
       - [Example](#example-55)
-    - [`updateTextures(texturesIndexUrl, texturesAtlasUrl)`](#updatetexturestexturesindexurl-texturesatlasurl)
+    - [`updateBackground(backgroundUrl)`](#updatebackgroundbackgroundurl)
       - [Example](#example-56)
-    - [`updateMap(newMap)`](#updatemapnewmap)
+    - [`updateGrid(gridUrl)`](#updategridgridurl)
       - [Example](#example-57)
-    - [`updateBoard(newBoard)`](#updateboardnewboard)
+    - [`updateTextures(texturesIndexUrl, texturesAtlasUrl)`](#updatetexturestexturesindexurl-texturesatlasurl)
       - [Example](#example-58)
-    - [`addEventListener(eventType, listener, options)`](#addeventlistenereventtype-listener-options)
+    - [`updateMap(newMap)`](#updatemapnewmap)
       - [Example](#example-59)
-    - [`removeEventListener(eventType, listener)`](#removeeventlistenereventtype-listener)
+    - [`updateBoard(newBoard)`](#updateboardnewboard)
       - [Example](#example-60)
-    - [`getFPS()`](#getfps)
+    - [`addEventListener(eventType, listener, options)`](#addeventlistenereventtype-listener-options)
       - [Example](#example-61)
-    - [`destroy()`](#destroy)
+    - [`removeEventListener(eventType, listener)`](#removeeventlistenereventtype-listener)
       - [Example](#example-62)
+    - [`getFPS()`](#getfps)
+      - [Example](#example-63)
+    - [`destroy()`](#destroy)
+      - [Example](#example-64)
 
 ## Import the Library
 
@@ -1809,6 +1813,69 @@ Removes the highlight mask, clearing any highlighted available positions from th
 
 ```javascript
 renderer.clearAvailablePositions(); // Remove highlights
+```
+
+### `getPieceCoordinates(index)`
+
+```javascript
+getPieceCoordinates(index);
+```
+
+**Description:**
+
+Retrieves the coordinates of a piece at a specified index on the board. This is useful for determining where to render the piece visually.
+
+**Parameters:**
+
+- `index` (number): The 0-based index of the piece on the board.
+
+**Returns:**
+
+- `Array<number>`: An array containing the `[x, y]` coordinates of the piece on the canvas.
+
+**Throws:**
+
+- `Error`: If the `index` is out of bounds.
+
+#### Example
+
+```javascript
+const pieceCoordinates = renderer.getPieceCoordinates(5);
+console.log(
+  `Piece at index 5 is located at coordinates: [${pieceCoordinates.join(', ')}]`,
+);
+```
+
+### `getHexagonCoordinates(col, row)`
+
+```javascript
+getHexagonCoordinates(col, row);
+```
+
+**Description:**
+
+Retrieves the coordinates of a hexagon at specified column and row indices on the board. This is useful for determining where to render the hexagon visually.
+
+**Parameters:**
+
+- `col` (number): The column index of the hexagon.
+- `row` (number): The row index of the hexagon.
+
+**Returns:**
+
+- `Array<number>`: An array containing the `[x, y]` coordinates of the hexagon on the canvas.
+
+**Throws:**
+
+- `Error`: If `col` or `row` is out of bounds.
+
+#### Example
+
+```javascript
+const hexagonCoordinates = renderer.getHexagonCoordinates(2, 3);
+console.log(
+  `Hexagon at (2, 3) is located at coordinates: [${hexagonCoordinates.join(', ')}]`,
+);
 ```
 
 ### `getTexture(type, key)`
