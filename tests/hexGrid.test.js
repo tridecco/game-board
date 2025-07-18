@@ -23,7 +23,7 @@ describe('HexGrid', () => {
     });
 
     it('should throw an error if the grid type is invalid', () => {
-      expect(() => new HexGrid(2, 2, 'invalid-type')).toThrowError(
+      expect(() => new HexGrid(2, 2, 'invalid-type')).toThrow(
         'Invalid grid type',
       );
     });

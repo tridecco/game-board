@@ -25,61 +25,61 @@ describe('Piece', () => {
     });
 
     it('should throw an error if colors is not an array', () => {
-      expect(() => new Piece('red-blue')).toThrowError(
+      expect(() => new Piece('red-blue')).toThrow(
         'colors must be an array of strings',
       );
-      expect(() => new Piece({})).toThrowError(
+      expect(() => new Piece({})).toThrow(
         'colors must be an array of strings',
       );
-      expect(() => new Piece(123)).toThrowError(
+      expect(() => new Piece(123)).toThrow(
         'colors must be an array of strings',
       );
     });
 
     it('should throw an error if colors array does not have exactly 2 elements', () => {
-      expect(() => new Piece(['red'])).toThrowError(
+      expect(() => new Piece(['red'])).toThrow(
         'colors must be an array of 2 strings representing the colors of the piece',
       );
-      expect(() => new Piece(['red', 'blue', 'green'])).toThrowError(
+      expect(() => new Piece(['red', 'blue', 'green'])).toThrow(
         'colors must be an array of 2 strings representing the colors of the piece',
       );
-      expect(() => new Piece([])).toThrowError(
+      expect(() => new Piece([])).toThrow(
         'colors must be an array of 2 strings representing the colors of the piece',
       );
     });
 
     it('should throw an error if colors array contains non-string elements', () => {
-      expect(() => new Piece(['red', 123])).toThrowError(
+      expect(() => new Piece(['red', 123])).toThrow(
         'colors must be an array of strings',
       );
-      expect(() => new Piece([123, 'blue'])).toThrowError(
+      expect(() => new Piece([123, 'blue'])).toThrow(
         'colors must be an array of strings',
       );
-      expect(() => new Piece([{}, 'blue'])).toThrowError(
+      expect(() => new Piece([{}, 'blue'])).toThrow(
         'colors must be an array of strings',
       );
-      expect(() => new Piece(['red', {}])).toThrowError(
+      expect(() => new Piece(['red', {}])).toThrow(
         'colors must be an array of strings',
       );
-      expect(() => new Piece([null, 'blue'])).toThrowError(
+      expect(() => new Piece([null, 'blue'])).toThrow(
         'colors must be an array of strings',
       );
-      expect(() => new Piece(['red', null])).toThrowError(
+      expect(() => new Piece(['red', null])).toThrow(
         'colors must be an array of strings',
       );
     });
 
     it('should throw an error if params is not an object', () => {
-      expect(() => new Piece(['red', 'blue'], 'string param')).toThrowError(
+      expect(() => new Piece(['red', 'blue'], 'string param')).toThrow(
         'params must be an object',
       );
-      expect(() => new Piece(['red', 'blue'], 123)).toThrowError(
+      expect(() => new Piece(['red', 'blue'], 123)).toThrow(
         'params must be an object',
       );
-      expect(() => new Piece(['red', 'blue'], [])).toThrowError(
+      expect(() => new Piece(['red', 'blue'], [])).toThrow(
         'params must be an object',
       );
-      expect(() => new Piece(['red', 'blue'], null)).not.toThrowError(
+      expect(() => new Piece(['red', 'blue'], null)).not.toThrow(
         'params must be an object',
       );
     });
@@ -177,7 +177,7 @@ describe('Piece', () => {
 
     it('should throw an error if colors is missing in the JSON representation', () => {
       const json = { customProperties: { name: 'Test Piece', value: 15 } };
-      expect(() => Piece.fromJSON(json)).toThrowError(
+      expect(() => Piece.fromJSON(json)).toThrow(
         'colors must be an array of strings',
       );
     });
@@ -187,7 +187,7 @@ describe('Piece', () => {
         colors: ['red'],
         customProperties: { name: 'Test Piece', value: 15 },
       };
-      expect(() => Piece.fromJSON(json)).toThrowError(
+      expect(() => Piece.fromJSON(json)).toThrow(
         'colors must be an array of 2 strings representing the colors of the piece',
       );
     });

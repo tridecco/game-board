@@ -48,10 +48,10 @@ describe('TriHexGrid', () => {
     });
 
     it('should throw an error if the triangle index is invalid', () => {
-      expect(() => grid.get(1, 1, 0)).toThrowError(
+      expect(() => grid.get(1, 1, 0)).toThrow(
         'Triangle index must be between 1 and 6',
       );
-      expect(() => grid.get(1, 1, 7)).toThrowError(
+      expect(() => grid.get(1, 1, 7)).toThrow(
         'Triangle index must be between 1 and 6',
       );
     });
@@ -75,10 +75,10 @@ describe('TriHexGrid', () => {
     });
 
     it('should not set the value if the triangle index is invalid', () => {
-      expect(() => grid.set([[0, 0, 0]], 'value')).toThrowError(
+      expect(() => grid.set([[0, 0, 0]], 'value')).toThrow(
         'Triangle index must be between 1 and 6',
       );
-      expect(() => grid.set([[0, 0, 7]], 'value')).toThrowError(
+      expect(() => grid.set([[0, 0, 7]], 'value')).toThrow(
         'Triangle index must be between 1 and 6',
       );
     });
@@ -153,10 +153,10 @@ describe('TriHexGrid', () => {
     });
 
     it('should throw an error if the triangle index is invalid', () => {
-      expect(() => grid.remove([[2, 2, 0]])).toThrowError(
+      expect(() => grid.remove([[2, 2, 0]])).toThrow(
         'Triangle index must be between 1 and 6',
       );
-      expect(() => grid.remove([[2, 2, 7]])).toThrowError(
+      expect(() => grid.remove([[2, 2, 7]])).toThrow(
         'Triangle index must be between 1 and 6',
       );
     });
