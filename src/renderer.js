@@ -1162,7 +1162,7 @@ class Renderer {
 
     const { image: textureImage, definition, scale = 1 } = texture;
 
-    const [x, y] = this._getHexagonCoordinates(coordinate);
+    const [x, y] = this._getHexagonCoordinates(...coordinate);
     const imageWidth = definition.w;
     const imageHeight = definition.h;
 
