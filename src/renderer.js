@@ -1665,20 +1665,6 @@ class Renderer {
   }
 
   /**
-   * @method getTexture - Retrieves a texture from the assets manager.
-   * @param {string} type - The type of texture to retrieve (e.g., 'tiles', 'hexagons').
-   * @param {string} key - The key of the texture to retrieve.
-   * @returns {Object} - The texture object containing the image and its definition.
-   * @throws {Error} - If the assets manager is not initialized or if the texture is not found.
-   */
-  getTexture(type, key) {
-    if (!this._assetsManager || !this._assetsManager.textures) {
-      throw new Error('Assets manager not initialized');
-    }
-    return this._assetsManager.textures.get(type, key);
-  }
-
-  /**
    * @method getPieceCoordinates - Retrieves the coordinates of a piece on the board.
    * @param {number} index - The index of the piece on the board.
    * @returns {Array<number>} - An array containing the x and y coordinates of the piece.
@@ -1697,6 +1683,20 @@ class Renderer {
    */
   getHexagonCoordinates(col, row) {
     return this._getHexagonCoordinates(col, row);
+  }
+
+  /**
+   * @method getTexture - Retrieves a texture from the assets manager.
+   * @param {string} type - The type of texture to retrieve (e.g., 'tiles', 'hexagons').
+   * @param {string} key - The key of the texture to retrieve.
+   * @returns {Object} - The texture object containing the image and its definition.
+   * @throws {Error} - If the assets manager is not initialized or if the texture is not found.
+   */
+  getTexture(type, key) {
+    if (!this._assetsManager || !this._assetsManager.textures) {
+      throw new Error('Assets manager not initialized');
+    }
+    return this._assetsManager.textures.get(type, key);
   }
 
   /**
