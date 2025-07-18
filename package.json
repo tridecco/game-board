@@ -1,6 +1,6 @@
 {
   "name": "tridecco-board",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Tridecco Game Board is the game board and pieces for the Tridecco game. It is a complete implementation of the game board and pieces, supporting a range of advanced operations and complex gameplay mechanics.",
   "keywords": [
     "einstein-problem",
