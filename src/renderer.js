@@ -1671,7 +1671,7 @@ class Renderer {
    * @throws {Error} - If the index is out of bounds.
    */
   getPieceCoordinates(index) {
-    return this._getHexagonCoordinates(index);
+    return this._getPieceCoordinates(index);
   }
 
   /**
