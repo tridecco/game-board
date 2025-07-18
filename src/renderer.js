@@ -1063,8 +1063,7 @@ class Renderer {
     }
     const { image: textureImage, definition } = texture;
 
-    const x = tile.x * this._widthRatio;
-    const y = tile.y * this._heightRatio;
+    const [x, y] = this._getPieceCoordinates(index);
     const imageWidth = definition.w;
     const imageHeight = definition.h;
     const scale = texture.definition.scale || 1;
@@ -1088,7 +1087,7 @@ class Renderer {
     const angle = (rotation * Math.PI) / PI_DEGREES;
 
     context.save();
-    context.translate(x + width * HALF, y + height * HALF);
+    context.translate(x, y);
     context.rotate(angle);
 
     if (fillColor) {
@@ -1163,8 +1162,7 @@ class Renderer {
 
     const { image: textureImage, definition, scale = 1 } = texture;
 
-    const x = hexagon.x * this._widthRatio;
-    const y = hexagon.y * this._heightRatio;
+    const [x, y] = this._getHexagonCoordinates(coordinate);
     const imageWidth = definition.w;
     const imageHeight = definition.h;
 
@@ -1394,8 +1392,7 @@ class Renderer {
         tile.flipped ? 'empty-flipped' : 'empty',
       );
 
-      const x = tile.x * this._widthRatio;
-      const y = tile.y * this._heightRatio;
+      const [x, y] = this._getPieceCoordinates(index);
       const imageWidth = texture.definition.w;
       const imageHeight = texture.definition.h;
 
@@ -1418,7 +1415,7 @@ class Renderer {
       const angle = (rotation * Math.PI) / PI_DEGREES;
 
       context.save();
-      context.translate(x + width * HALF, y + height * HALF);
+      context.translate(x, y);
       context.rotate(angle);
 
       context.globalCompositeOperation = 'destination-out';
