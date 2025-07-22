@@ -646,10 +646,19 @@ class Renderer {
    */
   _initEventListeners() {
     const eventConfigs = [
-      { type: 'dragover', preventDefault: true },
-      { type: 'drop', preventDefault: true },
       { type: 'click', preventDefault: false },
+      { type: 'dblclick', preventDefault: false },
+      { type: 'mousedown', preventDefault: false },
       { type: 'mousemove', preventDefault: false },
+      { type: 'mouseup', preventDefault: false },
+      { type: 'dragenter', preventDefault: true },
+      { type: 'dragover', preventDefault: true },
+      { type: 'dragleave', preventDefault: true },
+      { type: 'drop', preventDefault: true },
+      { type: 'touchstart', preventDefault: true },
+      { type: 'touchmove', preventDefault: true },
+      { type: 'touchend', preventDefault: true },
+      { type: 'touchcancel', preventDefault: true },
     ];
 
     eventConfigs.forEach(({ type, preventDefault }) => {
@@ -1893,7 +1902,7 @@ class Renderer {
 
   /**
    * @method addEventListener - Adds an event listener for a specific event type.
-   * @param {string} eventType - The event type to listen for (dragover, drop, mousemove, click, resize).
+   * @param {string} eventType - The event type to listen for.
    * @param {Function} listener - The callback function to be executed when the event is triggered.
    * @param {Object} [options] - Optional parameters, including `onlyAvailable: true` to filter events to available positions only.
    * @throws {Error} - If the event type is invalid.
@@ -1912,7 +1921,7 @@ class Renderer {
 
   /**
    * @method removeEventListener - Removes an event listener for a specific event type.
-   * @param {string} eventType - The event type to stop listening for (dragover, drop, mousemove, click, resize).
+   * @param {string} eventType - The event type to stop listening for.
    * @param {Function} listener - The callback function to be removed.
    * @throws {Error} - If the event type is invalid.
    */
