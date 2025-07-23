@@ -1761,81 +1761,89 @@ class Renderer {
    * @throws {Error} - If either texturesIndexUrl or texturesAtlasUrl is not a string.
    */
   async updateTextures(texturesIndexUrl, texturesAtlasUrl) {
-    if (typeof texturesIndexUrl !== 'string') {
-      throw new Error('texturesIndexUrl must be a string');
-    }
-    if (typeof texturesAtlasUrl !== 'string') {
-      throw new Error('texturesAtlasUrl must be a string');
+    if (
+      typeof texturesIndexUrl !== 'string' ||
+      typeof texturesAtlasUrl !== 'string'
+    ) {
+      throw new Error('URL must be a string');
     }
 
-    return new Promise(async (resolve, reject) => {
-      await this._assetsManager
-        .updateTextures(texturesIndexUrl, texturesAtlasUrl)
-        .then(() => {
-          this._layersManager.requestAnimationFrame('pieces', (context) => {
-            this._layersManager.clear('pieces');
-            this._renderPlacedPieces(context);
-          });
-          this._layersManager.removeLayer('hexagons');
-          this._layersManager.addLayer({
-            name: 'hexagons',
-            fps: this._assetsManager.textures.get('hexagons', 'loop').definition
-              .fps,
-            zIndex: 4,
-            render: ({ context, elapsed }) => {
-              this._layersManager.clear('hexagons');
-              this._renderFormedHexagonsFrame(context, elapsed);
-            },
-          });
-          this._layersManager.requestAnimationFrame(
-            'preview-pieces',
-            (context) => {
-              this._layersManager.clear('preview-pieces');
-              this._renderPreviewingPiecePositions(context);
-            },
-          );
-          this._layersManager.requestAnimationFrame(
-            'preview-hexagons',
-            (context) => {
-              if (this._previewingHexagonPositions.size === 0) {
-                this._renderPreviewingHexagonPositions(context);
-              } else {
-                this._layersManager.clear('preview-hexagons');
-                this._renderPreviewingHexagonPositions(context);
-              }
-            },
-          );
-          this._layersManager.removeLayer('preview-hexagons-particle');
-          this._layersManager.addLayer({
-            name: 'preview-hexagons-particle',
-            fps: this._assetsManager.textures.get('hexagons', 'particle')
-              .definition.fps,
-            zIndex: 7,
-            render: ({ context, elapsed }) => {
-              this._layersManager.clear('preview-hexagons-particle');
-              this._renderPreviewingHexagonParticlePositionsFrame(
-                context,
-                elapsed,
-              );
-            },
-          });
-          this._layersManager.requestAnimationFrame(
-            'available-positions',
-            (context) => {
-              this._layersManager.clear('available-positions');
-              this._renderShowingAvailablePositions(context);
-            },
-          );
-          this._layersManager.requestAnimationFrame('hitmap', (context) => {
-            this._layersManager.clear('hitmap');
-            this._renderHitmap(context);
-          });
-          resolve();
-        })
-        .catch((error) => {
-          reject(error);
-        });
-    });
+    try {
+      const tempAssetsManager = new AssetsManager(
+        texturesIndexUrl,
+        texturesAtlasUrl,
+        this._assetsManager.urls.background,
+        this._assetsManager.urls.grid,
+      );
+
+      await tempAssetsManager.updateTextures(
+        texturesIndexUrl,
+        texturesAtlasUrl,
+      );
+
+      await tempAssetsManager.updateBackground(
+        tempAssetsManager.urls.background,
+      );
+      await tempAssetsManager.updateGrid(tempAssetsManager.urls.grid);
+
+      this._assetsManager = tempAssetsManager;
+
+      this._layersManager.requestAnimationFrame('pieces', (context) => {
+        this._layersManager.clear('pieces');
+        this._renderPlacedPieces(context);
+      });
+      this._layersManager.removeLayer('hexagons');
+      this._layersManager.addLayer({
+        name: 'hexagons',
+        fps: this._assetsManager.textures.get('hexagons', 'loop').definition
+          .fps,
+        zIndex: 4,
+        render: ({ context, elapsed }) => {
+          this._layersManager.clear('hexagons');
+          this._renderFormedHexagonsFrame(context, elapsed);
+        },
+      });
+      this._layersManager.requestAnimationFrame('preview-pieces', (context) => {
+        this._layersManager.clear('preview-pieces');
+        this._renderPreviewingPiecePositions(context);
+      });
+      this._layersManager.requestAnimationFrame(
+        'preview-hexagons',
+        (context) => {
+          if (this._previewingHexagonPositions.size === 0) {
+            this._renderPreviewingHexagonPositions(context);
+          } else {
+            this._layersManager.clear('preview-hexagons');
+            this._renderPreviewingHexagonPositions(context);
+          }
+        },
+      );
+      this._layersManager.removeLayer('preview-hexagons-particle');
+      this._layersManager.addLayer({
+        name: 'preview-hexagons-particle',
+        fps: this._assetsManager.textures.get('hexagons', 'particle').definition
+          .fps,
+        zIndex: 7,
+        render: ({ context, elapsed }) => {
+          this._layersManager.clear('preview-hexagons-particle');
+          this._renderPreviewingHexagonParticlePositionsFrame(context, elapsed);
+        },
+      });
+      this._layersManager.requestAnimationFrame(
+        'available-positions',
+        (context) => {
+          this._layersManager.clear('available-positions');
+          this._renderShowingAvailablePositions(context);
+        },
+      );
+      this._layersManager.requestAnimationFrame('hitmap', (context) => {
+        this._layersManager.clear('hitmap');
+        this._renderHitmap(context);
+      });
+      this._layersManager.render(true);
+    } catch (error) {
+      throw error;
+    }
   }
 
   /**
