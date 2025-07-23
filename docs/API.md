@@ -2082,13 +2082,17 @@ addEventListener(eventType, listener, options = {});
 
 **Description:**
 
-Adds an event listener for specific renderer interaction events (drag/drop, mouse move, click) or resize events.
+Adds an event listener for renderer interaction events (pointer, mouse, drag/drop, touch, or resize events).
 
 **Parameters:**
 
-- `eventType` (string): The type of event to listen for:
-  - `'dragover'`, `'drop'`, `'mousemove'`, `'click'`: Triggered for interactions anywhere on the canvas. The listener receives the index of the piece at the event coordinates (-1 if none).
-  - `'resize'`: Triggered when the container element is resized. The listener receives an object with canvas and container dimensions.
+- `eventType` (string): The type of event to listen for. Supported event types:
+  - `'click'`, `'dblclick'`, `'mousedown'`, `'mousemove'`, `'mouseup'`
+  - `'dragenter'`, `'dragover'`, `'dragleave'`, `'drop'`
+  - `'touchstart'`, `'touchmove'`, `'touchend'`, `'touchcancel'`
+  - `'resize'`
+  - For pointer/mouse/touch/drag events: The listener receives the index of the piece at the event coordinates (`-1` if none).
+  - For `'resize'`: The listener receives an object with canvas and container dimensions.
 - `listener` (Function): The function to execute when the event occurs. Receives event-specific arguments (usually the piece index or dimension info).
 - `options` (Object, optional): Optional parameters.
   - `onlyAvailable` (boolean): If `true`, the listener will only be triggered for drop events on available positions. Defaults to `false`. This is useful for distinguishing between general drop events and those specifically on available positions. (`resize` events do not use this option.)
@@ -2137,7 +2141,11 @@ Removes a previously added event listener for a specific renderer event type.
 
 **Parameters:**
 
-- `eventType` (string): The event type from which to remove the listener.
+- `eventType` (string): The event type from which to remove the listener. Supported event types:
+  - `'click'`, `'dblclick'`, `'mousedown'`, `'mousemove'`, `'mouseup'`
+  - `'dragenter'`, `'dragover'`, `'dragleave'`, `'drop'`
+  - `'touchstart'`, `'touchmove'`, `'touchend'`, `'touchcancel'`
+  - `'resize'`
 - `listener` (Function): The listener function that was originally added.
 
 **Throws:**
