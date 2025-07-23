@@ -50,6 +50,7 @@ class LayersManager {
     this.context = context;
     this.layers = [];
     this.layerMap = new Map();
+    this.frameRequested = {};
   }
 
   /**
@@ -91,8 +92,6 @@ class LayersManager {
     this.layers.push(layer);
     this.layerMap.set(layer.name, layer);
     this.layers.sort((a, b) => a.zIndex - b.zIndex);
-
-    this.frameRequested = {};
 
     return layer.context;
   }
@@ -303,12 +302,16 @@ class AssetsManager {
     this.urls.texturesAtlas = texturesAtlasUrl;
 
     return new Promise((resolve, reject) => {
-      this.textures = new TexturePack(
+      const tempTextures = new TexturePack(
         texturesIndexUrl,
         texturesAtlasUrl,
         (error) => {
-          if (error) reject(error);
-          else resolve();
+          if (error) {
+            reject(error);
+          } else {
+            this.textures = tempTextures;
+            resolve();
+          }
         },
       );
     });
