@@ -1761,11 +1761,11 @@ class Renderer {
    * @throws {Error} - If either texturesIndexUrl or texturesAtlasUrl is not a string.
    */
   async updateTextures(texturesIndexUrl, texturesAtlasUrl) {
-    if (
-      typeof texturesIndexUrl !== 'string' ||
-      typeof texturesAtlasUrl !== 'string'
-    ) {
-      throw new Error('URL must be a string');
+    if (typeof texturesIndexUrl !== 'string') {
+      throw new Error('texturesIndexUrl must be a string');
+    }
+    if (typeof texturesAtlasUrl !== 'string') {
+      throw new Error('texturesAtlasUrl must be a string');
     }
 
     try {
