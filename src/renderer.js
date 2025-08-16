@@ -568,15 +568,39 @@ class Renderer {
     this._canvasEventHandlers = [];
 
     this._eventListeners = {
-      dragover: new Set(), // Listeners for dragover events
-      dragoverAvailable: new Set(), // Listeners for dragover events with available positions
-      drop: new Set(), // Listeners for drop events
-      dropAvailable: new Set(), // Listeners for drop events with available positions
-      mousemove: new Set(), // Listeners for hover events
-      mousemoveAvailable: new Set(), // Listeners for hover events with available positions
-      click: new Set(), // Listeners for click events
-      clickAvailable: new Set(), // Listeners for click events with available positions
-      resize: new Set(), // Listeners for resize events
+      click: new Set(),
+      clickAvailable: new Set(),
+      dblclick: new Set(),
+      dblclickAvailable: new Set(),
+      mousedown: new Set(),
+      mousedownAvailable: new Set(),
+      mousemove: new Set(),
+      mousemoveAvailable: new Set(),
+      mouseup: new Set(),
+      mouseupAvailable: new Set(),
+      dragstart: new Set(),
+      dragstartAvailable: new Set(),
+      dragover: new Set(),
+      dragoverAvailable: new Set(),
+      dragend: new Set(),
+      dragendAvailable: new Set(),
+      drop: new Set(),
+      dropAvailable: new Set(),
+      touchstart: new Set(),
+      touchstartAvailable: new Set(),
+      touchmove: new Set(),
+      touchmoveAvailable: new Set(),
+      touchend: new Set(),
+      touchendAvailable: new Set(),
+      touchcancel: new Set(),
+      touchcancelAvailable: new Set(),
+      pointerdown: new Set(),
+      pointerdownAvailable: new Set(),
+      pointermove: new Set(),
+      pointermoveAvailable: new Set(),
+      pointerup: new Set(),
+      pointerupAvailable: new Set(),
+      resize: new Set(),
     };
 
     this._eventHandlers = new Map();
@@ -649,10 +673,22 @@ class Renderer {
    */
   _initEventListeners() {
     const eventConfigs = [
-      { type: 'dragover', preventDefault: true },
-      { type: 'drop', preventDefault: true },
       { type: 'click', preventDefault: false },
+      { type: 'dblclick', preventDefault: false },
+      { type: 'mousedown', preventDefault: false },
       { type: 'mousemove', preventDefault: false },
+      { type: 'mouseup', preventDefault: false },
+      { type: 'dragstart', preventDefault: true },
+      { type: 'dragover', preventDefault: true },
+      { type: 'dragend', preventDefault: true },
+      { type: 'drop', preventDefault: true },
+      { type: 'touchstart', preventDefault: true },
+      { type: 'touchmove', preventDefault: true },
+      { type: 'touchend', preventDefault: true },
+      { type: 'touchcancel', preventDefault: true },
+      { type: 'pointerdown', preventDefault: true },
+      { type: 'pointermove', preventDefault: true },
+      { type: 'pointerup', preventDefault: true },
     ];
 
     eventConfigs.forEach(({ type, preventDefault }) => {
@@ -1896,7 +1932,7 @@ class Renderer {
 
   /**
    * @method addEventListener - Adds an event listener for a specific event type.
-   * @param {string} eventType - The event type to listen for (dragover, drop, mousemove, click, resize).
+   * @param {string} eventType - The event type to listen for.
    * @param {Function} listener - The callback function to be executed when the event is triggered.
    * @param {Object} [options] - Optional parameters, including `onlyAvailable: true` to filter events to available positions only.
    * @throws {Error} - If the event type is invalid.
@@ -1915,7 +1951,7 @@ class Renderer {
 
   /**
    * @method removeEventListener - Removes an event listener for a specific event type.
-   * @param {string} eventType - The event type to stop listening for (dragover, drop, mousemove, click, resize).
+   * @param {string} eventType - The event type to stop listening for.
    * @param {Function} listener - The callback function to be removed.
    * @throws {Error} - If the event type is invalid.
    */
