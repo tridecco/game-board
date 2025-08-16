@@ -26,7 +26,7 @@ Tridecco Game Board is the game board and pieces for the Tridecco game. It is a 
 #### Node.js
 
 ```bash
-npm install tridecco-board@0.6.2
+npm install tridecco-board@0.7.0
 ```
 
 #### Browser
@@ -34,7 +34,7 @@ npm install tridecco-board@0.6.2
 Include the following script tag in your HTML file:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/tridecco-board@0.6.2/dist/tridecco-board.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tridecco-board@0.7.0/dist/tridecco-board.min.js"></script>
 ```
 
 > **Note**: You can also download the `tridecco-board.min.js` file and include it in your project.
