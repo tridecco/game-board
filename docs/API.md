@@ -126,28 +126,30 @@ This document provides a comprehensive guide to the API of the Tridecco Game Boa
       - [Example](#example-52)
     - [`getPieceCoordinates(index)`](#getpiececoordinatesindex)
       - [Example](#example-53)
-    - [`getHexagonCoordinates(col, row)`](#gethexagoncoordinatescol-row)
+    - [`getPieceIndexAt(x, y)`](#getpieceindexatx-y)
       - [Example](#example-54)
-    - [`getTexture(type, key)`](#gettexturetype-key)
+    - [`getHexagonCoordinates(col, row)`](#gethexagoncoordinatescol-row)
       - [Example](#example-55)
-    - [`updateBackground(backgroundUrl)`](#updatebackgroundbackgroundurl)
+    - [`getTexture(type, key)`](#gettexturetype-key)
       - [Example](#example-56)
-    - [`updateGrid(gridUrl)`](#updategridgridurl)
+    - [`updateBackground(backgroundUrl)`](#updatebackgroundbackgroundurl)
       - [Example](#example-57)
-    - [`updateTextures(texturesIndexUrl, texturesAtlasUrl)`](#updatetexturestexturesindexurl-texturesatlasurl)
+    - [`updateGrid(gridUrl)`](#updategridgridurl)
       - [Example](#example-58)
-    - [`updateMap(newMap)`](#updatemapnewmap)
+    - [`updateTextures(texturesIndexUrl, texturesAtlasUrl)`](#updatetexturestexturesindexurl-texturesatlasurl)
       - [Example](#example-59)
-    - [`updateBoard(newBoard)`](#updateboardnewboard)
+    - [`updateMap(newMap)`](#updatemapnewmap)
       - [Example](#example-60)
-    - [`addEventListener(eventType, listener, options)`](#addeventlistenereventtype-listener-options)
+    - [`updateBoard(newBoard)`](#updateboardnewboard)
       - [Example](#example-61)
-    - [`removeEventListener(eventType, listener)`](#removeeventlistenereventtype-listener)
+    - [`addEventListener(eventType, listener, options)`](#addeventlistenereventtype-listener-options)
       - [Example](#example-62)
-    - [`getFPS()`](#getfps)
+    - [`removeEventListener(eventType, listener)`](#removeeventlistenereventtype-listener)
       - [Example](#example-63)
-    - [`destroy()`](#destroy)
+    - [`getFPS()`](#getfps)
       - [Example](#example-64)
+    - [`destroy()`](#destroy)
+      - [Example](#example-65)
 
 ## Import the Library
 
@@ -1844,6 +1846,36 @@ const pieceCoordinates = renderer.getPieceCoordinates(5);
 console.log(
   `Piece at index 5 is located at coordinates: [${pieceCoordinates.join(', ')}]`,
 );
+```
+
+### `getPieceIndexAt(x, y)`
+
+```javascript
+getPieceIndexAt(x, y);
+```
+
+**Description:**
+
+Returns the board position index at the given canvas coordinates using the internal hitmap. If the coordinates do not intersect any position, `-1` is returned.
+
+**Parameters:**
+
+- `x` (number): The x-coordinate on the renderer canvas (in pixels).
+- `y` (number): The y-coordinate on the renderer canvas (in pixels).
+
+**Returns:**
+
+- `number`: The 0-based position index at the specified coordinates, or `-1` if none is found.
+
+#### Example
+
+```javascript
+const index = renderer.getPieceIndexAt(150, 220);
+if (index !== -1) {
+  console.log(`Found position at index: ${index}`);
+} else {
+  console.log('No position at these coordinates.');
+}
 ```
 
 ### `getHexagonCoordinates(col, row)`
