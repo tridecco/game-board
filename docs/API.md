@@ -2088,8 +2088,9 @@ Adds an event listener for renderer interaction events (pointer, mouse, drag/dro
 
 - `eventType` (string): The type of event to listen for. Supported event types:
   - `'click'`, `'dblclick'`, `'mousedown'`, `'mousemove'`, `'mouseup'`
-  - `'dragenter'`, `'dragover'`, `'dragleave'`, `'drop'`
+  - `'dragenter'`, `'dragover'`, `'dragend'`, `'drop'`
   - `'touchstart'`, `'touchmove'`, `'touchend'`, `'touchcancel'`
+  - `'pointerdown'`, `'pointermove'`, `'pointerup'`
   - `'resize'`
   - For pointer/mouse/touch/drag events: The listener receives the index of the piece at the event coordinates (`-1` if none).
   - For `'resize'`: The listener receives an object with canvas and container dimensions.
@@ -2143,8 +2144,9 @@ Removes a previously added event listener for a specific renderer event type.
 
 - `eventType` (string): The event type from which to remove the listener. Supported event types:
   - `'click'`, `'dblclick'`, `'mousedown'`, `'mousemove'`, `'mouseup'`
-  - `'dragenter'`, `'dragover'`, `'dragleave'`, `'drop'`
+  - `'dragenter'`, `'dragover'`, `'dragend'`, `'drop'`
   - `'touchstart'`, `'touchmove'`, `'touchend'`, `'touchcancel'`
+  - `'pointerdown'`, `'pointermove'`, `'pointerup'`
   - `'resize'`
 - `listener` (Function): The listener function that was originally added.
 
