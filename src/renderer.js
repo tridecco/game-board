@@ -565,15 +565,39 @@ class Renderer {
     this._canvasEventHandlers = [];
 
     this._eventListeners = {
-      dragover: new Set(), // Listeners for dragover events
-      dragoverAvailable: new Set(), // Listeners for dragover events with available positions
-      drop: new Set(), // Listeners for drop events
-      dropAvailable: new Set(), // Listeners for drop events with available positions
-      mousemove: new Set(), // Listeners for hover events
-      mousemoveAvailable: new Set(), // Listeners for hover events with available positions
-      click: new Set(), // Listeners for click events
-      clickAvailable: new Set(), // Listeners for click events with available positions
-      resize: new Set(), // Listeners for resize events
+      click: new Set(),
+      clickAvailable: new Set(),
+      dblclick: new Set(),
+      dblclickAvailable: new Set(),
+      mousedown: new Set(),
+      mousedownAvailable: new Set(),
+      mousemove: new Set(),
+      mousemoveAvailable: new Set(),
+      mouseup: new Set(),
+      mouseupAvailable: new Set(),
+      dragstart: new Set(),
+      dragstartAvailable: new Set(),
+      dragover: new Set(),
+      dragoverAvailable: new Set(),
+      dragend: new Set(),
+      dragendAvailable: new Set(),
+      drop: new Set(),
+      dropAvailable: new Set(),
+      touchstart: new Set(),
+      touchstartAvailable: new Set(),
+      touchmove: new Set(),
+      touchmoveAvailable: new Set(),
+      touchend: new Set(),
+      touchendAvailable: new Set(),
+      touchcancel: new Set(),
+      touchcancelAvailable: new Set(),
+      pointerdown: new Set(),
+      pointerdownAvailable: new Set(),
+      pointermove: new Set(),
+      pointermoveAvailable: new Set(),
+      pointerup: new Set(),
+      pointerupAvailable: new Set(),
+      resize: new Set(),
     };
 
     this._eventHandlers = new Map();
@@ -651,14 +675,17 @@ class Renderer {
       { type: 'mousedown', preventDefault: false },
       { type: 'mousemove', preventDefault: false },
       { type: 'mouseup', preventDefault: false },
-      { type: 'dragenter', preventDefault: true },
+      { type: 'dragstart', preventDefault: true },
       { type: 'dragover', preventDefault: true },
-      { type: 'dragleave', preventDefault: true },
+      { type: 'dragend', preventDefault: true },
       { type: 'drop', preventDefault: true },
       { type: 'touchstart', preventDefault: true },
       { type: 'touchmove', preventDefault: true },
       { type: 'touchend', preventDefault: true },
       { type: 'touchcancel', preventDefault: true },
+      { type: 'pointerdown', preventDefault: true },
+      { type: 'pointermove', preventDefault: true },
+      { type: 'pointerup', preventDefault: true },
     ];
 
     eventConfigs.forEach(({ type, preventDefault }) => {
