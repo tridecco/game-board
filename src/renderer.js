@@ -1714,6 +1714,20 @@ class Renderer {
   }
 
   /**
+   * @method getPieceIndexAt - Retrieves the index of a piece at the specified coordinates.
+   * @param {number} x - The x coordinate of the piece.
+   * @param {number} y - The y coordinate of the piece.
+   * @returns {number} - The index of the piece at the specified coordinates, or -1 if no piece is found.
+   */
+  getPieceIndexAt(x, y) {
+    return this._getPositionFromHitmap(
+      this._layersManager.getLayer('hitmap').context,
+      x,
+      y,
+    );
+  }
+
+  /**
    * @method getHexagonCoordinates - Retrieves the coordinates of a hexagon on the board.
    * @param {number} col - The column index of the hexagon.
    * @param {number} row - The row index of the hexagon.
