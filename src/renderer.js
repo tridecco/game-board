@@ -1717,7 +1717,7 @@ class Renderer {
    * @method getPieceIndexAt - Retrieves the index of a piece at the specified coordinates.
    * @param {number} x - The x coordinate of the piece.
    * @param {number} y - The y coordinate of the piece.
-   * @returns {number} - The index of the piece at the specified coordinates.
+   * @returns {number} - The index of the piece at the specified coordinates, or -1 if no piece is found.
    */
   getPieceIndexAt(x, y) {
     return this._getPositionFromHitmap(
